@@ -1,0 +1,42 @@
+{
+  "name": "studentevents",
+  "version": "1.0.0",
+  "description": "Student Event Ticketing System - Full Stack Application",
+  "main": "index.html",
+  "scripts": {
+    "dev": "python -m http.server 8000",
+    "dev:backend": "cd backend && npm run dev",
+    "build:backend": "cd backend && npm run build",
+    "start:backend": "cd backend && npm start",
+    "seed": "cd backend && npm run seed",
+    "deploy": "node deploy.js",
+    "deploy:backend": "cd backend && railway up",
+    "deploy:frontend": "netlify deploy --prod --dir=.",
+    "setup": "cd backend && npm install",
+    "test": "echo \"No tests specified\" && exit 0"
+  },
+  "keywords": [
+    "events",
+    "ticketing",
+    "student",
+    "full-stack",
+    "nodejs",
+    "express",
+    "supabase",
+    "stripe"
+  ],
+  "author": "StudentEvents Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/studentevents.git"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "devDependencies": {
+    "@railway/cli": "^3.0.0",
+    "netlify-cli": "^17.0.0"
+  }
+}
