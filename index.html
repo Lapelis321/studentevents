@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StudentEvents - Find Your Next Event</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/homepage.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-ticket-alt"></i>
+                    <span>StudentEvents</span>
+                </div>
+                <div class="header-right">
+                    <nav class="nav-desktop">
+                        <a href="#events" class="nav-link">Events</a>
+                        <a href="rules.html" class="nav-link">Rules & Policy</a>
+                        <a href="#contact" class="nav-link">Contact</a>
+                    </nav>
+                    <div class="header-actions">
+                        <button class="mobile-menu-toggle" aria-label="Toggle menu">
+                            <i class="fas fa-bars"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Mobile Navigation -->
+        <nav class="mobile-nav">
+            <a href="#events" class="mobile-nav-link">Events</a>
+            <a href="rules.html" class="mobile-nav-link">Rules & Policy</a>
+            <a href="#contact" class="mobile-nav-link">Contact</a>
+        </nav>
+
+    <!-- Main Content -->
+    <main class="main">
+        <div class="container">
+            <!-- Hero Section -->
+            <section class="hero">
+                <h1 class="hero-title">Discover Amazing Student Events</h1>
+                <p class="hero-subtitle">Connect, learn, and have fun with events designed for students</p>
+            </section>
+
+
+            <!-- Events Section -->
+            <section class="events-section" id="events">
+                <h2 class="section-title">Upcoming Events</h2>
+                <div class="events-grid" id="eventsGrid">
+                    <!-- Events will be populated by JavaScript -->
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-links">
+                    <a href="rules.html" class="footer-link">Rules & Policy</a>
+                    <a href="#contact" class="footer-link">Contact</a>
+                </div>
+                <div class="footer-info">
+                    <p>&copy; 2024 StudentEvents. All rights reserved.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="scripts/main.js"></script>
+    <script src="scripts/homepage.js"></script>
+</body>
+</html>

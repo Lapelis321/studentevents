@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Details - StudentEvents</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/event-details.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="header-left">
+                    <button class="back-btn-header" onclick="history.back()" aria-label="Go back">
+                        <i class="fas fa-arrow-left"></i>
+                        <span>Back</span>
+                    </button>
+                    <div class="logo">
+                        <i class="fas fa-ticket-alt"></i>
+                        <span>StudentEvents</span>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <nav class="nav-desktop">
+                        <a href="index.html" class="nav-link">Events</a>
+                        <a href="rules.html" class="nav-link">Rules & Policy</a>
+                        <a href="#contact" class="nav-link">Contact</a>
+                    </nav>
+                    <div class="header-actions">
+                        <button class="mobile-menu-toggle" aria-label="Toggle menu">
+                            <i class="fas fa-bars"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Mobile Navigation -->
+    <nav class="mobile-nav">
+        <a href="index.html" class="mobile-nav-link">Events</a>
+        <a href="rules.html" class="mobile-nav-link">Rules & Policy</a>
+        <a href="#contact" class="mobile-nav-link">Contact</a>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main">
+        <div class="container">
+            <!-- Event Details -->
+            <article class="event-details" id="eventDetails">
+                <!-- Content will be populated by JavaScript -->
+                <div class="event-loading">
+                    <div class="spinner"></div>
+                    <p>Loading event details...</p>
+                </div>
+            </article>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-links">
+                    <a href="rules.html" class="footer-link">Rules & Policy</a>
+                    <a href="#contact" class="footer-link">Contact</a>
+                </div>
+                <div class="footer-info">
+                    <p>&copy; 2024 StudentEvents. All rights reserved.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="scripts/main.js"></script>
+    <script src="scripts/event-details.js"></script>
+</body>
+</html>

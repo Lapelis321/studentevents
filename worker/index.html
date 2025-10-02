@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Worker Portal - Ticket Scanner</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="stylesheet" href="/worker/worker-scan.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="header-left">
+                    <button class="back-btn-header" onclick="history.back()" aria-label="Go back">
+                        <i class="fas fa-arrow-left"></i>
+                        <span>Back</span>
+                    </button>
+                    <div class="logo">
+                        <i class="fas fa-ticket-alt"></i>
+                        <span>StudentEvents</span>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <div class="worker-controls">
+                        <div class="worker-badge">
+                            <i class="fas fa-qrcode"></i>
+                            <span>Worker Portal</span>
+                        </div>
+                        <button class="logout-btn" onclick="workerLogout()" title="Logout">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span class="logout-text">Logout</span>
+                        </button>
+                    </div>
+                    <div class="header-actions">
+                        <button class="mobile-menu-toggle" aria-label="Toggle menu">
+                            <i class="fas fa-bars"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Mobile Navigation -->
+    <nav class="mobile-nav">
+                        <a href="/index.html" class="mobile-nav-link">Back to Events</a>
+                        <a href="/rules.html" class="mobile-nav-link">Rules & Policy</a>
+        <a href="#contact" class="mobile-nav-link">Contact</a>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main">
+        <div class="container">
+            <!-- Scanner Interface -->
+            <div class="scanner-container">
+                <div class="scanner-header">
+                    <h1 class="scanner-title">
+                        <i class="fas fa-qrcode"></i>
+                        Ticket Scanner
+                    </h1>
+                    <p class="scanner-subtitle">Scan QR codes or enter ticket IDs manually</p>
+                </div>
+
+                <!-- Camera Scanner Section -->
+                <div class="camera-section" id="cameraSection">
+                    <div class="camera-container">
+                        <video id="cameraVideo" class="camera-video" autoplay playsinline></video>
+                        <div class="camera-overlay">
+                            <div class="scan-frame">
+                                <div class="scan-corners">
+                                    <div class="corner top-left"></div>
+                                    <div class="corner top-right"></div>
+                                    <div class="corner bottom-left"></div>
+                                    <div class="corner bottom-right"></div>
+                                </div>
+                                <div class="scan-line"></div>
+                            </div>
+                        </div>
+                        <canvas id="cameraCanvas" style="display: none;"></canvas>
+                    </div>
+                    
+                    <div class="camera-controls">
+                        <button class="btn btn-primary" id="startCameraBtn" onclick="workerScan.startCamera()">
+                            <i class="fas fa-camera"></i>
+                            Start Camera
+                        </button>
+                        <button class="btn btn-secondary" id="stopCameraBtn" onclick="workerScan.stopCamera()" style="display: none;">
+                            <i class="fas fa-stop"></i>
+                            Stop Camera
+                        </button>
+                        <button class="btn btn-secondary" id="switchCameraBtn" onclick="workerScan.switchCamera()" style="display: none;">
+                            <i class="fas fa-sync-alt"></i>
+                            Switch Camera
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Manual Input Section -->
+                <div class="manual-section">
+                    <div class="section-divider">
+                        <span>OR</span>
+                    </div>
+                    
+                    <div class="manual-input-container">
+                        <h2 class="manual-title">
+                            <i class="fas fa-keyboard"></i>
+                            Manual Entry
+                        </h2>
+                        
+                        <form class="manual-form" id="manualForm">
+                            <div class="form-group">
+                                <label class="form-label" for="ticketId">Ticket ID</label>
+                                <input type="text" 
+                                       class="form-input" 
+                                       id="ticketId" 
+                                       placeholder="Enter ticket ID or scan code"
+                                       autocomplete="off">
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-search"></i>
+                                Verify Ticket
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Scan Results Section -->
+                <div class="results-section" id="resultsSection" style="display: none;">
+                    <!-- Results will be populated by JavaScript -->
+                </div>
+
+                <!-- Statistics Section -->
+                <div class="stats-section">
+                    <h2 class="stats-title">
+                        <i class="fas fa-chart-bar"></i>
+                        Today's Statistics
+                    </h2>
+                    
+                    <div class="stats-grid">
+                        <div class="stat-card stat-card-success">
+                            <div class="stat-icon">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-number" id="validScans">0</div>
+                                <div class="stat-label">Valid Scans</div>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card stat-card-error">
+                            <div class="stat-icon">
+                                <i class="fas fa-times-circle"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-number" id="invalidScans">0</div>
+                                <div class="stat-label">Invalid Scans</div>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card stat-card-info">
+                            <div class="stat-icon">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-number" id="totalScans">0</div>
+                                <div class="stat-label">Total Scans</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-links">
+                    <a href="/rules.html" class="footer-link">Rules & Policy</a>
+                    <a href="#contact" class="footer-link">Contact</a>
+                </div>
+                <div class="footer-info">
+                    <p>&copy; 2024 StudentEvents. All rights reserved.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/scripts/main.js"></script>
+    <script src="/worker/worker-scan.js"></script>
+    <script>
+        // Worker access control
+        document.addEventListener('DOMContentLoaded', () => {
+            const hasAccess = sessionStorage.getItem('workerAccess');
+            if (!hasAccess) {
+                window.location.href = 'login.html';
+            } else {
+                // Display worker info in header if logged in
+                const workerData = JSON.parse(sessionStorage.getItem('workerData') || '{}');
+                if (workerData.name) {
+                    updateWorkerBadge(workerData);
+                }
+            }
+        });
+        
+        function updateWorkerBadge(workerData) {
+            const workerBadge = document.querySelector('.worker-badge span');
+            if (workerBadge) {
+                workerBadge.textContent = `${workerData.name} (${workerData.role})`;
+            }
+        }
+        
+        function workerLogout() {
+            if (confirm('Are you sure you want to logout?')) {
+                sessionStorage.removeItem('workerAccess');
+                sessionStorage.removeItem('workerData');
+                window.location.href = 'login.html';
+            }
+        }
+    </script>
+</body>
+</html>
