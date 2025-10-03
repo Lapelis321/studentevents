@@ -11,6 +11,7 @@ class AdminDashboard {
 
     init() {
         this.loadMockData();
+        this.loadSettingsFromStorage();
         this.setupEventListeners();
         this.renderCurrentTab();
     }
@@ -569,7 +570,18 @@ class AdminDashboard {
         const formData = new FormData(document.getElementById('organizationForm'));
         const settings = Object.fromEntries(formData);
         
-        // In a real app, you would save these to an API
+        // Save to localStorage for persistence
+        localStorage.setItem('adminSettings', JSON.stringify({
+            ...this.settings,
+            organization: settings
+        }));
+        
+        // Update current settings
+        this.settings = { ...this.settings, organization: settings };
+        
+        // Apply organization name changes throughout the site
+        this.applyOrganizationName(settings.orgName);
+        
         console.log('Saving organization settings:', settings);
         EventTicketingApp.showNotification('Organization settings saved successfully', 'success');
     }
@@ -578,7 +590,18 @@ class AdminDashboard {
         const formData = new FormData(document.getElementById('policyForm'));
         const settings = Object.fromEntries(formData);
         
-        // In a real app, you would save these to an API
+        // Save to localStorage for persistence
+        localStorage.setItem('adminSettings', JSON.stringify({
+            ...this.settings,
+            policy: settings
+        }));
+        
+        // Update current settings
+        this.settings = { ...this.settings, policy: settings };
+        
+        // Apply policy changes
+        this.applyPolicyChanges(settings);
+        
         console.log('Saving policy settings:', settings);
         EventTicketingApp.showNotification('Policy settings saved successfully', 'success');
     }
@@ -587,9 +610,119 @@ class AdminDashboard {
         const formData = new FormData(document.getElementById('systemForm'));
         const settings = Object.fromEntries(formData);
         
-        // In a real app, you would save these to an API
+        // Save to localStorage for persistence
+        localStorage.setItem('adminSettings', JSON.stringify({
+            ...this.settings,
+            system: settings
+        }));
+        
+        // Update current settings
+        this.settings = { ...this.settings, system: settings };
+        
         console.log('Saving system settings:', settings);
         EventTicketingApp.showNotification('System settings saved successfully', 'success');
+    }
+
+    // Helper methods to apply settings changes
+    applyOrganizationName(orgName) {
+        // Update all instances of "StudentEvents" with the new organization name
+        const elements = document.querySelectorAll('.logo span, .admin-badge span, .footer-info p');
+        elements.forEach(element => {
+            if (element.textContent.includes('StudentEvents')) {
+                element.textContent = element.textContent.replace('StudentEvents', orgName);
+            }
+        });
+        
+        // Update page titles
+        document.title = document.title.replace('StudentEvents', orgName);
+        
+        // Update any other hardcoded references
+        const allElements = document.querySelectorAll('*');
+        allElements.forEach(element => {
+            if (element.textContent && element.textContent.includes('StudentEvents')) {
+                element.textContent = element.textContent.replace('StudentEvents', orgName);
+            }
+        });
+    }
+    
+    applyPolicyChanges(policySettings) {
+        // Update policy-related elements on the page
+        console.log('Applying policy changes:', policySettings);
+        
+        // Update contact information in the rules page
+        if (policySettings.contactEmail || policySettings.contactPhone) {
+            this.updateContactInfo(policySettings.contactEmail, policySettings.contactPhone);
+        }
+        
+        // Update refund policy display
+        if (policySettings.refundPolicy) {
+            this.updateRefundPolicy(policySettings.refundPolicy);
+        }
+        
+        // Update service fee display
+        if (policySettings.serviceFee) {
+            this.updateServiceFee(policySettings.serviceFee);
+        }
+    }
+    
+    updateContactInfo(email, phone) {
+        // This would update the contact section in rules.html
+        // For now, we'll store it for when the rules page is loaded
+        localStorage.setItem('contactEmail', email || 'contact@studentevents.com');
+        localStorage.setItem('contactPhone', phone || '+1 (555) 123-4567');
+    }
+    
+    updateRefundPolicy(hours) {
+        // Store refund policy for use in other parts of the app
+        localStorage.setItem('refundPolicyHours', hours);
+    }
+    
+    updateServiceFee(fee) {
+        // Store service fee for use in checkout
+        localStorage.setItem('serviceFee', fee);
+    }
+    
+    loadSettingsFromStorage() {
+        // Load settings from localStorage on page load
+        const savedSettings = localStorage.getItem('adminSettings');
+        if (savedSettings) {
+            this.settings = JSON.parse(savedSettings);
+            this.applySavedSettings();
+        }
+    }
+    
+    applySavedSettings() {
+        // Apply saved settings to form inputs
+        if (this.settings.organization) {
+            Object.keys(this.settings.organization).forEach(key => {
+                const input = document.getElementById(key);
+                if (input) {
+                    input.value = this.settings.organization[key];
+                }
+            });
+        }
+        
+        if (this.settings.policy) {
+            Object.keys(this.settings.policy).forEach(key => {
+                const input = document.getElementById(key);
+                if (input) {
+                    input.value = this.settings.policy[key];
+                }
+            });
+        }
+        
+        if (this.settings.system) {
+            Object.keys(this.settings.system).forEach(key => {
+                const input = document.getElementById(key);
+                if (input) {
+                    if (input.type === 'checkbox') {
+                        input.checked = this.settings.system[key] === 'on';
+                    } else {
+                        input.value = this.settings.system[key];
+                    }
+                }
+            });
+        }
     }
 
     // Data Management Methods

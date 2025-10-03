@@ -46,15 +46,23 @@ class WorkerScan {
 
     async checkCameraSupport() {
         try {
+            // Check if mediaDevices API is available
+            if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
+                this.showCameraError('Camera API not supported in this browser');
+                return;
+            }
+
             const devices = await navigator.mediaDevices.enumerateDevices();
             this.cameras = devices.filter(device => device.kind === 'videoinput');
             
             if (this.cameras.length === 0) {
                 this.showCameraError('No cameras found on this device');
+            } else {
+                console.log(`Found ${this.cameras.length} camera(s)`);
             }
         } catch (error) {
             console.error('Error checking camera support:', error);
-            this.showCameraError('Camera access not supported');
+            this.showCameraError('Camera access not supported or blocked');
         }
     }
 

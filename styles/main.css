@@ -201,6 +201,7 @@ p {
     cursor: pointer;
     transition: all var(--transition-fast);
     min-height: 44px; /* Touch-friendly minimum */
+    -webkit-user-select: none;
     user-select: none;
 }
 
@@ -369,6 +370,7 @@ p {
     position: sticky;
     top: 0;
     z-index: 100;
+    -webkit-backdrop-filter: blur(8px);
     backdrop-filter: blur(8px);
 }
 

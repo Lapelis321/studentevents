@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Worker Portal - Ticket Scanner</title>
-    <link rel="stylesheet" href="/styles/main.css">
-    <link rel="stylesheet" href="/worker/worker-scan.css">
+    <link rel="stylesheet" href="../styles/main.css">
+    <link rel="stylesheet" href="worker-scan.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
@@ -80,7 +80,7 @@
                                 <div class="scan-line"></div>
                             </div>
                         </div>
-                        <canvas id="cameraCanvas" style="display: none;"></canvas>
+                        <canvas id="cameraCanvas"></canvas>
                     </div>
                     
                     <div class="camera-controls">
@@ -88,11 +88,11 @@
                             <i class="fas fa-camera"></i>
                             Start Camera
                         </button>
-                        <button class="btn btn-secondary" id="stopCameraBtn" onclick="workerScan.stopCamera()" style="display: none;">
+                        <button class="btn btn-secondary" id="stopCameraBtn" onclick="workerScan.stopCamera()">
                             <i class="fas fa-stop"></i>
                             Stop Camera
                         </button>
-                        <button class="btn btn-secondary" id="switchCameraBtn" onclick="workerScan.switchCamera()" style="display: none;">
+                        <button class="btn btn-secondary" id="switchCameraBtn" onclick="workerScan.switchCamera()">
                             <i class="fas fa-sync-alt"></i>
                             Switch Camera
                         </button>
@@ -130,7 +130,7 @@
                 </div>
 
                 <!-- Scan Results Section -->
-                <div class="results-section" id="resultsSection" style="display: none;">
+                <div class="results-section" id="resultsSection">
                     <!-- Results will be populated by JavaScript -->
                 </div>
 

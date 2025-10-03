@@ -10,6 +10,7 @@ class RulesPage {
         this.setupTableOfContents();
         this.setupPrintFunctionality();
         this.trackReadingProgress();
+        this.loadContactInfo();
     }
 
     setupSmoothScrolling() {
@@ -264,6 +265,30 @@ class RulesPage {
             parent.replaceChild(document.createTextNode(highlight.textContent), highlight);
             parent.normalize();
         });
+    }
+    
+    loadContactInfo() {
+        // Load contact information from localStorage (set by admin)
+        const contactEmail = localStorage.getItem('contactEmail');
+        const contactPhone = localStorage.getItem('contactPhone');
+        
+        if (contactEmail) {
+            // Update email in contact section
+            const emailElements = document.querySelectorAll('#contact-info [href*="mailto:"]');
+            emailElements.forEach(element => {
+                element.href = `mailto:${contactEmail}`;
+                element.textContent = contactEmail;
+            });
+        }
+        
+        if (contactPhone) {
+            // Update phone in contact section
+            const phoneElements = document.querySelectorAll('#contact-info [href*="tel:"]');
+            phoneElements.forEach(element => {
+                element.href = `tel:${contactPhone}`;
+                element.textContent = contactPhone;
+            });
+        }
     }
 }
 
