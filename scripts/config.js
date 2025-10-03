@@ -11,9 +11,8 @@ const CONFIG = {
             return 'http://localhost:3001/api';
         }
         
-        // Production - Update this with your actual backend domain
-        // Replace 'your-backend-domain' with your actual Railway/Render domain
-        return 'https://your-backend-domain.railway.app/api';
+        // Production - Using a simple API service
+        return 'https://studentevents-api.herokuapp.com/api';
     })(),
     
     // Stripe Configuration

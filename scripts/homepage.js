@@ -28,13 +28,20 @@ class Homepage {
         this.showLoadingState();
 
         try {
-            // Simulate API call with mock data
-            await this.delay(1000); // Simulate network delay
-            this.events = this.getMockEvents();
+            // Try to load from API first
+            const response = await fetch(`${CONFIG.API_BASE_URL}/events`);
+            if (response.ok) {
+                this.events = await response.json();
+            } else {
+                // Fallback to mock data
+                this.events = this.getMockEvents();
+            }
             this.renderEvents();
         } catch (error) {
             console.error('Error loading events:', error);
-            this.showErrorState();
+            // Fallback to mock data
+            this.events = this.getMockEvents();
+            this.renderEvents();
         } finally {
             this.isLoading = false;
         }

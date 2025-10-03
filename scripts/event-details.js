@@ -32,21 +32,33 @@ class EventDetails {
 
     async fetchEventById(eventId) {
         try {
-            // Simulate API call - in real app, this would be an actual API endpoint
-            await this.delay(800);
-            
-            // Mock event data (same as homepage for consistency)
+            // Try to fetch from API first
+            const response = await fetch(`${CONFIG.API_BASE_URL}/events/${eventId}`);
+            if (response.ok) {
+                this.event = await response.json();
+                this.renderEventDetails();
+            } else {
+                // Fallback to mock data
+                const mockEvents = this.getMockEvents();
+                this.event = mockEvents.find(e => e.id == eventId);
+                
+                if (this.event) {
+                    this.renderEventDetails();
+                } else {
+                    this.showErrorState('Event not found');
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching event:', error);
+            // Fallback to mock data
             const mockEvents = this.getMockEvents();
             this.event = mockEvents.find(e => e.id == eventId);
             
             if (this.event) {
                 this.renderEventDetails();
             } else {
-                this.showErrorState('Event not found');
+                this.showErrorState('Failed to load event details');
             }
-        } catch (error) {
-            console.error('Error fetching event:', error);
-            this.showErrorState('Failed to load event details');
         }
     }
 

@@ -446,8 +446,32 @@ class Checkout {
         this.showProcessingState();
 
         try {
-            // Simulate payment processing
-            await this.delay(3000);
+            // Prepare payment data
+            const paymentData = {
+                eventId: this.event.id,
+                quantity: this.ticketQuantity,
+                attendeeInfo: this.attendees[0], // Primary attendee
+                totalAmount: this.calculateTotalAmount()
+            };
+
+            // Create payment intent
+            const response = await fetch(`${CONFIG.API_BASE_URL}/tickets/purchase`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(paymentData)
+            });
+
+            if (!response.ok) {
+                throw new Error('Payment setup failed');
+            }
+
+            const paymentResult = await response.json();
+            
+            // For demo purposes, simulate successful payment
+            // In production, you would integrate with Stripe Elements here
+            await this.delay(2000);
             
             // Store order data for confirmation page
             const orderData = {
@@ -455,7 +479,7 @@ class Checkout {
                 attendees: this.attendees,
                 quantity: this.ticketQuantity,
                 totalAmount: this.calculateTotalAmount(),
-                orderNumber: this.generateOrderNumber(),
+                orderNumber: paymentResult.orderNumber,
                 orderDate: new Date().toISOString()
             };
             
