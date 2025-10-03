@@ -5,10 +5,12 @@ const CONFIG = {
     // Automatically detect environment and use appropriate API URL
     API_BASE_URL: (() => {
         const hostname = window.location.hostname;
+        const port = window.location.port;
         
-        // Local development
-        if (hostname === 'localhost' || hostname === '127.0.0.1') {
-            return 'http://localhost:3001/api';
+        // Local development (localhost or network IP)
+        if (hostname === 'localhost' || hostname === '127.0.0.1' || 
+            (hostname.match(/^192\.168\./) || hostname.match(/^10\./) || hostname.match(/^172\.(1[6-9]|2[0-9]|3[0-1])\./))) {
+            return `http://${hostname}:3001/api`;
         }
         
         // Production - Using a simple API service
