@@ -13,8 +13,8 @@ const CONFIG = {
             return `http://${hostname}:3001/api`;
         }
         
-        // Production - Replace with your Railway URL
-        return 'https://your-railway-url.up.railway.app/api';
+        // Production - Railway backend URL
+        return 'https://studentevents-production.up.railway.app/api';
     })(),
     
     // Stripe Configuration
