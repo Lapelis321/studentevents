@@ -1,10 +1,18 @@
-// Production server for Railway deployment
+// Production server with database integration for Railway deployment
 const express = require('express');
 const cors = require('cors');
-const path = require('path');
+const { Pool } = require('pg');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+// Database connection
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+});
 
 // Middleware
 app.use(cors({
@@ -12,7 +20,7 @@ app.use(cors({
     'http://localhost:8000',
     'https://studentevents.netlify.app',
     'https://studentevents.vercel.app',
-    process.env.FRONTEND_URL || 'https://studentevents.netlify.app'
+    process.env.FRONTEND_URL || 'https://fabulous-pothos-8d2cf9.netlify.app'
   ],
   credentials: true
 }));
@@ -24,144 +32,98 @@ app.get('/health', (req, res) => {
     status: 'OK', 
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
-    environment: process.env.NODE_ENV || 'production'
+    environment: process.env.NODE_ENV || 'production',
+    database: 'connected'
   });
 });
 
-// API endpoints
-app.get('/api/events', (req, res) => {
-  const events = [
-    {
-      id: 1,
-      title: "Spring Music Festival",
-      date: "2024-04-15T19:00:00Z",
-      location: "University Campus",
-      price: 25.00,
-      currency: "EUR",
-      minAge: 18,
-      dressCode: "Casual",
-      description: "Join us for an amazing night of live music featuring local and international artists.",
-      additionalInfo: "Food trucks will be available on-site. Bring your student ID for verification.",
-      availableTickets: 150,
-      totalTickets: 500
-    },
-    {
-      id: 2,
-      title: "Tech Innovation Summit",
-      date: "2024-04-22T14:00:00Z",
-      location: "Convention Center",
-      price: 15.00,
-      currency: "EUR",
-      minAge: 16,
-      dressCode: "Business Casual",
-      description: "Explore the latest in technology and innovation with industry leaders.",
-      additionalInfo: "Networking lunch included. Laptops recommended for workshops.",
-      availableTickets: 200,
-      totalTickets: 300
-    },
-    {
-      id: 3,
-      title: "Art & Culture Night",
-      date: "2024-04-28T18:30:00Z",
-      location: "City Art Gallery",
-      price: 12.00,
-      currency: "EUR",
-      minAge: 16,
-      dressCode: "Smart Casual",
-      description: "An evening celebrating local artists and cultural diversity.",
-      additionalInfo: "Wine and cheese reception included. Photography allowed.",
-      availableTickets: 80,
-      totalTickets: 100
-    }
-  ];
-  
-  res.json(events);
-});
-
-app.get('/api/events/:id', (req, res) => {
-  const eventId = parseInt(req.params.id);
-  const events = [
-    {
-      id: 1,
-      title: "Spring Music Festival",
-      date: "2024-04-15T19:00:00Z",
-      location: "University Campus",
-      price: 25.00,
-      currency: "EUR",
-      minAge: 18,
-      dressCode: "Casual",
-      description: "Join us for an amazing night of live music featuring local and international artists.",
-      additionalInfo: "Food trucks will be available on-site. Bring your student ID for verification. The event will feature multiple stages with different genres of music including rock, pop, electronic, and indie.",
-      availableTickets: 150,
-      totalTickets: 500
-    },
-    {
-      id: 2,
-      title: "Tech Innovation Summit",
-      date: "2024-04-22T14:00:00Z",
-      location: "Convention Center",
-      price: 15.00,
-      currency: "EUR",
-      minAge: 16,
-      dressCode: "Business Casual",
-      description: "Explore the latest in technology and innovation with industry leaders.",
-      additionalInfo: "Networking lunch included. Laptops recommended for workshops. The summit will cover topics including AI, blockchain, cybersecurity, and sustainable technology.",
-      availableTickets: 200,
-      totalTickets: 300
-    },
-    {
-      id: 3,
-      title: "Art & Culture Night",
-      date: "2024-04-28T18:30:00Z",
-      location: "City Art Gallery",
-      price: 12.00,
-      currency: "EUR",
-      minAge: 16,
-      dressCode: "Smart Casual",
-      description: "An evening celebrating local artists and cultural diversity.",
-      additionalInfo: "Wine and cheese reception included. Photography allowed. The event showcases works from emerging local artists, interactive installations, and live performances.",
-      availableTickets: 80,
-      totalTickets: 100
-    }
-  ];
-  
-  const event = events.find(e => e.id === eventId);
-  if (event) {
-    res.json(event);
-  } else {
-    res.status(404).json({ error: 'Event not found' });
+// Get all events from database
+app.get('/api/events', async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT * FROM events WHERE is_active = true ORDER BY date ASC'
+    );
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error fetching events:', error);
+    res.status(500).json({ error: 'Failed to fetch events' });
   }
 });
 
-// Basic auth endpoints
-app.post('/api/auth/login', (req, res) => {
-  const { email, password } = req.body;
-  
-  // Simple mock authentication
-  if (email === 'admin@studentevents.com' && password === 'admin123') {
+// Get single event by ID
+app.get('/api/events/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query(
+      'SELECT * FROM events WHERE id =  AND is_active = true',
+      [id]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+    
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error fetching event:', error);
+    res.status(500).json({ error: 'Failed to fetch event' });
+  }
+});
+
+// User login (with database)
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    
+    // Find user in database
+    const result = await pool.query(
+      'SELECT id, name, email, password_hash, role FROM users WHERE email = ',
+      [email]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+    
+    const user = result.rows[0];
+    
+    // Verify password
+    const isValidPassword = await bcrypt.compare(password, user.password_hash);
+    
+    if (!isValidPassword) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+    
+    // Generate JWT token
+    const token = jwt.sign(
+      { userId: user.id, email: user.email, role: user.role },
+      process.env.JWT_SECRET || 'fallback-secret',
+      { expiresIn: '24h' }
+    );
+    
     res.json({
       success: true,
-      token: 'mock-jwt-token',
+      token,
       user: {
-        id: 1,
-        name: 'Admin User',
-        email: 'admin@studentevents.com',
-        role: 'admin'
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role
       }
     });
-  } else {
-    res.status(401).json({ error: 'Invalid credentials' });
+  } catch (error) {
+    console.error('Error logging in user:', error);
+    res.status(500).json({ error: 'Failed to login' });
   }
 });
 
-// Mock ticket purchase endpoint
+// Mock ticket purchase
 app.post('/api/tickets/purchase', (req, res) => {
   const { eventId, quantity, customerInfo } = req.body;
   
-  // Mock successful purchase
   res.json({
     success: true,
-    ticketId: `TICKET-${Date.now()}`,
+    ticketId: TICKET-,
     eventId: eventId,
     quantity: quantity,
     total: quantity * 25.00,
@@ -178,8 +140,9 @@ app.use((err, req, res, next) => {
 
 // Start server
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Production server running on port ${PORT}`);
-  console.log(`🌐 Health check: http://localhost:${PORT}/health`);
-  console.log(`📚 API Base URL: http://localhost:${PORT}/api`);
-  console.log(`🔗 Frontend URL: ${process.env.FRONTEND_URL || 'https://studentevents.netlify.app'}`);
+  console.log(🚀 Database server running on port );
+  console.log(🌐 Health check: http://localhost:/health);
+  console.log(📚 API Base URL: http://localhost:/api);
+  console.log(🔗 Frontend URL: );
+  console.log(🗄️ Database: );
 });
