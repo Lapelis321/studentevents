@@ -1,19 +1,20 @@
 {
   "name": "studentevents",
   "version": "1.0.0",
-  "description": "Student Event Ticketing System",
-  "main": "api-server.js",
+  "description": "StudentEvents - Full-stack event ticketing platform",
+  "main": "backend/database-server.js",
   "scripts": {
-    "start": "node api-server.js",
+    "start": "cd backend && node database-server.js",
     "dev": "python -m http.server 8000",
-    "api": "node api-server.js",
+    "api": "cd backend && node database-server.js",
     "test": "echo \"No tests specified\" && exit 0"
   },
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^4.18.2",
-    "node-fetch": "^3.3.2",
-    "stripe": "^19.0.0"
+    "pg": "^8.16.3",
+    "bcryptjs": "^3.0.2",
+    "jsonwebtoken": "^9.0.2"
   },
   "engines": {
     "node": ">=18.0.0"
