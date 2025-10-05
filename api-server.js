@@ -55,7 +55,7 @@ app.get('/api/events/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const result = await pool.query(
-      'SELECT * FROM events WHERE id =  AND is_active = true',
+      'SELECT * FROM events WHERE id = $1 AND is_active = true',
       [id]
     );
     
@@ -77,7 +77,7 @@ app.post('/api/auth/login', async (req, res) => {
     
     // Find user in database
     const result = await pool.query(
-      'SELECT id, name, email, password_hash, role FROM users WHERE email = ',
+      'SELECT id, name, email, password_hash, role FROM users WHERE email = $1',
       [email]
     );
     
@@ -123,7 +123,7 @@ app.post('/api/tickets/purchase', (req, res) => {
   
   res.json({
     success: true,
-    ticketId: TICKET-,
+    ticketId: `TICKET-${Date.now()}`,
     eventId: eventId,
     quantity: quantity,
     total: quantity * 25.00,
@@ -140,9 +140,9 @@ app.use((err, req, res, next) => {
 
 // Start server
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(🚀 Database server running on port );
-  console.log(🌐 Health check: http://localhost:/health);
-  console.log(📚 API Base URL: http://localhost:/api);
-  console.log(🔗 Frontend URL: );
-  console.log(🗄️ Database: );
+  console.log(`🚀 Database server running on port ${PORT}`);
+  console.log(`🌐 Health check: http://localhost:${PORT}/health`);
+  console.log(`📚 API Base URL: http://localhost:${PORT}/api`);
+  console.log(`🔗 Frontend URL: ${process.env.FRONTEND_URL || 'https://fabulous-pothos-8d2cf9.netlify.app'}`);
+  console.log(`🗄️ Database: ${process.env.DATABASE_URL ? 'Connected' : 'Not configured'}`);
 });
