@@ -2,10 +2,10 @@
   "name": "studentevents-backend",
   "version": "1.0.0",
   "description": "Backend API for StudentEvents ticketing system",
-  "main": "production-server.js",
+  "main": "database-server.js",
   "scripts": {
     "build": "echo 'No build needed for production server'",
-    "start": "node production-server.js",
+    "start": "node database-server.js",
     "start:full": "node dist/index.js",
     "dev": "nodemon src/index.ts",
     "seed": "ts-node src/scripts/seed.ts",
