@@ -13,8 +13,8 @@ const CONFIG = {
             return `http://${hostname}:3001/api`;
         }
         
-        // Production - Using a simple API service
-        return 'https://studentevents-api.herokuapp.com/api';
+        // Production - Replace with your Railway URL
+        return 'https://your-railway-url.up.railway.app/api';
     })(),
     
     // Stripe Configuration

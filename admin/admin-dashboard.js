@@ -32,6 +32,16 @@ class AdminDashboard {
             e.preventDefault();
             this.saveSystemSettings();
         });
+
+        document.getElementById('policyTextForm')?.addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.savePolicyText();
+        });
+
+        document.getElementById('editEventForm')?.addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.saveEditedEvent();
+        });
     }
 
     loadMockData() {
@@ -42,10 +52,17 @@ class AdminDashboard {
                 name: 'Spring Music Festival',
                 date: '2024-04-15T19:00:00Z',
                 location: 'University Campus',
-                price: 25.00,
+                price: 25.00, // Legacy single price for backward compatibility
+                priceTiers: [
+                    { name: "General Admission", price: 25.00, totalTickets: 300, soldTickets: 200, enabled: true },
+                    { name: "VIP", price: 50.00, totalTickets: 100, soldTickets: 80, enabled: true },
+                    { name: "Student", price: 15.00, totalTickets: 100, soldTickets: 70, enabled: true }
+                ],
                 totalTickets: 500,
                 soldTickets: 350,
-                status: 'upcoming'
+                status: 'upcoming',
+                description: 'A wonderful evening of live music featuring local artists.',
+                image: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800'
             },
             {
                 id: 2,
@@ -370,9 +387,158 @@ class AdminDashboard {
 
     editEvent(eventId) {
         const event = this.events.find(e => e.id === eventId);
-        if (event) {
-            EventTicketingApp.showNotification(`Edit modal for ${event.name} would open here`, 'info');
+        if (!event) return;
+
+        // Store the current event ID for saving
+        this.editingEventId = eventId;
+
+        // Populate the edit form
+        document.getElementById('editEventName').value = event.name;
+        document.getElementById('editEventDate').value = event.date.slice(0, 16); // Convert to datetime-local format
+        document.getElementById('editEventLocation').value = event.location;
+        document.getElementById('editEventDescription').value = event.description || '';
+        document.getElementById('editEventImage').value = event.image || '';
+        document.getElementById('editEventStatus').value = event.status;
+
+        // Populate price tiers
+        this.populatePriceTiers(event.priceTiers || [{ name: 'General', price: event.price, totalTickets: event.totalTickets, soldTickets: event.soldTickets, enabled: true }]);
+
+        // Show the modal
+        document.getElementById('editEventModal').classList.add('active');
+    }
+
+    populatePriceTiers(priceTiers) {
+        const container = document.getElementById('editPriceTiers');
+        container.innerHTML = '';
+
+        priceTiers.forEach((tier, index) => {
+            const tierElement = this.createPriceTierElement(tier, index, 'edit');
+            container.appendChild(tierElement);
+        });
+    }
+
+    createPriceTierElement(tier, index, prefix) {
+        const div = document.createElement('div');
+        div.className = 'price-tier';
+        div.innerHTML = `
+            <div class="form-group">
+                <label class="form-label">Tier Name</label>
+                <input type="text" class="form-input" name="${prefix}PriceTierName${index}" value="${tier.name}" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Price (€)</label>
+                <input type="number" class="form-input" name="${prefix}PriceTierPrice${index}" value="${tier.price}" step="0.01" min="0" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Total Tickets</label>
+                <input type="number" class="form-input" name="${prefix}PriceTierTotal${index}" value="${tier.totalTickets}" min="0" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Enabled</label>
+                <input type="checkbox" class="form-checkbox" name="${prefix}PriceTierEnabled${index}" ${tier.enabled ? 'checked' : ''}>
+            </div>
+            <button type="button" class="price-tier-remove" onclick="adminDashboard.removePriceTier(this, '${prefix}')">
+                <i class="fas fa-trash"></i>
+            </button>
+        `;
+        return div;
+    }
+
+    addPriceTier(prefix) {
+        const container = document.getElementById(`${prefix}PriceTiers`);
+        const index = container.children.length;
+        const tierElement = this.createPriceTierElement({
+            name: '',
+            price: 0,
+            totalTickets: 0,
+            soldTickets: 0,
+            enabled: true
+        }, index, prefix);
+        container.appendChild(tierElement);
+    }
+
+    removePriceTier(button, prefix) {
+        const container = document.getElementById(`${prefix}PriceTiers`);
+        if (container.children.length > 1) {
+            button.parentElement.remove();
+        } else {
+            EventTicketingApp.showNotification('At least one price tier is required', 'warning');
         }
+    }
+
+    closeEditEventModal() {
+        document.getElementById('editEventModal').classList.remove('active');
+        this.editingEventId = null;
+    }
+
+    saveEditedEvent() {
+        if (!this.editingEventId) return;
+
+        const event = this.events.find(e => e.id === this.editingEventId);
+        if (!event) return;
+
+        // Get form data
+        const formData = new FormData(document.getElementById('editEventForm'));
+        
+        // Update basic event properties
+        event.name = formData.get('editEventName');
+        event.date = formData.get('editEventDate') + ':00Z'; // Convert back to ISO format
+        event.location = formData.get('editEventLocation');
+        event.description = formData.get('editEventDescription');
+        event.image = formData.get('editEventImage');
+        event.status = formData.get('editEventStatus');
+
+        // Process price tiers
+        const priceTiers = [];
+        let totalTickets = 0;
+        let soldTickets = 0;
+        let lowestPrice = Infinity;
+
+        // Collect all price tier data
+        const tierData = {};
+        for (let [key, value] of formData.entries()) {
+            if (key.startsWith('editPriceTier')) {
+                const match = key.match(/editPriceTier(\w+)(\d+)/);
+                if (match) {
+                    const [, field, index] = match;
+                    if (!tierData[index]) tierData[index] = {};
+                    tierData[index][field] = value;
+                }
+            }
+        }
+
+        // Process each tier
+        Object.keys(tierData).forEach(index => {
+            const tier = tierData[index];
+            const priceTier = {
+                name: tier.Name || '',
+                price: parseFloat(tier.Price) || 0,
+                totalTickets: parseInt(tier.Total) || 0,
+                soldTickets: parseInt(tier.Sold) || 0, // Preserve existing sold tickets
+                enabled: tier.Enabled === 'on'
+            };
+            
+            if (tier.Name && tier.Price) {
+                priceTiers.push(priceTier);
+                totalTickets += priceTier.totalTickets;
+                soldTickets += priceTier.soldTickets;
+                if (priceTier.price < lowestPrice) {
+                    lowestPrice = priceTier.price;
+                }
+            }
+        });
+
+        // Update event with new data
+        event.priceTiers = priceTiers;
+        event.totalTickets = totalTickets;
+        event.soldTickets = soldTickets; // Preserve existing sold tickets
+        event.price = lowestPrice; // Update legacy price field
+
+        // Close modal and refresh
+        this.closeEditEventModal();
+        this.renderEventsTab();
+        
+        EventTicketingApp.showNotification(`Event "${event.name}" updated successfully`, 'success');
     }
 
     deleteEvent(eventId) {
@@ -388,6 +554,59 @@ class AdminDashboard {
         const csvContent = this.generateEventsCSV();
         this.downloadCSV(csvContent, 'events.csv');
         EventTicketingApp.showNotification('Events exported successfully', 'success');
+    }
+
+    exportParticipants() {
+        // Generate participant data for all events
+        const participantData = [];
+        
+        this.events.forEach(event => {
+            // Generate mock participant data for each event
+            const participants = this.generateMockParticipants(event);
+            
+            participants.forEach(participant => {
+                participantData.push({
+                    'Event Name': event.name,
+                    'Event Date': this.formatDate(event.date),
+                    'Event Location': event.location,
+                    'Participant Name': participant.name,
+                    'Email': participant.email,
+                    'Phone': participant.phone,
+                    'Ticket Type': participant.ticketType,
+                    'Price Paid': `€${participant.pricePaid}`,
+                    'Purchase Date': participant.purchaseDate,
+                    'Status': participant.status
+                });
+            });
+        });
+
+        // Export to CSV
+        this.downloadCSV(participantData, 'event_participants.csv');
+        EventTicketingApp.showNotification('Participant data exported successfully', 'success');
+    }
+
+    generateMockParticipants(event) {
+        const participants = [];
+        const ticketTypes = event.priceTiers ? event.priceTiers.map(tier => tier.name) : ['General'];
+        
+        // Generate participants based on sold tickets
+        for (let i = 0; i < event.soldTickets; i++) {
+            const ticketType = ticketTypes[i % ticketTypes.length];
+            const tier = event.priceTiers ? event.priceTiers.find(t => t.name === ticketType) : null;
+            const price = tier ? tier.price : event.price;
+            
+            participants.push({
+                name: `Participant ${i + 1}`,
+                email: `participant${i + 1}@example.com`,
+                phone: `+1-555-${String(i + 1).padStart(4, '0')}`,
+                ticketType: ticketType,
+                pricePaid: price,
+                purchaseDate: this.formatDate(new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000)),
+                status: 'Confirmed'
+            });
+        }
+        
+        return participants;
     }
 
     generateEventsCSV() {
@@ -623,6 +842,26 @@ class AdminDashboard {
         EventTicketingApp.showNotification('System settings saved successfully', 'success');
     }
 
+    savePolicyText() {
+        const formData = new FormData(document.getElementById('policyTextForm'));
+        const policyTexts = Object.fromEntries(formData);
+        
+        // Save to localStorage for persistence
+        localStorage.setItem('adminSettings', JSON.stringify({
+            ...this.settings,
+            policyTexts: policyTexts
+        }));
+        
+        // Update current settings
+        this.settings = { ...this.settings, policyTexts: policyTexts };
+        
+        // Apply policy text changes to the rules page
+        this.applyPolicyTextChanges(policyTexts);
+        
+        console.log('Saving policy text:', policyTexts);
+        EventTicketingApp.showNotification('Policy text saved successfully', 'success');
+    }
+
     // Helper methods to apply settings changes
     applyOrganizationName(orgName) {
         // Update all instances of "StudentEvents" with the new organization name
@@ -635,6 +874,9 @@ class AdminDashboard {
         
         // Update page titles
         document.title = document.title.replace('StudentEvents', orgName);
+        
+        // Store organization name for other pages to use
+        localStorage.setItem('organizationName', orgName);
         
         // Update any other hardcoded references
         const allElements = document.querySelectorAll('*');
@@ -682,6 +924,13 @@ class AdminDashboard {
         localStorage.setItem('serviceFee', fee);
     }
     
+    applyPolicyTextChanges(policyTexts) {
+        // Store policy texts for the rules page to use
+        localStorage.setItem('privacyPolicyText', policyTexts.privacyPolicyText || '');
+        localStorage.setItem('refundPolicyText', policyTexts.refundPolicyText || '');
+        localStorage.setItem('termsOfServiceText', policyTexts.termsOfServiceText || '');
+    }
+    
     loadSettingsFromStorage() {
         // Load settings from localStorage on page load
         const savedSettings = localStorage.getItem('adminSettings');
@@ -720,6 +969,15 @@ class AdminDashboard {
                     } else {
                         input.value = this.settings.system[key];
                     }
+                }
+            });
+        }
+        
+        if (this.settings.policyTexts) {
+            Object.keys(this.settings.policyTexts).forEach(key => {
+                const textarea = document.getElementById(key);
+                if (textarea) {
+                    textarea.value = this.settings.policyTexts[key];
                 }
             });
         }

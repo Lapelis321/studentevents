@@ -11,6 +11,7 @@ class EventTicketingApp {
         this.setupMobileMenu();
         this.setupSmoothScrolling();
         this.setupAccessibility();
+        this.loadOrganizationName();
     }
 
     // Mobile menu functionality
@@ -281,6 +282,39 @@ class EventTicketingApp {
                 inThrottle = true;
                 setTimeout(() => inThrottle = false, limit);
             }
+        }
+    }
+    
+    loadOrganizationName() {
+        // Load organization name from localStorage and update page elements
+        const orgName = localStorage.getItem('organizationName');
+        if (orgName) {
+            // Update page title
+            document.title = document.title.replace('StudentEvents', orgName);
+            
+            // Update logo spans
+            const logoSpans = document.querySelectorAll('.logo span');
+            logoSpans.forEach(span => {
+                if (span.textContent.includes('StudentEvents')) {
+                    span.textContent = span.textContent.replace('StudentEvents', orgName);
+                }
+            });
+            
+            // Update footer copyright
+            const footerTexts = document.querySelectorAll('.footer-info p');
+            footerTexts.forEach(p => {
+                if (p.textContent.includes('StudentEvents')) {
+                    p.textContent = p.textContent.replace('StudentEvents', orgName);
+                }
+            });
+            
+            // Update any other hardcoded references
+            const allElements = document.querySelectorAll('*');
+            allElements.forEach(element => {
+                if (element.textContent && element.textContent.includes('StudentEvents')) {
+                    element.textContent = element.textContent.replace('StudentEvents', orgName);
+                }
+            });
         }
     }
 }

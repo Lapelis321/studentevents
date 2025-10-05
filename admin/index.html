@@ -139,7 +139,11 @@
                             <div class="table-actions">
                                 <button class="btn btn-secondary btn-sm" onclick="adminDashboard.exportEvents()">
                                     <i class="fas fa-download"></i>
-                                    Export
+                                    Export Events
+                                </button>
+                                <button class="btn btn-primary btn-sm" onclick="adminDashboard.exportParticipants()">
+                                    <i class="fas fa-users"></i>
+                                    Export Participants
                                 </button>
                             </div>
                         </div>
@@ -287,6 +291,32 @@
                             </form>
                         </div>
 
+                        <!-- Policy Text Editor -->
+                        <div class="settings-section">
+                            <h3 class="settings-section-title">
+                                <i class="fas fa-edit"></i>
+                                Policy Text Editor
+                            </h3>
+                            <form class="settings-form" id="policyTextForm">
+                                <div class="form-group">
+                                    <label class="form-label" for="privacyPolicyText">Privacy Policy Text</label>
+                                    <textarea class="form-textarea" id="privacyPolicyText" rows="8" placeholder="Enter privacy policy text here...">We collect information you provide directly to us, such as when you create an account, purchase tickets, or contact us for support. This may include name, email address, and phone number. We use this information to provide and improve our services.</textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="refundPolicyText">Refund Policy Text</label>
+                                    <textarea class="form-textarea" id="refundPolicyText" rows="6" placeholder="Enter refund policy text here...">Refunds are available up to 24 hours before the event. Service fees are non-refundable. To request a refund, contact us with your ticket information.</textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="termsOfServiceText">Terms of Service Text</label>
+                                    <textarea class="form-textarea" id="termsOfServiceText" rows="6" placeholder="Enter terms of service text here...">By using our service, you agree to follow our code of conduct and respect other attendees. We reserve the right to remove anyone who violates these terms.</textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i>
+                                    Save Policy Text
+                                </button>
+                            </form>
+                        </div>
+
                         <!-- System Settings -->
                         <div class="settings-section">
                             <h3 class="settings-section-title">
@@ -371,6 +401,72 @@
     </footer>
 
     <script src="/scripts/main.js"></script>
+    <!-- Edit Event Modal -->
+    <div class="modal" id="editEventModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Edit Event</h3>
+                <button class="modal-close" onclick="adminDashboard.closeEditEventModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form class="modal-form" id="editEventForm">
+                <div class="form-group">
+                    <label class="form-label" for="editEventName">Event Name</label>
+                    <input type="text" class="form-input" id="editEventName" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="editEventDate">Date & Time</label>
+                    <input type="datetime-local" class="form-input" id="editEventDate" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="editEventLocation">Location</label>
+                    <input type="text" class="form-input" id="editEventLocation" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="editEventDescription">Description</label>
+                    <textarea class="form-textarea" id="editEventDescription" rows="4"></textarea>
+                </div>
+                
+                <!-- Price Tiers Section -->
+                <div class="form-group">
+                    <label class="form-label">Price Tiers</label>
+                    <div id="editPriceTiers">
+                        <!-- Price tiers will be dynamically added here -->
+                    </div>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="adminDashboard.addPriceTier('edit')">
+                        <i class="fas fa-plus"></i> Add Price Tier
+                    </button>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="editEventImage">Event Image URL</label>
+                    <input type="url" class="form-input" id="editEventImage" placeholder="https://example.com/image.jpg">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="editEventStatus">Status</label>
+                    <select class="form-input" id="editEventStatus">
+                        <option value="active">Active</option>
+                        <option value="sold-out">Sold Out</option>
+                        <option value="cancelled">Cancelled</option>
+                        <option value="completed">Completed</option>
+                    </select>
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="adminDashboard.closeEditEventModal()">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i>
+                        Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script src="/admin/admin-dashboard.js"></script>
     <script>
         // Simple access control - in production, use proper authentication

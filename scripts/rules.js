@@ -11,6 +11,7 @@ class RulesPage {
         this.setupPrintFunctionality();
         this.trackReadingProgress();
         this.loadContactInfo();
+        this.loadPolicyTexts();
     }
 
     setupSmoothScrolling() {
@@ -288,6 +289,37 @@ class RulesPage {
                 element.href = `tel:${contactPhone}`;
                 element.textContent = contactPhone;
             });
+        }
+    }
+    
+    loadPolicyTexts() {
+        // Load policy texts from localStorage (set by admin)
+        const privacyPolicyText = localStorage.getItem('privacyPolicyText');
+        const refundPolicyText = localStorage.getItem('refundPolicyText');
+        const termsOfServiceText = localStorage.getItem('termsOfServiceText');
+        
+        if (privacyPolicyText) {
+            // Update privacy policy section
+            const privacySection = document.querySelector('#privacy-policy .section-content p');
+            if (privacySection) {
+                privacySection.textContent = privacyPolicyText;
+            }
+        }
+        
+        if (refundPolicyText) {
+            // Update refund policy section
+            const refundSection = document.querySelector('#refund-policy .section-content p');
+            if (refundSection) {
+                refundSection.textContent = refundPolicyText;
+            }
+        }
+        
+        if (termsOfServiceText) {
+            // Update terms of service section
+            const termsSection = document.querySelector('#code-of-conduct .section-content p');
+            if (termsSection) {
+                termsSection.textContent = termsOfServiceText;
+            }
         }
     }
 }
