@@ -20,7 +20,7 @@ app.use(cors({
     'http://localhost:8000',
     'https://studentevents.netlify.app',
     'https://studentevents.vercel.app',
-    process.env.FRONTEND_URL || 'https://fabulous-pothos-8d2cf9.netlify.app'
+    process.env.FRONTEND_URL || 'https://afterstateevents.netlify.app'
   ],
   credentials: true
 }));
@@ -143,6 +143,6 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Database server running on port ${PORT}`);
   console.log(`🌐 Health check: http://localhost:${PORT}/health`);
   console.log(`📚 API Base URL: http://localhost:${PORT}/api`);
-  console.log(`🔗 Frontend URL: ${process.env.FRONTEND_URL || 'https://fabulous-pothos-8d2cf9.netlify.app'}`);
+  console.log(`🔗 Frontend URL: ${process.env.FRONTEND_URL || 'https://afterstateevents.netlify.app'}`);
   console.log(`🗄️ Database: ${process.env.DATABASE_URL ? 'Connected' : 'Not configured'}`);
 });

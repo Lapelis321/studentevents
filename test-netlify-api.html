@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Netlify API Functions</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-button {
+            background: #007cba;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-button:hover {
+            background: #005a87;
+        }
+        .result {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+        .success { border-color: #28a745; background: #d4edda; }
+        .error { border-color: #dc3545; background: #f8d7da; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Netlify API Functions Test</h1>
+    
+    <div class="test-section">
+        <h3>Health Check</h3>
+        <button class="test-button" onclick="testHealth()">Test Health Endpoint</button>
+        <div id="health-result" class="result" style="display: none;"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Events API</h3>
+        <button class="test-button" onclick="testEvents()">Test Events Endpoint</button>
+        <div id="events-result" class="result" style="display: none;"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Admin Login</h3>
+        <button class="test-button" onclick="testAdminLogin()">Test Admin Login</button>
+        <div id="admin-result" class="result" style="display: none;"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Worker Login</h3>
+        <button class="test-button" onclick="testWorkerLogin()">Test Worker Login</button>
+        <div id="worker-result" class="result" style="display: none;"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://afterstate.events/.netlify/functions';
+        
+        function showResult(elementId, content, isSuccess = true) {
+            const element = document.getElementById(elementId);
+            element.textContent = content;
+            element.className = `result ${isSuccess ? 'success' : 'error'}`;
+            element.style.display = 'block';
+        }
+        
+        async function testHealth() {
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                const data = await response.json();
+                showResult('health-result', `✅ Health Check Success!\n\nStatus: ${response.status}\nResponse: ${JSON.stringify(data, null, 2)}`);
+            } catch (error) {
+                showResult('health-result', `❌ Health Check Failed!\n\nError: ${error.message}`, false);
+            }
+        }
+        
+        async function testEvents() {
+            try {
+                const response = await fetch(`${API_BASE}/events`);
+                const data = await response.json();
+                showResult('events-result', `✅ Events API Success!\n\nStatus: ${response.status}\nEvents Count: ${data.length}\nResponse: ${JSON.stringify(data, null, 2)}`);
+            } catch (error) {
+                showResult('events-result', `❌ Events API Failed!\n\nError: ${error.message}`, false);
+            }
+        }
+        
+        async function testAdminLogin() {
+            try {
+                const response = await fetch(`${API_BASE}/admin-login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'admin@studentevents.com',
+                        password: 'admin123'
+                    })
+                });
+                const data = await response.json();
+                showResult('admin-result', `✅ Admin Login Success!\n\nStatus: ${response.status}\nResponse: ${JSON.stringify(data, null, 2)}`);
+            } catch (error) {
+                showResult('admin-result', `❌ Admin Login Failed!\n\nError: ${error.message}`, false);
+            }
+        }
+        
+        async function testWorkerLogin() {
+            try {
+                const response = await fetch(`${API_BASE}/worker-login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'john.worker@studentevents.com',
+                        password: 'worker123'
+                    })
+                });
+                const data = await response.json();
+                showResult('worker-result', `✅ Worker Login Success!\n\nStatus: ${response.status}\nResponse: ${JSON.stringify(data, null, 2)}`);
+            } catch (error) {
+                showResult('worker-result', `❌ Worker Login Failed!\n\nError: ${error.message}`, false);
+            }
+        }
+        
+        // Auto-run tests on page load
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                testHealth();
+                testEvents();
+                testAdminLogin();
+                testWorkerLogin();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

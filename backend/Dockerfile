@@ -10,11 +10,11 @@ COPY package*.json ./
 # Install only production dependencies
 RUN npm ci --only=production
 
-# Copy the production server
-COPY production-server.js ./
+# Copy the simple server
+COPY simple-server.js ./
 
 # Expose port
 EXPOSE 3001
 
-# Start the production server
-CMD ["node", "production-server.js"]
+# Start the simple server
+CMD ["node", "simple-server.js"]

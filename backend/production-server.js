@@ -7,7 +7,7 @@ const jwt = require('jsonwebtoken');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
-const FRONTEND_URL = process.env.FRONTEND_URL || 'https://fabulous-pothos-8d2cf9.netlify.app';
+const FRONTEND_URL = process.env.FRONTEND_URL || 'https://afterstate.events';
 
 // In-memory storage for mock data (persists across requests until server restart)
 let mockEventsStore = [
@@ -85,7 +85,7 @@ app.use(cors({
     'http://127.0.0.1:8000',
     'https://studentevents.netlify.app',
     'https://studentevents.vercel.app',
-    process.env.FRONTEND_URL || 'https://fabulous-pothos-8d2cf9.netlify.app'
+    process.env.FRONTEND_URL || 'https://afterstateevents.netlify.app'
   ],
   credentials: true
 }));

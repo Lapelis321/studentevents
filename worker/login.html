@@ -167,12 +167,12 @@
             
             console.log('Email entered:', email);
             
-            const API_BASE_URL = window.CONFIG?.API_BASE_URL?.replace('/api', '') || 'https://studentevents-production.up.railway.app';
+            const API_BASE_URL = window.CONFIG?.API_BASE_URL || 'https://afterstate.events/.netlify/functions';
             
             try {
                 console.log('📡 Calling API login...');
                 
-                const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+                const response = await fetch(`${API_BASE_URL}/worker-login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password })

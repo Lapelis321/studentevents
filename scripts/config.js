@@ -13,8 +13,8 @@ const CONFIG = {
             return `http://${hostname}:3001/api`;
         }
         
-        // Production - Railway backend URL
-        return 'https://studentevents-production.up.railway.app/api';
+        // Production - Netlify Functions
+        return 'https://afterstate.events/.netlify/functions';
     })(),
     
     // Stripe Configuration
