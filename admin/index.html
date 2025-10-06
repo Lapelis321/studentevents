@@ -471,17 +471,176 @@
     <script src="/admin/admin-dashboard.js"></script>
     <script src="/admin/admin-api-connector.js"></script>
     <script>
-        // Simple access control - in production, use proper authentication
-        document.addEventListener('DOMContentLoaded', () => {
-            const hasAccess = sessionStorage.getItem('adminAccess');
-            if (!hasAccess) {
+        // Proper authentication check with JWT token validation
+        document.addEventListener('DOMContentLoaded', async () => {
+            const isAuthenticated = await checkAuthentication();
+            if (!isAuthenticated) {
                 window.location.href = 'login.html';
             }
         });
         
+        async function checkAuthentication() {
+            try {
+                // Check if JWT token exists
+                const token = localStorage.getItem('adminToken');
+                if (!token) {
+                    console.log('❌ No JWT token found');
+                    return false;
+                }
+                
+                // Check token expiration
+                try {
+                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    const now = Math.floor(Date.now() / 1000);
+                    
+                    if (payload.exp < now) {
+                        console.log('❌ JWT token expired');
+                        clearAuthData();
+                        return false;
+                    }
+                } catch (error) {
+                    console.log('❌ Invalid JWT token format');
+                    clearAuthData();
+                    return false;
+                }
+                
+                // Verify token with server (with fallback)
+                const API_BASE_URL = window.CONFIG?.API_BASE_URL?.replace('/api', '') || 'https://studentevents-production.up.railway.app';
+                try {
+                    const response = await fetch(`${API_BASE_URL}/api/auth/verify`, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (!data.success || data.user.role !== 'admin') {
+                            console.log('❌ User is not an admin');
+                            clearAuthData();
+                            return false;
+                        }
+                        console.log('✅ Server token verification successful');
+                    } else {
+                        console.log('⚠️ Server verification failed, using client-side validation');
+                        // Fallback to client-side validation
+                        const payload = JSON.parse(atob(token.split('.')[1]));
+                        if (payload.role !== 'admin') {
+                            console.log('❌ User is not an admin (client-side check)');
+                            clearAuthData();
+                            return false;
+                        }
+                    }
+                } catch (error) {
+                    console.log('⚠️ Server verification error, using client-side validation:', error.message);
+                    // Fallback to client-side validation
+                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    if (payload.role !== 'admin') {
+                        console.log('❌ User is not an admin (client-side check)');
+                        clearAuthData();
+                        return false;
+                    }
+                }
+                
+                console.log('✅ Authentication successful');
+                startTokenValidation(); // Start periodic token validation
+                return true;
+                
+            } catch (error) {
+                console.error('❌ Authentication check failed:', error);
+                clearAuthData();
+                return false;
+            }
+        }
+        
+        function clearAuthData() {
+            localStorage.removeItem('adminToken');
+            localStorage.removeItem('adminUser');
+            sessionStorage.removeItem('adminAccess');
+        }
+        
+        // Periodic token validation (every 5 minutes)
+        function startTokenValidation() {
+            setInterval(async () => {
+                const token = localStorage.getItem('adminToken');
+                if (token) {
+                    try {
+                        const payload = JSON.parse(atob(token.split('.')[1]));
+                        const now = Math.floor(Date.now() / 1000);
+                        const timeUntilExpiry = payload.exp - now;
+                        
+                        // If token expires in less than 5 minutes, refresh it
+                        if (timeUntilExpiry < 300) {
+                            console.log('🔄 Token expiring soon, refreshing...');
+                            await refreshToken();
+                        }
+                    } catch (error) {
+                        console.error('Token validation error:', error);
+                        clearAuthData();
+                        window.location.href = 'login.html';
+                    }
+                }
+            }, 300000); // Check every 5 minutes
+        }
+        
+        async function refreshToken() {
+            try {
+                const token = localStorage.getItem('adminToken');
+                const API_BASE_URL = window.CONFIG?.API_BASE_URL?.replace('/api', '') || 'https://studentevents-production.up.railway.app';
+                
+                const response = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    localStorage.setItem('adminToken', data.token);
+                    console.log('✅ Token refreshed successfully');
+                } else {
+                    throw new Error('Token refresh failed');
+                }
+            } catch (error) {
+                console.error('Token refresh failed:', error);
+                clearAuthData();
+                window.location.href = 'login.html';
+            }
+        }
+        
         function adminLogout() {
             if (confirm('Are you sure you want to logout?')) {
+                // Clear all authentication data
+                localStorage.removeItem('adminToken');
+                localStorage.removeItem('adminUser');
                 sessionStorage.removeItem('adminAccess');
+                
+                // Optional: Call logout API to invalidate token on server
+                const token = localStorage.getItem('adminToken');
+                if (token) {
+                    fetch('https://studentevents-production.up.railway.app/api/auth/logout', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        }
+                    }).then(response => {
+                        if (response.ok) {
+                            console.log('✅ Server logout successful');
+                        } else {
+                            console.log('⚠️ Server logout failed, but continuing with client logout');
+                        }
+                    }).catch(error => {
+                        console.warn('⚠️ Logout API call failed, but continuing with client logout:', error.message);
+                        // Continue with logout even if API call fails
+                    });
+                }
+                
+                // Redirect to login page
                 window.location.href = 'login.html';
             }
         }
