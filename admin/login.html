@@ -99,12 +99,92 @@
         }
         
         .demo-credentials code {
-            background-color: var(--primary-500);
+            background-color: var(--gray-600);
             color: var(--text-white);
             padding: var(--space-1) var(--space-2);
             border-radius: var(--radius-sm);
             font-family: monospace;
+            font-size: var(--font-size-xs);
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: var(--space-3);
+            border: 2px solid var(--gray-200);
+            border-radius: var(--radius-md);
+            font-size: var(--font-size-base);
+            transition: border-color 0.2s ease;
+            background-color: var(--bg-primary);
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-500);
+            box-shadow: 0 0 0 3px var(--primary-100);
+        }
+        
+        .form-input::placeholder {
+            color: var(--text-muted);
+        }
+        
+        .login-btn {
+            width: 100%;
+            padding: var(--space-3);
+            background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%);
+            color: var(--text-white);
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: var(--font-size-base);
+            font-weight: var(--font-semibold);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-2);
+        }
+        
+        .login-btn:hover {
+            background: linear-gradient(135deg, var(--primary-600) 0%, var(--primary-700) 100%);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .login-btn:active {
+            transform: translateY(0);
+        }
+        
+        .message {
+            padding: var(--space-3);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--space-4);
             font-size: var(--font-size-sm);
+            font-weight: var(--font-medium);
+            text-align: center;
+            animation: slideIn 0.3s ease;
+        }
+        
+        .message.success {
+            background-color: var(--green-50);
+            color: var(--green-700);
+            border: 1px solid var(--green-200);
+        }
+        
+        .message.error {
+            background-color: var(--red-50);
+            color: var(--red-700);
+            border: 1px solid var(--red-200);
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
     </style>
 </head>
@@ -121,14 +201,15 @@
                 <p><strong>Demo Credentials:</strong></p>
                 <p>Email: <code>admin@studentevents.com</code></p>
                 <p>Password: <code>admin123</code></p>
+                <p><small>Enter these credentials to test the admin panel</small></p>
             </div>
             
             <form class="login-form" onsubmit="adminLogin(event)">
                 <div class="form-group">
-                    <input type="email" id="email" name="email" class="form-input" placeholder="Email" value="admin@studentevents.com" required>
+                    <input type="email" id="email" name="email" class="form-input" placeholder="Enter your email address" autocomplete="username" required>
                 </div>
                 <div class="form-group">
-                    <input type="password" id="password" name="password" class="form-input" placeholder="Password" value="admin123" required>
+                    <input type="password" id="password" name="password" class="form-input" placeholder="Enter your password" autocomplete="current-password" required>
                 </div>
                 <button type="submit" class="login-btn">
                     <i class="fas fa-sign-in-alt"></i>
@@ -145,15 +226,58 @@
 
     <script src="/scripts/config.js?v=2025-10-06-20-30"></script>
     <script>
+        function showMessage(text, type) {
+            // Remove existing messages
+            const existingMessage = document.querySelector('.message');
+            if (existingMessage) {
+                existingMessage.remove();
+            }
+            
+            // Create new message
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            messageDiv.textContent = text;
+            
+            // Insert before the form
+            const form = document.querySelector('.login-form');
+            form.parentNode.insertBefore(messageDiv, form);
+            
+            // Auto-remove success messages after 3 seconds
+            if (type === 'success') {
+                setTimeout(() => {
+                    if (messageDiv.parentNode) {
+                        messageDiv.remove();
+                    }
+                }, 3000);
+            }
+        }
+        
         async function adminLogin(event) {
             event.preventDefault();
             console.log('🔐 Admin login attempt started');
             
             // Get form inputs
-            const email = event.target.querySelector('input[type="text"]').value.trim();
+            const email = event.target.querySelector('input[type="email"]').value.trim();
             const password = event.target.querySelector('input[type="password"]').value.trim();
             
+            // Validate inputs
+            if (!email || !password) {
+                showMessage('Please enter both email and password.', 'error');
+                return;
+            }
+            
+            if (!email.includes('@')) {
+                showMessage('Please enter a valid email address.', 'error');
+                return;
+            }
+            
             console.log('Email entered:', email);
+            
+            // Show loading state
+            const submitBtn = event.target.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in...';
+            submitBtn.disabled = true;
             
             const API_BASE_URL = window.CONFIG?.API_BASE_URL?.replace('/api', '') || 'https://studentevents-production.up.railway.app';
             
@@ -179,28 +303,40 @@
                     
                     console.log('✅ Token saved:', data.token.substring(0, 20) + '...');
                     
-                    alert('Login successful! Redirecting to dashboard...');
-                    window.location.href = 'index.html';
+                    // Show success message
+                    showMessage('Login successful! Redirecting to dashboard...', 'success');
+                    
+                    // Redirect after a short delay
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 1500);
                 } else {
                     console.log('❌ Login failed: Not an admin account');
-                    alert('Invalid credentials or not an admin account!');
+                    showMessage('Invalid credentials or not an admin account!', 'error');
                 }
                 
             } catch (error) {
                 console.error('❌ Login failed:', error);
-                alert('Login failed: ' + error.message + '\n\nPlease check your connection.');
+                showMessage('Login failed: ' + error.message + '. Please check your connection.', 'error');
+            } finally {
+                // Reset button state
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
             }
         }
         
-        // Auto-fill demo credentials on page load
+        // Clear any auto-filled values on page load
         document.addEventListener('DOMContentLoaded', function() {
-            const emailInput = document.querySelector('input[type="text"]');
+            const emailInput = document.querySelector('input[type="email"]');
             const passwordInput = document.querySelector('input[type="password"]');
             
             if (emailInput && passwordInput) {
-                emailInput.value = 'admin@studentevents.com';
-                emailInput.placeholder = 'admin@studentevents.com';
-                passwordInput.value = 'admin123';
+                // Clear any auto-filled values
+                emailInput.value = '';
+                passwordInput.value = '';
+                
+                // Focus on email input
+                emailInput.focus();
             }
         });
     </script>
