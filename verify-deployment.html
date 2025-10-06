@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Deployment Verification</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+</head>
+<body>
+    <h1>🚀 Deployment Verification</h1>
+    <p>This page verifies that the NEW authentication code is deployed.</p>
+    
+    <h2>Test 1: Check Admin Login Page</h2>
+    <button onclick="checkAdminPage()">Check Admin Login Page</button>
+    <div id="adminCheck"></div>
+    
+    <h2>Test 2: Check Worker Login Page</h2>
+    <button onclick="checkWorkerPage()">Check Worker Login Page</button>
+    <div id="workerCheck"></div>
+    
+    <h2>Test 3: Test API Connection</h2>
+    <button onclick="testAPI()">Test Railway API</button>
+    <div id="apiCheck"></div>
+
+    <script>
+        async function checkAdminPage() {
+            try {
+                const response = await fetch('/admin/login.html?v=' + Date.now());
+                const html = await response.text();
+                
+                const hasEmail = html.includes('admin@studentevents.com');
+                const hasUsername = html.includes('Username: <code>admin</code>');
+                const hasUpdated = html.includes('UPDATED: Now uses Railway API');
+                
+                document.getElementById('adminCheck').innerHTML = `
+                    <h3>Admin Login Page Check:</h3>
+                    <p><strong>Has Email:</strong> ${hasEmail ? '✅ YES' : '❌ NO'}</p>
+                    <p><strong>Has Old Username:</strong> ${hasUsername ? '❌ YES (OLD)' : '✅ NO (GOOD)'}</p>
+                    <p><strong>Has Updated Text:</strong> ${hasUpdated ? '✅ YES' : '❌ NO'}</p>
+                    <p><strong>Status:</strong> ${hasEmail && !hasUsername && hasUpdated ? '✅ NEW CODE DEPLOYED' : '❌ OLD CODE STILL SERVED'}</p>
+                `;
+            } catch (error) {
+                document.getElementById('adminCheck').innerHTML = `<p>Error: ${error.message}</p>`;
+            }
+        }
+        
+        async function checkWorkerPage() {
+            try {
+                const response = await fetch('/worker/login.html?v=' + Date.now());
+                const html = await response.text();
+                
+                const hasEmail = html.includes('john.worker@studentevents.com');
+                const hasCacheHeaders = html.includes('Cache-Control');
+                
+                document.getElementById('workerCheck').innerHTML = `
+                    <h3>Worker Login Page Check:</h3>
+                    <p><strong>Has Email:</strong> ${hasEmail ? '✅ YES' : '❌ NO'}</p>
+                    <p><strong>Has Cache Headers:</strong> ${hasCacheHeaders ? '✅ YES' : '❌ NO'}</p>
+                    <p><strong>Status:</strong> ${hasEmail && hasCacheHeaders ? '✅ NEW CODE DEPLOYED' : '❌ OLD CODE STILL SERVED'}</p>
+                `;
+            } catch (error) {
+                document.getElementById('workerCheck').innerHTML = `<p>Error: ${error.message}</p>`;
+            }
+        }
+        
+        async function testAPI() {
+            try {
+                const response = await fetch('https://studentevents-production.up.railway.app/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'admin@studentevents.com',
+                        password: 'admin123'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                document.getElementById('apiCheck').innerHTML = `
+                    <h3>Railway API Test:</h3>
+                    <p><strong>Status:</strong> ${response.status}</p>
+                    <p><strong>Success:</strong> ${data.success ? '✅ YES' : '❌ NO'}</p>
+                    <p><strong>Token:</strong> ${data.token ? '✅ YES' : '❌ NO'}</p>
+                    <p><strong>User Role:</strong> ${data.user ? data.user.role : 'None'}</p>
+                `;
+            } catch (error) {
+                document.getElementById('apiCheck').innerHTML = `<p>Error: ${error.message}</p>`;
+            }
+        }
+        
+        // Auto-run checks
+        window.onload = function() {
+            checkAdminPage();
+            checkWorkerPage();
+            testAPI();
+        };
+    </script>
+</body>
+</html>
