@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick API Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f0f0f0; }
+        .test { background: white; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .success { border-left: 4px solid #28a745; }
+        .error { border-left: 4px solid #dc3545; }
+        .loading { border-left: 4px solid #ffc107; }
+        button { background: #007cba; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 4px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🚀 Quick API Test</h1>
+    <button onclick="runAllTests()">Run All Tests</button>
+    
+    <div id="health" class="test loading">
+        <h3>Health Check</h3>
+        <div id="health-result">Testing...</div>
+    </div>
+    
+    <div id="events" class="test loading">
+        <h3>Events API</h3>
+        <div id="events-result">Testing...</div>
+    </div>
+    
+    <div id="admin" class="test loading">
+        <h3>Admin Login</h3>
+        <div id="admin-result">Testing...</div>
+    </div>
+    
+    <div id="worker" class="test loading">
+        <h3>Worker Login</h3>
+        <div id="worker-result">Testing...</div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://afterstate.events/.netlify/functions';
+        
+        function updateTest(testId, success, message) {
+            const element = document.getElementById(testId);
+            const resultElement = document.getElementById(testId + '-result');
+            
+            element.className = `test ${success ? 'success' : 'error'}`;
+            resultElement.innerHTML = `<pre>${message}</pre>`;
+        }
+        
+        async function testHealth() {
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                const data = await response.json();
+                updateTest('health', true, `✅ SUCCESS!\nStatus: ${response.status}\nResponse: ${JSON.stringify(data, null, 2)}`);
+            } catch (error) {
+                updateTest('health', false, `❌ FAILED!\nError: ${error.message}`);
+            }
+        }
+        
+        async function testEvents() {
+            try {
+                const response = await fetch(`${API_BASE}/events`);
+                const data = await response.json();
+                updateTest('events', true, `✅ SUCCESS!\nStatus: ${response.status}\nEvents: ${data.length}\nFirst Event: ${data[0]?.title || 'None'}`);
+            } catch (error) {
+                updateTest('events', false, `❌ FAILED!\nError: ${error.message}`);
+            }
+        }
+        
+        async function testAdminLogin() {
+            try {
+                const response = await fetch(`${API_BASE}/admin-login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: 'admin@studentevents.com', password: 'admin123' })
+                });
+                const data = await response.json();
+                updateTest('admin', true, `✅ SUCCESS!\nStatus: ${response.status}\nLogin: ${data.success ? 'YES' : 'NO'}\nUser: ${data.user?.email || 'None'}`);
+            } catch (error) {
+                updateTest('admin', false, `❌ FAILED!\nError: ${error.message}`);
+            }
+        }
+        
+        async function testWorkerLogin() {
+            try {
+                const response = await fetch(`${API_BASE}/worker-login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: 'john.worker@studentevents.com', password: 'worker123' })
+                });
+                const data = await response.json();
+                updateTest('worker', true, `✅ SUCCESS!\nStatus: ${response.status}\nLogin: ${data.success ? 'YES' : 'NO'}\nUser: ${data.user?.email || 'None'}`);
+            } catch (error) {
+                updateTest('worker', false, `❌ FAILED!\nError: ${error.message}`);
+            }
+        }
+        
+        async function runAllTests() {
+            console.log('🧪 Starting API tests...');
+            await testHealth();
+            await testEvents();
+            await testAdminLogin();
+            await testWorkerLogin();
+            console.log('✅ All tests completed!');
+        }
+        
+        // Auto-run tests
+        window.addEventListener('load', () => {
+            setTimeout(runAllTests, 1000);
+        });
+    </script>
+</body>
+</html>

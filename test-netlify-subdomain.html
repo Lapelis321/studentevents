@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Netlify Subdomain API</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f0f0f0; }
+        .test { background: white; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .success { border-left: 4px solid #28a745; }
+        .error { border-left: 4px solid #dc3545; }
+        .loading { border-left: 4px solid #ffc107; }
+        button { background: #007cba; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; margin: 5px; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 4px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test Netlify Subdomain API</h1>
+    <p>Testing both custom domain and Netlify subdomain...</p>
+    
+    <button onclick="testCustomDomain()">Test Custom Domain (afterstate.events)</button>
+    <button onclick="testNetlifySubdomain()">Test Netlify Subdomain (afterstateevents.netlify.app)</button>
+    <button onclick="runAllTests()">Run All Tests</button>
+    
+    <div id="custom-domain" class="test loading">
+        <h3>Custom Domain Test</h3>
+        <div id="custom-result">Click button to test...</div>
+    </div>
+    
+    <div id="netlify-subdomain" class="test loading">
+        <h3>Netlify Subdomain Test</h3>
+        <div id="netlify-result">Click button to test...</div>
+    </div>
+
+    <script>
+        function updateTest(testId, success, message) {
+            const element = document.getElementById(testId);
+            const resultElement = document.getElementById(testId + '-result');
+            
+            element.className = `test ${success ? 'success' : 'error'}`;
+            resultElement.innerHTML = `<pre>${message}</pre>`;
+        }
+        
+        async function testAPI(baseUrl, testId) {
+            try {
+                // Test health endpoint
+                const healthResponse = await fetch(`${baseUrl}/.netlify/functions/health`);
+                const healthData = await healthResponse.json();
+                
+                // Test events endpoint
+                const eventsResponse = await fetch(`${baseUrl}/.netlify/functions/events`);
+                const eventsData = await eventsResponse.json();
+                
+                updateTest(testId, true, `✅ SUCCESS!\n\nHealth: ${healthResponse.status} - ${healthData.status}\nEvents: ${eventsResponse.status} - ${eventsData.length} events\n\nHealth Response: ${JSON.stringify(healthData, null, 2)}\n\nFirst Event: ${eventsData[0]?.title || 'None'}`);
+            } catch (error) {
+                updateTest(testId, false, `❌ FAILED!\n\nError: ${error.message}\n\nThis could mean:\n1. Netlify Functions not deployed yet\n2. Domain not properly configured\n3. Functions not in correct directory\n4. Build/deployment in progress`);
+            }
+        }
+        
+        async function testCustomDomain() {
+            updateTest('custom-domain', null, 'Testing custom domain...');
+            await testAPI('https://afterstate.events', 'custom-domain');
+        }
+        
+        async function testNetlifySubdomain() {
+            updateTest('netlify-subdomain', null, 'Testing Netlify subdomain...');
+            await testAPI('https://afterstateevents.netlify.app', 'netlify-subdomain');
+        }
+        
+        async function runAllTests() {
+            await testCustomDomain();
+            await testNetlifySubdomain();
+        }
+        
+        // Auto-run tests
+        window.addEventListener('load', () => {
+            setTimeout(runAllTests, 1000);
+        });
+    </script>
+</body>
+</html>
