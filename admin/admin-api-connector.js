@@ -108,3 +108,74 @@
     
 })();
 
+
+        // Override saveEditedEvent to use API
+        const originalSaveEditedEvent = window.adminDashboard.saveEditedEvent.bind(window.adminDashboard);
+        
+        window.adminDashboard.saveEditedEvent = async function() {
+            if (!this.editingEventId) return;
+            
+            const token = getAuthToken();
+            if (!token) {
+                alert('Please login first to save changes');
+                return;
+            }
+            
+            const event = this.events.find(e => e.id === this.editingEventId);
+            if (!event) return;
+            
+            // Get form data
+            const form = document.getElementById('editEventForm');
+            const formData = new FormData(form);
+            
+            // Prepare event data for API
+            const eventData = {
+                title: formData.get('editEventName') || event.name,
+                date: (formData.get('editEventDate') || event.date.substring(0, 16)) + ':00Z',
+                location: formData.get('editEventLocation') || event.location,
+                price: parseFloat(event.price) || 0,
+                currency: 'EUR',
+                minAge: 18,
+                dressCode: 'Casual',
+                description: formData.get('editEventDescription') || event.description || '',
+                additionalInfo: '',
+                availableTickets: event.totalTickets - event.soldTickets,
+                totalTickets: event.totalTickets || 100
+            };
+            
+            try {
+                console.log('💾 Updating event via API...', eventData);
+                const response = await fetch(+"${API_BASE_URL}/api/events/"+, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': +"Bearer "+
+                    },
+                    body: JSON.stringify(eventData)
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Update failed');
+                }
+                
+                const result = await response.json();
+                console.log('✅ Event updated on API:', result);
+                
+                // Update local event
+                event.name = eventData.title;
+                event.date = eventData.date;
+                event.location = eventData.location;
+                event.description = eventData.description;
+                
+                this.closeEditEventModal();
+                this.renderEventsTab();
+                this.showNotification(+"Event \"\" updated successfully"+, 'success');
+                
+            } catch (error) {
+                console.error('❌ Update failed:', error);
+                this.showNotification('Failed to update event: ' + error.message, 'error');
+            }
+        };
+        
+        console.log('✅ Edit function connected to API');
