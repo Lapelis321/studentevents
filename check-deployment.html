@@ -19,7 +19,7 @@
     <h1>🔍 Deployment Status Check</h1>
     
     <div class="status warning">
-        <strong>Checking:</strong> https://fabulous-pothos-8d2cf9.netlify.app/admin/login.html
+        <strong>Checking:</strong> https://afterstate.events/admin/login.html
     </div>
     
     <div>
@@ -43,7 +43,7 @@
             
             // Add cache-busting parameter
             const cacheBuster = '?v=' + Date.now();
-            iframe.src = 'https://fabulous-pothos-8d2cf9.netlify.app/admin/login.html' + cacheBuster;
+            iframe.src = 'https://afterstate.events/admin/login.html' + cacheBuster;
             
             iframe.onload = function() {
                 try {
@@ -78,7 +78,7 @@
         function forceRefresh() {
             const iframe = document.getElementById('loginFrame');
             const cacheBuster = '?v=' + Date.now();
-            iframe.src = 'https://fabulous-pothos-8d2cf9.netlify.app/admin/login.html' + cacheBuster;
+            iframe.src = 'https://afterstate.events/admin/login.html' + cacheBuster;
         }
         
         // Auto-check on page load

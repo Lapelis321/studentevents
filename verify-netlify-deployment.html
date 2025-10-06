@@ -79,7 +79,7 @@
             updateStatus('Checking deployment...', 'info');
             
             const iframe = document.getElementById('loginFrame');
-            const loginUrl = 'https://fabulous-pothos-8d2cf9.netlify.app/admin/login.html';
+            const loginUrl = 'https://afterstate.events/admin/login.html';
             
             // Add cache-busting parameter
             const cacheBuster = '?v=' + Date.now();
@@ -179,7 +179,7 @@
         function forceRefresh() {
             log('🔄 Forcing page refresh...', 'info');
             const iframe = document.getElementById('loginFrame');
-            const loginUrl = 'https://fabulous-pothos-8d2cf9.netlify.app/admin/login.html';
+            const loginUrl = 'https://afterstate.events/admin/login.html';
             const cacheBuster = '?v=' + Date.now();
             iframe.src = loginUrl + cacheBuster;
         }

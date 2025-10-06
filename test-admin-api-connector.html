@@ -190,7 +190,7 @@
             try {
                 // Test 1: Check if admin page loads
                 log('📡 Testing admin page load...', 'info');
-                const adminResponse = await fetch('https://fabulous-pothos-8d2cf9.netlify.app/admin/index.html');
+                const adminResponse = await fetch('https://afterstate.events/admin/index.html');
                 
                 if (adminResponse.ok) {
                     log('✅ Admin page load: PASSED', 'success');
@@ -200,7 +200,7 @@
                 
                 // Test 2: Check if login page loads
                 log('📡 Testing admin login page...', 'info');
-                const loginResponse = await fetch('https://fabulous-pothos-8d2cf9.netlify.app/admin/login.html');
+                const loginResponse = await fetch('https://afterstate.events/admin/login.html');
                 
                 if (loginResponse.ok) {
                     log('✅ Admin login page: PASSED', 'success');
@@ -210,7 +210,7 @@
                 
                 // Test 3: Check if config.js loads
                 log('📡 Testing config.js...', 'info');
-                const configResponse = await fetch('https://fabulous-pothos-8d2cf9.netlify.app/scripts/config.js');
+                const configResponse = await fetch('https://afterstate.events/scripts/config.js');
                 
                 if (configResponse.ok) {
                     log('✅ Config.js: PASSED', 'success');

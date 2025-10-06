@@ -5,6 +5,10 @@
 [build.environment]
   NODE_VERSION = "18"
 
+# Custom domain configuration
+[context.production]
+  command = "echo Production build"
+
 [[redirects]]
   from = "/api/*"
   to = "https://studentevents-production.up.railway.app/api/:splat"
