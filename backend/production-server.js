@@ -411,6 +411,40 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
+// Verify token (Admin/Worker)
+app.get('/api/auth/verify', authenticateToken, async (req, res) => {
+  try {
+    // Token is already validated by authenticateToken middleware
+    // Return user info
+    res.json({
+      success: true,
+      user: {
+        id: req.user.userId,
+        email: req.user.email,
+        role: req.user.role
+      }
+    });
+  } catch (error) {
+    console.error('Token verification failed:', error);
+    res.status(500).json({ error: 'Token verification failed' });
+  }
+});
+
+// Logout (Admin/Worker)
+app.post('/api/auth/logout', authenticateToken, async (req, res) => {
+  try {
+    // In a real app, you would blacklist the token
+    // For now, just return success
+    res.json({
+      success: true,
+      message: 'Logged out successfully'
+    });
+  } catch (error) {
+    console.error('Logout failed:', error);
+    res.status(500).json({ error: 'Logout failed' });
+  }
+});
+
 // Validate ticket (Worker only)
 app.post('/api/tickets/validate', authenticateToken, async (req, res) => {
   const { ticketId } = req.body;
