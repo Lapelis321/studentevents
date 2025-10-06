@@ -8,4 +8,4 @@ cmds = ["npm install --only=production"]
 cmds = ["echo 'No build needed'"]
 
 [start]
-cmd = "node database-server.js"
+cmd = "node production-server.js"
