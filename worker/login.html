@@ -165,59 +165,64 @@
         </div>
     </div>
 
+    <script src="/scripts/config.js"></script>
     <script>
-        function workerLogin(event) {
+        async function workerLogin(event) {
             event.preventDefault();
-            console.log('Worker login attempt started');
+            console.log('🔐 Worker login attempt started');
             
             // Get form inputs
-            const workerId = event.target.querySelector('input[type="text"]').value.trim();
+            const email = event.target.querySelector('input[type="text"]').value.trim();
             const password = event.target.querySelector('input[type="password"]').value.trim();
             
-            console.log('Worker ID entered:', workerId);
-            console.log('Password length:', password.length);
+            console.log('Email entered:', email);
             
-            // Get worker credentials from admin-managed localStorage
-            const workerCredentials = JSON.parse(localStorage.getItem('workerCredentials') || '{}');
+            const API_BASE_URL = window.CONFIG?.API_BASE_URL?.replace('/api', '') || 'https://studentevents-production.up.railway.app';
             
-            // Fallback to demo credentials if admin hasn't set up workers yet
-            const fallbackWorkers = {
-                'worker1': { password: 'scan123', role: 'Scanner', name: 'John Smith' },
-                'worker2': { password: 'scan123', role: 'Supervisor', name: 'Sarah Johnson' },
-                'worker3': { password: 'scan123', role: 'Scanner', name: 'Mike Davis' }
-            };
-            
-            const validWorkers = Object.keys(workerCredentials).length > 0 ? workerCredentials : fallbackWorkers;
-            
-            if (validWorkers[workerId] && validWorkers[workerId].password === password) {
-                console.log('Worker login successful');
+            try {
+                console.log('📡 Calling API login...');
                 
-                // Store worker session data
-                sessionStorage.setItem('workerAccess', 'true');
-                sessionStorage.setItem('workerData', JSON.stringify({
-                    id: workerId,
-                    name: validWorkers[workerId].name,
-                    role: validWorkers[workerId].role,
-                    loginTime: new Date().toISOString()
-                }));
+                const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
                 
-                alert(`Login successful!\nWelcome ${validWorkers[workerId].name} (${validWorkers[workerId].role})`);
-                window.location.href = 'index.html';
-            } else {
-                console.log('Worker login failed');
-                const availableUsernames = Object.keys(validWorkers).join(', ');
-                alert(`Invalid credentials!\n\nEntered:\nWorker ID: "${workerId}"\nPassword: "${password}"\n\nAvailable usernames: ${availableUsernames}\n\nNote: Credentials are managed by admin.`);
+                const data = await response.json();
+                console.log('API Response:', data);
+                
+                if (data.success && data.user.role === 'worker') {
+                    console.log('✅ Worker login successful!');
+                    
+                    // CRITICAL: Save JWT token
+                    localStorage.setItem('workerToken', data.token);
+                    localStorage.setItem('workerUser', JSON.stringify(data.user));
+                    sessionStorage.setItem('workerAccess', 'true');
+                    
+                    console.log('✅ Token saved:', data.token.substring(0, 20) + '...');
+                    
+                    alert(`Login successful! Welcome ${data.user.name}`);
+                    window.location.href = 'index.html';
+                } else {
+                    console.log('❌ Login failed: Not a worker account');
+                    alert('Invalid credentials or not a worker account!');
+                }
+                
+            } catch (error) {
+                console.error('❌ Login failed:', error);
+                alert('Login failed: ' + error.message + '\n\nPlease check your connection.');
             }
         }
         
         // Auto-fill demo credentials on page load
         document.addEventListener('DOMContentLoaded', function() {
-            const workerIdInput = document.querySelector('input[type="text"]');
+            const emailInput = document.querySelector('input[type="text"]');
             const passwordInput = document.querySelector('input[type="password"]');
             
-            if (workerIdInput && passwordInput) {
-                workerIdInput.value = 'worker1';
-                passwordInput.value = 'scan123';
+            if (emailInput && passwordInput) {
+                emailInput.value = 'john.worker@studentevents.com';
+                emailInput.placeholder = 'john.worker@studentevents.com';
+                passwordInput.value = 'worker123';
             }
         });
     </script>

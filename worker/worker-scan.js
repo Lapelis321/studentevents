@@ -198,48 +198,99 @@ class WorkerScan {
     }
 
     async verifyTicket(ticketId) {
-        // Mock ticket verification logic
-        const mockTickets = {
-            'SE123456': { name: 'John Doe', event: 'Spring Music Festival', valid: true },
-            'SE789012': { name: 'Jane Smith', event: 'Tech Innovation Summit', valid: true },
-            'ST345678': { name: 'Bob Johnson', event: 'Art & Culture Night', valid: true },
-            'EV901234': { name: 'Alice Brown', event: 'Sports Championship', valid: true },
-            'SE567890': { name: 'Charlie Wilson', event: 'Comedy Night Special', valid: true }
-        };
-        
-        const ticket = mockTickets[ticketId];
-        
-        if (!ticket) {
-            return {
-                status: 'invalid',
-                ticketId: ticketId,
-                message: 'Ticket not found',
-                timestamp: new Date()
+        try {
+            // Get worker token for authentication
+            const workerToken = localStorage.getItem('workerToken') || sessionStorage.getItem('workerToken');
+            
+            if (!workerToken) {
+                return {
+                    status: 'error',
+                    ticketId: ticketId,
+                    message: 'Worker not authenticated. Please login again.',
+                    timestamp: new Date()
+                };
+            }
+            
+            const API_BASE_URL = window.CONFIG?.API_BASE_URL?.replace('/api', '') || 'https://studentevents-production.up.railway.app';
+            
+            console.log('🔍 Validating ticket via API:', ticketId);
+            
+            const response = await fetch(`${API_BASE_URL}/api/tickets/validate`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${workerToken}`
+                },
+                body: JSON.stringify({ ticketId })
+            });
+            
+            const data = await response.json();
+            console.log('API Response:', data);
+            
+            if (data.success) {
+                // Mark as scanned to prevent duplicates
+                this.scannedTickets.add(ticketId);
+                
+                return {
+                    status: 'valid',
+                    ticketId: ticketId,
+                    name: data.ticket.holderName || 'Unknown',
+                    event: data.ticket.eventTitle || 'Unknown Event',
+                    message: 'Ticket verified successfully',
+                    timestamp: new Date()
+                };
+            } else {
+                return {
+                    status: 'invalid',
+                    ticketId: ticketId,
+                    message: data.message || 'Ticket validation failed',
+                    timestamp: new Date()
+                };
+            }
+            
+        } catch (error) {
+            console.error('❌ Ticket validation error:', error);
+            
+            // Fallback to mock data if API fails
+            const mockTickets = {
+                'SE123456': { name: 'John Doe', event: 'Spring Music Festival', valid: true },
+                'SE789012': { name: 'Jane Smith', event: 'Tech Innovation Summit', valid: true },
+                'ST345678': { name: 'Bob Johnson', event: 'Art & Culture Night', valid: true }
             };
-        }
-        
-        if (this.scannedTickets.has(ticketId)) {
+            
+            const ticket = mockTickets[ticketId];
+            
+            if (!ticket) {
+                return {
+                    status: 'invalid',
+                    ticketId: ticketId,
+                    message: 'Ticket not found (API unavailable)',
+                    timestamp: new Date()
+                };
+            }
+            
+            if (this.scannedTickets.has(ticketId)) {
+                return {
+                    status: 'duplicate',
+                    ticketId: ticketId,
+                    name: ticket.name,
+                    event: ticket.event,
+                    message: 'Ticket already scanned',
+                    timestamp: new Date()
+                };
+            }
+            
+            this.scannedTickets.add(ticketId);
+            
             return {
-                status: 'duplicate',
+                status: 'valid',
                 ticketId: ticketId,
                 name: ticket.name,
                 event: ticket.event,
-                message: 'Ticket already scanned',
+                message: 'Ticket verified (offline mode)',
                 timestamp: new Date()
             };
         }
-        
-        // Mark ticket as scanned
-        this.scannedTickets.add(ticketId);
-        
-        return {
-            status: 'valid',
-            ticketId: ticketId,
-            name: ticket.name,
-            event: ticket.event,
-            message: 'Valid ticket - Entry allowed',
-            timestamp: new Date()
-        };
     }
 
     showProcessingResult() {
