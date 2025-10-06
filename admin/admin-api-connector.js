@@ -83,32 +83,15 @@
                 
                 console.log('✅ Event deleted from API');
                 this.events = this.events.filter(e => e.id !== eventId);
-                this.showNotification('Event deleted successfully', 'success');
+                EventTicketingApp.showNotification('Event deleted successfully', 'success');
                 this.renderCurrentTab();
                 
             } catch (error) {
                 console.error('❌ Delete failed:', error);
-                this.showNotification('Failed to delete event: ' + error.message, 'error');
+                EventTicketingApp.showNotification('Failed to delete event: ' + error.message, 'error');
             }
         };
         
-        // Trigger initial load from API
-        console.log('🔄 Loading events from API...');
-        window.adminDashboard.loadMockData();
-    }
-    
-    // Start initialization
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initConnector);
-    } else {
-        initConnector();
-    }
-    
-    console.log('✅ API Connector loaded');
-    
-})();
-
-
         // Override saveEditedEvent to use API
         const originalSaveEditedEvent = window.adminDashboard.saveEditedEvent.bind(window.adminDashboard);
         
@@ -145,11 +128,11 @@
             
             try {
                 console.log('💾 Updating event via API...', eventData);
-                const response = await fetch(+"${API_BASE_URL}/api/events/"+, {
+                const response = await fetch(`${API_BASE_URL}/api/events/${this.editingEventId}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': +"Bearer "+
+                        'Authorization': `Bearer ${token}`
                     },
                     body: JSON.stringify(eventData)
                 });
@@ -170,12 +153,28 @@
                 
                 this.closeEditEventModal();
                 this.renderEventsTab();
-                this.showNotification(+"Event \"\" updated successfully"+, 'success');
+                EventTicketingApp.showNotification(`Event "${eventData.title}" updated successfully`, 'success');
                 
             } catch (error) {
                 console.error('❌ Update failed:', error);
-                this.showNotification('Failed to update event: ' + error.message, 'error');
+                EventTicketingApp.showNotification('Failed to update event: ' + error.message, 'error');
             }
         };
         
         console.log('✅ Edit function connected to API');
+        
+        // Trigger initial load from API
+        console.log('🔄 Loading events from API...');
+        window.adminDashboard.loadMockData();
+    }
+    
+    // Start initialization
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initConnector);
+    } else {
+        initConnector();
+    }
+    
+    console.log('✅ API Connector loaded');
+    
+})();

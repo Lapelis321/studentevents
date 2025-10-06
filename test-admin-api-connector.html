@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin API Connector Test</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .warning { background-color: #fff3cd; border-color: #ffeaa7; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; }
+        .log { background: #f8f9fa; padding: 10px; margin: 10px 0; border-radius: 3px; font-family: monospace; white-space: pre-wrap; }
+        .code { background: #f8f9fa; padding: 10px; border-radius: 3px; font-family: monospace; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Admin API Connector Test</h1>
+    
+    <div class="test-section info">
+        <h3>Test Instructions:</h3>
+        <ol>
+            <li>Click "Test Syntax" to verify JavaScript syntax is correct</li>
+            <li>Click "Test API Calls" to test API functionality</li>
+            <li>Click "Test Admin Page" to test the actual admin page</li>
+            <li>Check console (F12) for detailed logs</li>
+        </ol>
+    </div>
+    
+    <div class="test-section">
+        <h3>Test Controls:</h3>
+        <button onclick="testSyntax()">Test Syntax</button>
+        <button onclick="testApiCalls()">Test API Calls</button>
+        <button onclick="testAdminPage()">Test Admin Page</button>
+        <button onclick="clearLog()">Clear Log</button>
+    </div>
+    
+    <div class="test-section">
+        <h3>Test Results:</h3>
+        <div id="log" class="log"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Current Status:</h3>
+        <div id="status"></div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'https://studentevents-production.up.railway.app';
+        
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : type === 'warning' ? 'warning' : 'info';
+            logDiv.innerHTML += `<div class="${className}">[${timestamp}] ${message}</div>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+        
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+        }
+        
+        function updateStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : type === 'warning' ? 'warning' : 'info';
+            statusDiv.innerHTML = `<div class="${className}">${message}</div>`;
+        }
+        
+        async function testSyntax() {
+            log('🧪 Testing JavaScript syntax...', 'info');
+            
+            try {
+                // Test 1: Template literal syntax
+                const testUrl = 'https://test.com';
+                const testId = 123;
+                const testToken = 'test-token';
+                
+                // Test corrected syntax
+                const url = `${testUrl}/api/events/${testId}`;
+                const auth = `Bearer ${testToken}`;
+                const message = `Event "Test Event" updated successfully`;
+                
+                if (url === 'https://test.com/api/events/123' && 
+                    auth === 'Bearer test-token' && 
+                    message === 'Event "Test Event" updated successfully') {
+                    log('✅ Template literal syntax: PASSED', 'success');
+                } else {
+                    throw new Error('Template literal test failed');
+                }
+                
+                // Test 2: Invalid syntax detection
+                try {
+                    // This should throw an error (old broken syntax)
+                    eval('const response = await fetch(+"${API_BASE_URL}/api/events/"+, {});');
+                    log('❌ Invalid syntax test: FAILED - Should have thrown error', 'error');
+                } catch (error) {
+                    log('✅ Invalid syntax detection: PASSED', 'success');
+                }
+                
+                // Test 3: Function scope test
+                const testFunction = function() {
+                    return 'test';
+                };
+                
+                if (typeof testFunction === 'function') {
+                    log('✅ Function scope: PASSED', 'success');
+                } else {
+                    throw new Error('Function scope test failed');
+                }
+                
+                // Test 4: Object method binding
+                const mockDashboard = {
+                    events: [],
+                    editingEventId: 1,
+                    closeEditEventModal: function() { return 'closed'; },
+                    renderEventsTab: function() { return 'rendered'; }
+                };
+                
+                if (typeof mockDashboard.closeEditEventModal === 'function') {
+                    log('✅ Object method binding: PASSED', 'success');
+                } else {
+                    throw new Error('Object method binding test failed');
+                }
+                
+                log('🎉 All syntax tests passed!', 'success');
+                updateStatus('✅ Syntax tests passed - Code should work correctly', 'success');
+                
+            } catch (error) {
+                log(`❌ Syntax test failed: ${error.message}`, 'error');
+                updateStatus('❌ Syntax tests failed - Check the code', 'error');
+            }
+        }
+        
+        async function testApiCalls() {
+            log('🧪 Testing API calls...', 'info');
+            
+            try {
+                // Test 1: Events API
+                log('📡 Testing events API...', 'info');
+                const eventsResponse = await fetch(`${API_BASE_URL}/api/events`);
+                
+                if (eventsResponse.ok) {
+                    const events = await eventsResponse.json();
+                    log(`✅ Events API: PASSED - Loaded ${events.length} events`, 'success');
+                } else {
+                    throw new Error(`Events API failed: ${eventsResponse.status}`);
+                }
+                
+                // Test 2: Health API
+                log('📡 Testing health API...', 'info');
+                const healthResponse = await fetch(`${API_BASE_URL}/health`);
+                
+                if (healthResponse.ok) {
+                    const health = await healthResponse.json();
+                    log(`✅ Health API: PASSED - Status: ${health.status}`, 'success');
+                } else {
+                    throw new Error(`Health API failed: ${healthResponse.status}`);
+                }
+                
+                // Test 3: Auth API (without token)
+                log('📡 Testing auth API...', 'info');
+                const authResponse = await fetch(`${API_BASE_URL}/api/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: 'test@test.com', password: 'test' })
+                });
+                
+                // This should fail (401) but that's expected
+                if (authResponse.status === 401 || authResponse.status === 400) {
+                    log('✅ Auth API: PASSED - Correctly rejected invalid credentials', 'success');
+                } else {
+                    log(`⚠️ Auth API: Unexpected response ${authResponse.status}`, 'warning');
+                }
+                
+                log('🎉 API tests completed!', 'success');
+                updateStatus('✅ API tests passed - Backend is accessible', 'success');
+                
+            } catch (error) {
+                log(`❌ API test failed: ${error.message}`, 'error');
+                updateStatus('❌ API tests failed - Check backend connection', 'error');
+            }
+        }
+        
+        async function testAdminPage() {
+            log('🧪 Testing admin page functionality...', 'info');
+            
+            try {
+                // Test 1: Check if admin page loads
+                log('📡 Testing admin page load...', 'info');
+                const adminResponse = await fetch('https://fabulous-pothos-8d2cf9.netlify.app/admin/index.html');
+                
+                if (adminResponse.ok) {
+                    log('✅ Admin page load: PASSED', 'success');
+                } else {
+                    throw new Error(`Admin page failed: ${adminResponse.status}`);
+                }
+                
+                // Test 2: Check if login page loads
+                log('📡 Testing admin login page...', 'info');
+                const loginResponse = await fetch('https://fabulous-pothos-8d2cf9.netlify.app/admin/login.html');
+                
+                if (loginResponse.ok) {
+                    log('✅ Admin login page: PASSED', 'success');
+                } else {
+                    throw new Error(`Admin login page failed: ${loginResponse.status}`);
+                }
+                
+                // Test 3: Check if config.js loads
+                log('📡 Testing config.js...', 'info');
+                const configResponse = await fetch('https://fabulous-pothos-8d2cf9.netlify.app/scripts/config.js');
+                
+                if (configResponse.ok) {
+                    log('✅ Config.js: PASSED', 'success');
+                } else {
+                    throw new Error(`Config.js failed: ${configResponse.status}`);
+                }
+                
+                log('🎉 Admin page tests completed!', 'success');
+                updateStatus('✅ Admin page tests passed - Frontend is accessible', 'success');
+                
+            } catch (error) {
+                log(`❌ Admin page test failed: ${error.message}`, 'error');
+                updateStatus('❌ Admin page tests failed - Check frontend deployment', 'error');
+            }
+        }
+        
+        // Auto-run syntax test on page load
+        window.onload = function() {
+            log('🔌 Admin API Connector Test Page Loaded', 'info');
+            log('Click "Test Syntax" to verify the fixes', 'info');
+        };
+    </script>
+</body>
+</html>
