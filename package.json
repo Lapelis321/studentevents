@@ -2,11 +2,11 @@
   "name": "studentevents",
   "version": "1.0.0",
   "description": "StudentEvents - Full-stack event ticketing platform",
-  "main": "api-server.js",
+  "main": "server.js",
   "scripts": {
-    "start": "node api-server.js",
+    "start": "node server.js",
     "dev": "python -m http.server 8000",
-    "api": "node api-server.js",
+    "api": "node server.js",
     "test": "echo \"No tests specified\" && exit 0"
   },
   "dependencies": {
