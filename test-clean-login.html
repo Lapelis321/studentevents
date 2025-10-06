@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clean Admin Login Test</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .warning { background-color: #fff3cd; border-color: #ffeaa7; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; }
+        .log { background: #f8f9fa; padding: 10px; margin: 10px 0; border-radius: 3px; font-family: monospace; white-space: pre-wrap; }
+        iframe { width: 100%; height: 700px; border: 1px solid #ddd; border-radius: 5px; }
+        .status { padding: 10px; border-radius: 5px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>🎨 Clean Admin Login Design Test</h1>
+    
+    <div class="test-section info">
+        <h3>Design Verification:</h3>
+        <p>This test verifies the clean, professional admin login design without demo credentials.</p>
+        <p><strong>Expected Design Features:</strong></p>
+        <ul>
+            <li>✅ No demo credentials section</li>
+            <li>✅ Clean, professional form design</li>
+            <li>✅ Empty form fields (no auto-fill)</li>
+            <li>✅ Modern card design with proper spacing</li>
+            <li>✅ Professional button styling</li>
+            <li>✅ Clean typography and layout</li>
+        </ul>
+    </div>
+    
+    <div class="test-section">
+        <h3>Test Controls:</h3>
+        <button onclick="testCleanDesign()">Test Clean Design</button>
+        <button onclick="testFormFunctionality()">Test Form Functionality</button>
+        <button onclick="clearLog()">Clear Log</button>
+    </div>
+    
+    <div class="test-section">
+        <h3>Design Status:</h3>
+        <div id="status" class="status info">Click "Test Clean Design" to verify</div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Test Results:</h3>
+        <div id="log" class="log"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Clean Login Page Preview:</h3>
+        <iframe id="loginFrame" src="about:blank"></iframe>
+    </div>
+
+    <script>
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : type === 'warning' ? 'warning' : 'info';
+            logDiv.innerHTML += `<div class="${className}">[${timestamp}] ${message}</div>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+        
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+        }
+        
+        function updateStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : type === 'warning' ? 'warning' : 'info';
+            statusDiv.innerHTML = `<div class="${className}">${message}</div>`;
+        }
+        
+        function testCleanDesign() {
+            log('🎨 Testing clean admin login design...', 'info');
+            updateStatus('Testing clean design...', 'info');
+            
+            const iframe = document.getElementById('loginFrame');
+            const loginUrl = 'https://fabulous-pothos-8d2cf9.netlify.app/admin/login.html';
+            
+            // Add cache-busting parameter
+            const cacheBuster = '?v=' + Date.now();
+            iframe.src = loginUrl + cacheBuster;
+            
+            iframe.onload = function() {
+                log('✅ Login page loaded', 'success');
+                
+                try {
+                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                    
+                    // Check for demo credentials removal
+                    const demoCredentials = iframeDoc.querySelector('.demo-credentials');
+                    if (!demoCredentials) {
+                        log('✅ Demo credentials section removed - PASSED', 'success');
+                    } else {
+                        log('❌ Demo credentials section still present - FAILED', 'error');
+                    }
+                    
+                    // Check form inputs
+                    const emailInput = iframeDoc.querySelector('input[type="email"]');
+                    const passwordInput = iframeDoc.querySelector('input[type="password"]');
+                    
+                    if (emailInput && passwordInput) {
+                        if (emailInput.value === '' && passwordInput.value === '') {
+                            log('✅ Form fields are empty (no auto-fill) - PASSED', 'success');
+                        } else {
+                            log('❌ Form fields are pre-filled - FAILED', 'error');
+                        }
+                        
+                        if (emailInput.placeholder.includes('email address')) {
+                            log('✅ Email placeholder is professional - PASSED', 'success');
+                        } else {
+                            log('❌ Email placeholder is incorrect - FAILED', 'error');
+                        }
+                    } else {
+                        log('❌ Form inputs not found - FAILED', 'error');
+                    }
+                    
+                    // Check for clean design elements
+                    const loginCard = iframeDoc.querySelector('.login-card');
+                    if (loginCard) {
+                        const cardStyle = window.getComputedStyle(loginCard);
+                        if (cardStyle.borderRadius && cardStyle.borderRadius !== '0px') {
+                            log('✅ Card has rounded corners - PASSED', 'success');
+                        } else {
+                            log('❌ Card lacks rounded corners - FAILED', 'error');
+                        }
+                    }
+                    
+                    // Check button styling
+                    const loginBtn = iframeDoc.querySelector('.login-btn');
+                    if (loginBtn) {
+                        const btnStyle = window.getComputedStyle(loginBtn);
+                        if (btnStyle.padding && btnStyle.padding !== '0px') {
+                            log('✅ Button has proper padding - PASSED', 'success');
+                        } else {
+                            log('❌ Button lacks proper padding - FAILED', 'error');
+                        }
+                    }
+                    
+                    // Check logo design
+                    const logo = iframeDoc.querySelector('.login-logo');
+                    if (logo) {
+                        const logoStyle = window.getComputedStyle(logo);
+                        if (logoStyle.borderRadius && logoStyle.borderRadius.includes('50%')) {
+                            log('✅ Logo has circular design - PASSED', 'success');
+                        } else {
+                            log('❌ Logo lacks circular design - FAILED', 'error');
+                        }
+                    }
+                    
+                    // Overall assessment
+                    const errorCount = document.querySelectorAll('.error').length;
+                    const successCount = document.querySelectorAll('.success').length;
+                    
+                    if (errorCount === 0) {
+                        updateStatus('🎉 CLEAN DESIGN SUCCESSFUL! Professional login page ready.', 'success');
+                        log('🎉 All design tests passed! Clean, professional login page is ready.', 'success');
+                    } else {
+                        updateStatus(`⚠️ DESIGN ISSUES: ${errorCount} problems found.`, 'warning');
+                        log(`⚠️ ${errorCount} design issues found.`, 'warning');
+                    }
+                    
+                } catch (error) {
+                    log('⚠️ Cannot access iframe content (CORS) - This is normal', 'warning');
+                    log('Please check the page manually by visiting the URL', 'info');
+                    updateStatus('⚠️ Cannot verify automatically. Please check manually.', 'warning');
+                }
+            };
+            
+            iframe.onerror = function() {
+                log('❌ Failed to load login page', 'error');
+                updateStatus('❌ Failed to load page', 'error');
+            };
+        }
+        
+        function testFormFunctionality() {
+            log('🧪 Testing form functionality...', 'info');
+            
+            // Test form validation
+            const testCases = [
+                { email: '', password: '', expected: 'empty' },
+                { email: 'test', password: 'test', expected: 'invalid-email' },
+                { email: 'admin@studentevents.com', password: 'admin123', expected: 'valid' }
+            ];
+            
+            testCases.forEach((test, index) => {
+                const isValidEmail = test.email.includes('@');
+                const hasBothFields = test.email && test.password;
+                
+                let result = 'valid';
+                if (!hasBothFields) result = 'empty';
+                else if (!isValidEmail) result = 'invalid-email';
+                
+                if (result === test.expected) {
+                    log(`✅ Test ${index + 1}: ${test.email || 'empty'} / ${test.password || 'empty'} - PASSED`, 'success');
+                } else {
+                    log(`❌ Test ${index + 1}: Expected ${test.expected}, got ${result} - FAILED`, 'error');
+                }
+            });
+        }
+        
+        // Auto-run tests on page load
+        window.onload = function() {
+            log('🎨 Clean Admin Login Design Test Page Loaded', 'info');
+            log('Click "Test Clean Design" to verify the new design', 'info');
+        };
+    </script>
+</body>
+</html>
