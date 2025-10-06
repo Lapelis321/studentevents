@@ -1068,22 +1068,3 @@ class AdminDashboard {
 document.addEventListener('DOMContentLoaded', () => {
     window.adminDashboard = new AdminDashboard();
 });
-// Override events with API data immediately after dashboard loads
-(async function() {
-    const API_BASE_URL = 'https://studentevents-production.up.railway.app';
-    try {
-        const response = await fetch(${API_BASE_URL}/api/events);
-        const apiEvents = await response.json();
-        if (window.adminDashboard) {
-            window.adminDashboard.events = apiEvents.map(e => ({
-                id: e.id, name: e.title, date: e.date, location: e.location,
-                price: e.price, totalTickets: e.totalTickets || 100,
-                soldTickets: (e.totalTickets || 100) - (e.availableTickets || 0),
-                status: e.is_active ? 'upcoming' : 'completed'
-            }));
-            window.adminDashboard.updateEventsStatistics();
-            window.adminDashboard.renderCurrentTab();
-            console.log('✅ Loaded ' + apiEvents.length + ' events from API');
-        }
-    } catch(e) { console.error('API load failed:', e); }
-})();

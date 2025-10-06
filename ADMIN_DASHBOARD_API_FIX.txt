@@ -1,0 +1,169 @@
+=== EXACT FIX FOR admin/admin-dashboard.js ===
+
+STEP 1: Make init() async (Line 12)
+----------------------------------------
+FIND:
+    init() {
+        this.loadMockData();
+        this.loadSettingsFromStorage();
+        this.setupEventListeners();
+        this.renderCurrentTab();
+    }
+
+REPLACE WITH:
+    async init() {
+        await this.loadMockData();
+        this.loadSettingsFromStorage();
+        this.setupEventListeners();
+        this.renderCurrentTab();
+    }
+
+
+STEP 2: Replace loadMockData() function (Lines 47-159)
+-------------------------------------------------------
+FIND THE ENTIRE FUNCTION:
+    loadMockData() {
+        // Mock events data
+        this.events = [
+            ... (many lines of hardcoded events)
+        ];
+
+        // Mock workers data
+        this.workers = [
+            ... (many lines of hardcoded workers)
+        ];
+
+        // Store workers in localStorage for worker login system
+        this.saveWorkersToStorage();
+    }
+
+REPLACE WITH:
+    async loadMockData() {
+        // Load events from API
+        try {
+            const API_BASE_URL = window.CONFIG?.API_BASE_URL?.replace('/api', '') || 'https://studentevents-production.up.railway.app';
+            console.log('📡 Admin Dashboard: Loading events from API...');
+            
+            const response = await fetch(`${API_BASE_URL}/api/events`);
+            if (!response.ok) throw new Error('API request failed');
+            
+            const apiEvents = await response.json();
+            console.log(`✅ Admin Dashboard: Loaded ${apiEvents.length} events from API`);
+            
+            // Transform API format to dashboard format
+            this.events = apiEvents.map(event => ({
+                id: event.id,
+                name: event.title,
+                date: event.date,
+                location: event.location,
+                price: event.price,
+                totalTickets: event.totalTickets || 100,
+                soldTickets: (event.totalTickets || 100) - (event.availableTickets || 0),
+                status: event.is_active ? 'upcoming' : 'completed',
+                description: event.description || '',
+                image: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800'
+            }));
+            
+        } catch (error) {
+            console.error('❌ Failed to load from API:', error);
+            console.log('⚠️ Using fallback mock data');
+            // Fallback to 3 mock events if API fails
+            this.events = [
+                {
+                    id: 1,
+                    name: 'Spring Music Festival',
+                    date: '2024-04-15T19:00:00Z',
+                    location: 'University Campus',
+                    price: 25.00,
+                    totalTickets: 500,
+                    soldTickets: 350,
+                    status: 'upcoming',
+                    description: 'A wonderful evening of live music featuring local artists.',
+                    image: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800'
+                },
+                {
+                    id: 2,
+                    name: 'Tech Innovation Summit',
+                    date: '2024-04-22T14:00:00Z',
+                    location: 'Convention Center',
+                    price: 15.00,
+                    totalTickets: 300,
+                    soldTickets: 200,
+                    status: 'upcoming'
+                },
+                {
+                    id: 3,
+                    name: 'Art & Culture Night',
+                    date: '2024-04-28T18:30:00Z',
+                    location: 'City Art Gallery',
+                    price: 12.00,
+                    totalTickets: 100,
+                    soldTickets: 80,
+                    status: 'upcoming'
+                }
+            ];
+        }
+
+        // Mock workers data (keep as is)
+        this.workers = [
+            {
+                id: 1,
+                name: 'John Smith',
+                username: 'worker1',
+                password: 'scan123',
+                email: 'john.smith@studentevents.com',
+                phone: '+1 (555) 123-4567',
+                role: 'Scanner',
+                status: 'active',
+                lastActive: '2024-01-15T10:30:00Z'
+            },
+            {
+                id: 2,
+                name: 'Sarah Johnson',
+                username: 'worker2',
+                password: 'scan123',
+                email: 'sarah.johnson@studentevents.com',
+                phone: '+1 (555) 234-5678',
+                role: 'Supervisor',
+                status: 'active',
+                lastActive: '2024-01-15T09:15:00Z'
+            },
+            {
+                id: 3,
+                name: 'Mike Davis',
+                username: 'worker3',
+                password: 'scan123',
+                email: 'mike.davis@studentevents.com',
+                phone: '+1 (555) 345-6789',
+                role: 'Scanner',
+                status: 'inactive',
+                lastActive: '2024-01-10T14:20:00Z'
+            },
+            {
+                id: 4,
+                name: 'Emily Brown',
+                username: 'worker4',
+                password: 'scan123',
+                email: 'emily.brown@studentevents.com',
+                phone: '+1 (555) 456-7890',
+                role: 'Coordinator',
+                status: 'active',
+                lastActive: '2024-01-15T11:45:00Z'
+            }
+        ];
+
+        // Store workers in localStorage for worker login system
+        this.saveWorkersToStorage();
+    }
+
+
+AFTER MAKING THESE CHANGES:
+----------------------------
+1. Save the file
+2. git add admin/admin-dashboard.js
+3. git commit -m "Load events from API in admin dashboard"
+4. git push origin main
+5. Wait 1-2 minutes for Netlify to redeploy
+6. Refresh admin page in incognito mode
+7. Should see 3 events!
+
