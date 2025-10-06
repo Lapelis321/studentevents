@@ -123,7 +123,7 @@ app.post('/api/tickets/purchase', (req, res) => {
   
   res.json({
     success: true,
-    ticketId: TICKET-,
+    ticketId: `TICKET-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
     eventId: eventId,
     quantity: quantity,
     total: quantity * 25.00,
@@ -140,9 +140,9 @@ app.use((err, req, res, next) => {
 
 // Start server
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(🚀 Database server running on port );
-  console.log(🌐 Health check: http://localhost:/health);
-  console.log(📚 API Base URL: http://localhost:/api);
-  console.log(🔗 Frontend URL: );
-  console.log(🗄️ Database: );
+  console.log(`🚀 Production server running on port ${PORT}`);
+  console.log(`🌐 Health check: http://localhost:${PORT}/health`);
+  console.log(`📚 API Base URL: http://localhost:${PORT}/api`);
+  console.log(`🔗 Frontend URL: ${FRONTEND_URL}`);
+  console.log(`🗄️ Database: PostgreSQL via Supabase`);
 });
