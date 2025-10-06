@@ -45,8 +45,38 @@ class AdminDashboard {
     }
 
     async loadMockData() {
-        // Mock events data
-        this.events = [
+        try {
+            // Try to load from API first
+            console.log('📡 Loading events from API...');
+            const API_BASE_URL = window.CONFIG?.API_BASE_URL?.replace('/api', '') || 'https://studentevents-production.up.railway.app';
+            const response = await fetch(`${API_BASE_URL}/api/events`);
+            
+            if (response.ok) {
+                const apiEvents = await response.json();
+                console.log(`✅ Loaded ${apiEvents.length} events from API`);
+                
+                // Transform API events to dashboard format
+                this.events = apiEvents.map(event => ({
+                    id: event.id,
+                    name: event.title,
+                    date: event.date,
+                    location: event.location,
+                    price: event.price,
+                    totalTickets: event.totalTickets || 100,
+                    soldTickets: (event.totalTickets || 100) - (event.availableTickets || 0),
+                    status: event.is_active ? 'upcoming' : 'completed',
+                    description: event.description || '',
+                    image: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800'
+                }));
+            } else {
+                throw new Error(`API responded with status: ${response.status}`);
+            }
+        } catch (error) {
+            console.warn('API load failed, using fallback data:', error);
+            
+            // Fallback to hardcoded data only if API fails
+            console.log('📦 Using fallback data...');
+            this.events = [
             {
                 id: 1,
                 name: 'Spring Music Festival',
@@ -105,6 +135,7 @@ class AdminDashboard {
                 status: 'upcoming'
             }
         ];
+        }
 
         // Mock workers data
         this.workers = [
@@ -471,82 +502,313 @@ class AdminDashboard {
         this.editingEventId = null;
     }
 
-    saveEditedEvent() {
+    async saveEditedEvent() {
         if (!this.editingEventId) return;
 
         const event = this.events.find(e => e.id === this.editingEventId);
-        if (!event) return;
-
-        // Get form data
-        const formData = new FormData(document.getElementById('editEventForm'));
-        
-        // Update basic event properties
-        event.name = formData.get('editEventName');
-        event.date = formData.get('editEventDate') + ':00Z'; // Convert back to ISO format
-        event.location = formData.get('editEventLocation');
-        event.description = formData.get('editEventDescription');
-        event.image = formData.get('editEventImage');
-        event.status = formData.get('editEventStatus');
-
-        // Process price tiers
-        const priceTiers = [];
-        let totalTickets = 0;
-        let soldTickets = 0;
-        let lowestPrice = Infinity;
-
-        // Collect all price tier data
-        const tierData = {};
-        for (let [key, value] of formData.entries()) {
-            if (key.startsWith('editPriceTier')) {
-                const match = key.match(/editPriceTier(\w+)(\d+)/);
-                if (match) {
-                    const [, field, index] = match;
-                    if (!tierData[index]) tierData[index] = {};
-                    tierData[index][field] = value;
-                }
-            }
+        if (!event) {
+            EventTicketingApp.showNotification('Event not found', 'error');
+            return;
         }
 
-        // Process each tier
-        Object.keys(tierData).forEach(index => {
-            const tier = tierData[index];
-            const priceTier = {
-                name: tier.Name || '',
-                price: parseFloat(tier.Price) || 0,
-                totalTickets: parseInt(tier.Total) || 0,
-                soldTickets: parseInt(tier.Sold) || 0, // Preserve existing sold tickets
-                enabled: tier.Enabled === 'on'
+        try {
+            // Show loading state
+            this.showLoadingState('Updating event...');
+            
+            // Get authentication token
+            const token = localStorage.getItem('adminToken');
+            if (!token) {
+                throw new Error('Not authenticated. Please login again.');
+            }
+            
+            // Get form data
+            const formData = new FormData(document.getElementById('editEventForm'));
+            
+            // Prepare API data
+            const apiData = {
+                title: formData.get('editEventName'),
+                date: formData.get('editEventDate') + ':00Z',
+                location: formData.get('editEventLocation'),
+                description: formData.get('editEventDescription'),
+                additionalInfo: formData.get('editEventImage') || '',
+                is_active: formData.get('editEventStatus') === 'upcoming'
             };
             
-            if (tier.Name && tier.Price) {
-                priceTiers.push(priceTier);
-                totalTickets += priceTier.totalTickets;
-                soldTickets += priceTier.soldTickets;
-                if (priceTier.price < lowestPrice) {
-                    lowestPrice = priceTier.price;
+            // Process price tiers for API
+            const priceTiers = [];
+            let totalTickets = 0;
+            let soldTickets = 0;
+            let lowestPrice = Infinity;
+
+            // Collect all price tier data
+            const tierData = {};
+            for (let [key, value] of formData.entries()) {
+                if (key.startsWith('editPriceTier')) {
+                    const match = key.match(/editPriceTier(\w+)(\d+)/);
+                    if (match) {
+                        const [, field, index] = match;
+                        if (!tierData[index]) tierData[index] = {};
+                        tierData[index][field] = value;
+                    }
                 }
             }
-        });
 
-        // Update event with new data
-        event.priceTiers = priceTiers;
-        event.totalTickets = totalTickets;
-        event.soldTickets = soldTickets; // Preserve existing sold tickets
-        event.price = lowestPrice; // Update legacy price field
+            // Process each tier
+            Object.keys(tierData).forEach(index => {
+                const tier = tierData[index];
+                const priceTier = {
+                    name: tier.Name || '',
+                    price: parseFloat(tier.Price) || 0,
+                    totalTickets: parseInt(tier.Total) || 0,
+                    soldTickets: parseInt(tier.Sold) || 0,
+                    enabled: tier.Enabled === 'on'
+                };
+                
+                if (tier.Name && tier.Price) {
+                    priceTiers.push(priceTier);
+                    totalTickets += priceTier.totalTickets;
+                    soldTickets += priceTier.soldTickets;
+                    if (priceTier.price < lowestPrice) {
+                        lowestPrice = priceTier.price;
+                    }
+                }
+            });
 
-        // Close modal and refresh
-        this.closeEditEventModal();
-        this.renderEventsTab();
-        
-        EventTicketingApp.showNotification(`Event "${event.name}" updated successfully`, 'success');
+            // Add calculated fields to API data
+            apiData.price = lowestPrice;
+            apiData.currency = 'EUR';
+            apiData.minAge = 18;
+            apiData.dressCode = 'Casual';
+            apiData.totalTickets = totalTickets;
+            apiData.availableTickets = totalTickets - soldTickets;
+            
+            // Get API base URL
+            const API_BASE_URL = window.CONFIG?.API_BASE_URL?.replace('/api', '') || 'https://studentevents-production.up.railway.app';
+            
+            // Call API to update event
+            const response = await fetch(`${API_BASE_URL}/api/events/${this.editingEventId}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(apiData)
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({ error: 'Update failed' }));
+                throw new Error(errorData.error || `Update failed: ${response.status} ${response.statusText}`);
+            }
+            
+            // Update local object only after API success
+            event.name = apiData.title;
+            event.date = apiData.date;
+            event.location = apiData.location;
+            event.description = apiData.description;
+            event.image = apiData.additionalInfo;
+            event.status = apiData.is_active ? 'upcoming' : 'completed';
+            event.priceTiers = priceTiers;
+            event.totalTickets = totalTickets;
+            event.soldTickets = soldTickets;
+            event.price = lowestPrice;
+
+            // Close modal and refresh
+            this.closeEditEventModal();
+            this.renderEventsTab();
+            this.hideLoadingState();
+            
+            EventTicketingApp.showNotification(`Event "${event.name}" updated successfully`, 'success');
+            
+        } catch (error) {
+            this.hideLoadingState();
+            this.handleApiError(error, 'update event');
+        }
     }
 
-    deleteEvent(eventId) {
+    async deleteEvent(eventId) {
         const event = this.events.find(e => e.id === eventId);
-        if (event && confirm(`Are you sure you want to delete "${event.name}"?`)) {
+        if (!event) {
+            EventTicketingApp.showNotification('Event not found', 'error');
+            return;
+        }
+        
+        if (!confirm(`Are you sure you want to delete "${event.name}"?`)) {
+            return;
+        }
+        
+        try {
+            // Show loading state
+            this.showLoadingState('Deleting event...');
+            
+            // Get authentication token
+            const token = localStorage.getItem('adminToken');
+            if (!token) {
+                throw new Error('Not authenticated. Please login again.');
+            }
+            
+            // Get API base URL
+            const API_BASE_URL = window.CONFIG?.API_BASE_URL?.replace('/api', '') || 'https://studentevents-production.up.railway.app';
+            
+            // Call API to delete event
+            const response = await fetch(`${API_BASE_URL}/api/events/${eventId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({ error: 'Delete failed' }));
+                throw new Error(errorData.error || `Delete failed: ${response.status} ${response.statusText}`);
+            }
+            
+            // Remove from local array only after API success
             this.events = this.events.filter(e => e.id !== eventId);
             this.renderEventsTab();
+            this.hideLoadingState();
+            
             EventTicketingApp.showNotification(`Event "${event.name}" deleted successfully`, 'success');
+            
+        } catch (error) {
+            this.hideLoadingState();
+            this.handleApiError(error, 'delete event');
+        }
+    }
+    
+    showLoadingState(message = 'Loading...') {
+        // Remove existing loading overlay
+        const existingOverlay = document.querySelector('.loading-overlay');
+        if (existingOverlay) {
+            existingOverlay.remove();
+        }
+        
+        // Create loading overlay
+        const loadingOverlay = document.createElement('div');
+        loadingOverlay.className = 'loading-overlay';
+        loadingOverlay.innerHTML = `
+            <div class="loading-content">
+                <div class="loading-spinner"></div>
+                <div class="loading-message">${message}</div>
+            </div>
+        `;
+        
+        // Add styles
+        loadingOverlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        `;
+        
+        const loadingContent = loadingOverlay.querySelector('.loading-content');
+        loadingContent.style.cssText = `
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        `;
+        
+        const spinner = loadingOverlay.querySelector('.loading-spinner');
+        spinner.style.cssText = `
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        `;
+        
+        // Add spin animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        document.body.appendChild(loadingOverlay);
+    }
+    
+    hideLoadingState() {
+        const loadingOverlay = document.querySelector('.loading-overlay');
+        if (loadingOverlay) {
+            loadingOverlay.remove();
+        }
+    }
+    
+    // Centralized error handling
+    handleApiError(error, operation = 'operation') {
+        console.error(`${operation} failed:`, error);
+        
+        let userMessage = 'An unexpected error occurred';
+        
+        if (error.message.includes('Not authenticated')) {
+            userMessage = 'Session expired. Please login again.';
+            // Redirect to login after a delay
+            setTimeout(() => {
+                window.location.href = 'login.html';
+            }, 2000);
+        } else if (error.message.includes('401')) {
+            userMessage = 'Authentication failed. Please login again.';
+            setTimeout(() => {
+                window.location.href = 'login.html';
+            }, 2000);
+        } else if (error.message.includes('403')) {
+            userMessage = 'Access denied. You do not have permission to perform this action.';
+        } else if (error.message.includes('404')) {
+            userMessage = 'Resource not found. It may have been deleted.';
+        } else if (error.message.includes('500')) {
+            userMessage = 'Server error. Please try again later.';
+        } else if (error.message.includes('Network')) {
+            userMessage = 'Network error. Please check your connection and try again.';
+        } else if (error.message) {
+            userMessage = error.message;
+        }
+        
+        EventTicketingApp.showNotification(`Failed to ${operation}: ${userMessage}`, 'error');
+        
+        // Show retry option for certain errors
+        if (error.message.includes('Network') || error.message.includes('500')) {
+            this.showRetryOption(operation);
+        }
+    }
+    
+    showRetryOption(operation) {
+        const retryButton = document.createElement('button');
+        retryButton.className = 'retry-button';
+        retryButton.textContent = 'Retry';
+        retryButton.style.cssText = `
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 10px;
+        `;
+        
+        retryButton.onclick = () => {
+            retryButton.remove();
+            // This would need to be implemented per operation
+            console.log(`Retrying ${operation}...`);
+        };
+        
+        // Add retry button to the last notification
+        const notifications = document.querySelectorAll('.notification');
+        const lastNotification = notifications[notifications.length - 1];
+        if (lastNotification) {
+            lastNotification.appendChild(retryButton);
         }
     }
 
@@ -1068,22 +1330,4 @@ class AdminDashboard {
 document.addEventListener('DOMContentLoaded', () => {
     window.adminDashboard = new AdminDashboard();
 });
-// Override events with API data immediately after dashboard loads
-(async function() {
-    const API_BASE_URL = 'https://studentevents-production.up.railway.app';
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/events`);
-        const apiEvents = await response.json();
-        if (window.adminDashboard) {
-            window.adminDashboard.events = apiEvents.map(e => ({
-                id: e.id, name: e.title, date: e.date, location: e.location,
-                price: e.price, totalTickets: e.totalTickets || 100,
-                soldTickets: (e.totalTickets || 100) - (e.availableTickets || 0),
-                status: e.is_active ? 'upcoming' : 'completed'
-            }));
-            window.adminDashboard.updateEventsStatistics();
-            window.adminDashboard.renderCurrentTab();
-            console.log('âœ… Loaded ' + apiEvents.length + ' events from API');
-        }
-    } catch(e) { console.error('API load failed:', e); }
-})();
+// API data loading is now handled in loadMockData() function
