@@ -82,51 +82,35 @@
             color: var(--primary-500);
         }
         
-        .demo-credentials {
-            background-color: var(--gray-50);
-            border: 1px solid var(--border-light);
-            border-radius: var(--radius-lg);
+        .form-group {
+            margin-bottom: var(--space-4);
+        }
+        
+        .form-input {
+            width: 100%;
             padding: var(--space-4);
-            margin-bottom: var(--space-6);
-            text-align: left;
-        }
-        
-        .demo-credentials p {
-            margin: var(--space-1) 0;
-            font-size: var(--font-size-sm);
-            color: var(--text-secondary);
-        }
-        
-        .demo-credentials code {
-            background-color: var(--primary-500);
-            color: var(--text-white);
-            padding: var(--space-1) var(--space-2);
-            border-radius: var(--radius-sm);
-            font-family: monospace;
-            font-size: var(--font-size-sm);
-        }
-        
-        .worker-options {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: var(--space-3);
-            margin-bottom: var(--space-6);
-        }
-        
-        .worker-option {
-            padding: var(--space-3);
-            border: 2px solid var(--border-light);
+            border: 2px solid var(--gray-200);
             border-radius: var(--radius-lg);
-            background: var(--gray-50);
-            text-align: center;
-            font-size: var(--font-size-sm);
+            font-size: var(--font-size-base);
+            transition: all 0.3s ease;
+            background-color: var(--bg-primary);
+            box-sizing: border-box;
         }
         
-        .worker-option code {
-            display: block;
-            font-weight: var(--font-bold);
-            color: var(--primary-500);
-            margin-top: var(--space-1);
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-500);
+            box-shadow: 0 0 0 4px var(--primary-100);
+            transform: translateY(-1px);
+        }
+        
+        .form-input::placeholder {
+            color: var(--text-muted);
+            font-weight: var(--font-normal);
+        }
+        
+        .form-input:hover {
+            border-color: var(--primary-300);
         }
     </style>
 </head>
@@ -139,21 +123,13 @@
             <h1 class="login-title">Worker Access</h1>
             <p class="login-subtitle">Authorized personnel only - Ticket scanning portal</p>
             
-            <div class="demo-credentials">
-                <p><strong>Worker Login Information:</strong></p>
-                <div class="worker-info">
-                    <p>• Worker credentials are managed by the admin dashboard</p>
-                    <p>• Contact your administrator for username and password</p>
-                    <p>• Default demo accounts: worker1, worker2, worker3 (password: scan123)</p>
-                </div>
-            </div>
             
             <form class="login-form" onsubmit="workerLogin(event)">
                 <div class="form-group">
-                    <input type="text" id="workerId" name="workerId" class="form-input" placeholder="Worker ID" value="worker1" required>
+                    <input type="email" id="email" name="email" class="form-input" placeholder="Enter your email address" required>
                 </div>
                 <div class="form-group">
-                    <input type="password" id="password" name="password" class="form-input" placeholder="Password" value="scan123" required>
+                    <input type="password" id="password" name="password" class="form-input" placeholder="Enter your password" required>
                 </div>
                 <button type="submit" class="login-btn">
                     <i class="fas fa-qrcode"></i>
@@ -175,8 +151,19 @@
             console.log('🔐 Worker login attempt started');
             
             // Get form inputs
-            const email = event.target.querySelector('input[type="text"]').value.trim();
+            const email = event.target.querySelector('input[type="email"]').value.trim();
             const password = event.target.querySelector('input[type="password"]').value.trim();
+            
+            // Validate inputs
+            if (!email || !password) {
+                alert('Please enter both email and password.');
+                return;
+            }
+            
+            if (!email.includes('@')) {
+                alert('Please enter a valid email address.');
+                return;
+            }
             
             console.log('Email entered:', email);
             
@@ -217,15 +204,18 @@
             }
         }
         
-        // Auto-fill demo credentials on page load
+        // Clear any auto-filled values on page load
         document.addEventListener('DOMContentLoaded', function() {
-            const emailInput = document.querySelector('input[type="text"]');
+            const emailInput = document.querySelector('input[type="email"]');
             const passwordInput = document.querySelector('input[type="password"]');
             
             if (emailInput && passwordInput) {
-                emailInput.value = 'john.worker@studentevents.com';
-                emailInput.placeholder = 'john.worker@studentevents.com';
-                passwordInput.value = 'worker123';
+                // Clear any auto-filled values
+                emailInput.value = '';
+                passwordInput.value = '';
+                
+                // Focus on email input
+                emailInput.focus();
             }
         });
     </script>

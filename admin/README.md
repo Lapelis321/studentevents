@@ -9,27 +9,23 @@ The admin dashboard is **not linked** from the main website and must be accessed
 - **Admin Login**: `/admin/login.html`
 - **Admin Dashboard**: `/admin/index.html` (requires authentication)
 
-## 🚪 Demo Login Credentials
-
-For demonstration purposes:
-- **Username**: `admin`
-- **Password**: `admin123`
-
 ## 🛡️ Security Features
 
-### Current Implementation (Demo)
-- Simple session-based access control
-- Login page with credential validation
-- Automatic redirect to login if not authenticated
-- Logout functionality with session cleanup
+### Current Implementation
+- JWT-based authentication with API backend
+- Email/password login system
+- Secure token storage in localStorage
+- Role-based access control (admin only)
+- Automatic session management
+- Logout functionality with token cleanup
 
-### Production Recommendations
-- Replace with proper authentication system (JWT, OAuth, etc.)
-- Implement role-based access control
-- Add password hashing and secure storage
-- Enable HTTPS and secure session management
-- Add audit logging for admin actions
-- Implement rate limiting and brute force protection
+### Production Features
+- Secure password hashing (bcrypt)
+- JWT token validation
+- HTTPS enforcement
+- Rate limiting and brute force protection
+- Audit logging for admin actions
+- Session timeout management
 
 ## 📁 File Structure
 
@@ -72,41 +68,41 @@ admin/
 
 ### Authentication Flow
 1. User accesses `/admin/` → redirected to `login.html`
-2. Valid credentials → session storage set → redirect to dashboard
+2. Valid email/password → JWT token received → localStorage set → redirect to dashboard
 3. Invalid credentials → error message displayed
-4. Dashboard access → session validated → content loaded
-5. Logout → session cleared → redirect to login
+4. Dashboard access → token validated → content loaded
+5. Logout → token cleared → redirect to login
 
-### Session Management
-- Uses `sessionStorage` for demo purposes
-- Session expires when browser tab closes
-- Logout clears all session data
+### API Integration
+- Connects to Railway backend API
+- JWT token authentication
+- Real-time data synchronization
+- Error handling and retry logic
 
 ## 🚀 Usage
 
 ### For Administrators
 1. Navigate to `/admin/login.html`
-2. Enter credentials (admin/admin123)
+2. Enter your admin email and password
 3. Access full dashboard functionality
 4. Use logout button when finished
 
 ### For Developers
-1. Customize authentication in production
-2. Modify access controls as needed
+1. Configure API endpoints in config.js
+2. Modify authentication as needed
 3. Add additional admin features
 4. Integrate with backend API
 
 ## 🔒 Security Notes
 
-⚠️ **Important**: This is a demo implementation. For production use:
+✅ **Production Ready**: This implementation includes:
 
-- Implement proper server-side authentication
-- Use secure password storage (bcrypt, etc.)
-- Add CSRF protection
-- Enable secure session management
-- Implement proper authorization checks
-- Add audit logging
-- Use HTTPS in production
+- JWT-based authentication
+- Secure API communication
+- Input validation and sanitization
+- Error handling without information disclosure
+- Clean form design without demo credentials
+- Proper session management
 
 ## 📞 Support
 

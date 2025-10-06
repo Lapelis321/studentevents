@@ -5,7 +5,7 @@
             console.log('🔐 Admin login attempt started');
             
             // Get form inputs
-            const email = event.target.querySelector('input[type="text"]').value.trim();
+            const email = event.target.querySelector('input[type="email"]').value.trim();
             const password = event.target.querySelector('input[type="password"]').value.trim();
             
             console.log('Email entered:', email);
@@ -55,16 +55,18 @@
             }
         }
         
-        // Auto-fill demo credentials on page load
+        // Clear any auto-filled values on page load
         document.addEventListener('DOMContentLoaded', function() {
-            const emailInput = document.querySelector('input[type="text"]');
+            const emailInput = document.querySelector('input[type="email"]');
             const passwordInput = document.querySelector('input[type="password"]');
             
             if (emailInput && passwordInput) {
-                // Use email format (not username)
-                emailInput.value = 'admin@studentevents.com';
-                emailInput.placeholder = 'admin@studentevents.com';
-                passwordInput.value = 'admin123';
+                // Clear any auto-filled values
+                emailInput.value = '';
+                passwordInput.value = '';
+                
+                // Focus on email input
+                emailInput.focus();
             }
         });
     </script>

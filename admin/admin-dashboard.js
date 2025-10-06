@@ -137,53 +137,24 @@ class AdminDashboard {
         ];
         }
 
-        // Mock workers data
-        this.workers = [
-            {
-                id: 1,
-                name: 'John Smith',
-                username: 'worker1',
-                password: 'scan123',
-                email: 'john.smith@studentevents.com',
-                phone: '+1 (555) 123-4567',
-                role: 'Scanner',
-                status: 'active',
-                lastActive: '2024-01-15T10:30:00Z'
-            },
-            {
-                id: 2,
-                name: 'Sarah Johnson',
-                username: 'worker2',
-                password: 'scan123',
-                email: 'sarah.johnson@studentevents.com',
-                phone: '+1 (555) 234-5678',
-                role: 'Supervisor',
-                status: 'active',
-                lastActive: '2024-01-15T09:15:00Z'
-            },
-            {
-                id: 3,
-                name: 'Mike Davis',
-                username: 'worker3',
-                password: 'scan123',
-                email: 'mike.davis@studentevents.com',
-                phone: '+1 (555) 345-6789',
-                role: 'Scanner',
-                status: 'inactive',
-                lastActive: '2024-01-10T14:20:00Z'
-            },
-            {
-                id: 4,
-                name: 'Emily Brown',
-                username: 'worker4',
-                password: 'scan123',
-                email: 'emily.brown@studentevents.com',
-                phone: '+1 (555) 456-7890',
-                role: 'Coordinator',
-                status: 'active',
-                lastActive: '2024-01-15T11:45:00Z'
+        // Load workers from API or use empty array
+        try {
+            console.log('📡 Loading workers from API...');
+            const API_BASE_URL = window.CONFIG?.API_BASE_URL?.replace('/api', '') || 'https://studentevents-production.up.railway.app';
+            const response = await fetch(`${API_BASE_URL}/api/workers`);
+            
+            if (response.ok) {
+                const apiWorkers = await response.json();
+                console.log(`✅ Loaded ${apiWorkers.length} workers from API`);
+                this.workers = apiWorkers;
+            } else {
+                throw new Error(`API responded with status: ${response.status}`);
             }
-        ];
+        } catch (error) {
+            console.warn('Workers API load failed, using empty array:', error);
+            // Start with empty workers array - admin can add workers through the interface
+            this.workers = [];
+        }
 
         // Store workers in localStorage for worker login system
         this.saveWorkersToStorage();
