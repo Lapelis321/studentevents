@@ -1,6 +1,6 @@
 [build]
   publish = "."
-  command = "echo 'No build command needed for static site'"
+  command = "echo No build command needed for static site"
 
 [build.environment]
   NODE_VERSION = "18"
@@ -10,6 +10,16 @@
   to = "https://studentevents-production.up.railway.app/api/:splat"
   status = 200
   force = true
+
+[[redirects]]
+  from = "/admin/*"
+  to = "/admin/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/worker/*"
+  to = "/worker/:splat"
+  status = 200
 
 [[redirects]]
   from = "/*"
