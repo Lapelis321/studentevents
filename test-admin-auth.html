@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Authentication Test</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .warning { background-color: #fff3cd; border-color: #ffeaa7; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; }
+        .log { background: #f8f9fa; padding: 10px; margin: 10px 0; border-radius: 3px; font-family: monospace; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <h1>🔐 Admin Authentication System Test</h1>
+    
+    <div class="test-section info">
+        <h3>Test Instructions:</h3>
+        <ol>
+            <li>Click "Test Login" to test admin login</li>
+            <li>Check if authentication works</li>
+            <li>Click "Test Logout" to test logout</li>
+            <li>Verify all tokens are cleared</li>
+        </ol>
+    </div>
+    
+    <div class="test-section">
+        <h3>Test Controls:</h3>
+        <button onclick="testLogin()">Test Login</button>
+        <button onclick="testLogout()">Test Logout</button>
+        <button onclick="checkAuthStatus()">Check Auth Status</button>
+        <button onclick="clearLog()">Clear Log</button>
+    </div>
+    
+    <div class="test-section">
+        <h3>Test Results:</h3>
+        <div id="log" class="log"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Current Auth Status:</h3>
+        <div id="authStatus"></div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'https://studentevents-production.up.railway.app';
+        
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : type === 'warning' ? 'warning' : 'info';
+            logDiv.innerHTML += `<div class="${className}">[${timestamp}] ${message}</div>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+        
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+        }
+        
+        async function testLogin() {
+            log('🧪 Testing Admin Login...', 'info');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'admin@studentevents.com',
+                        password: 'admin123'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success && data.token) {
+                    log('✅ Login successful!', 'success');
+                    log(`   Token: ${data.token.substring(0, 30)}...`, 'info');
+                    log(`   User: ${data.user.name} (${data.user.role})`, 'info');
+                    
+                    // Save token to localStorage (simulate login)
+                    localStorage.setItem('adminToken', data.token);
+                    localStorage.setItem('adminUser', JSON.stringify(data.user));
+                    sessionStorage.setItem('adminAccess', 'true');
+                    
+                    log('✅ Token saved to localStorage', 'success');
+                    checkAuthStatus();
+                } else {
+                    log(`❌ Login failed: ${data.error || 'Unknown error'}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Login error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testLogout() {
+            log('🧪 Testing Logout...', 'info');
+            
+            const token = localStorage.getItem('adminToken');
+            if (!token) {
+                log('⚠️ No token found to logout', 'warning');
+                return;
+            }
+            
+            try {
+                // Try server logout
+                const response = await fetch(`${API_BASE_URL}/api/auth/logout`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    log('✅ Server logout successful', 'success');
+                } else {
+                    log('⚠️ Server logout failed, but continuing with client logout', 'warning');
+                }
+            } catch (error) {
+                log(`⚠️ Server logout error: ${error.message}`, 'warning');
+            }
+            
+            // Clear client-side data
+            localStorage.removeItem('adminToken');
+            localStorage.removeItem('adminUser');
+            sessionStorage.removeItem('adminAccess');
+            
+            log('✅ Client-side logout completed', 'success');
+            checkAuthStatus();
+        }
+        
+        function checkAuthStatus() {
+            const token = localStorage.getItem('adminToken');
+            const user = localStorage.getItem('adminUser');
+            const sessionAccess = sessionStorage.getItem('adminAccess');
+            
+            let status = '<h4>Authentication Status:</h4>';
+            status += `<p><strong>JWT Token:</strong> ${token ? '✅ Present' : '❌ Missing'}</p>`;
+            status += `<p><strong>User Data:</strong> ${user ? '✅ Present' : '❌ Missing'}</p>`;
+            status += `<p><strong>Session Access:</strong> ${sessionAccess ? '✅ Present' : '❌ Missing'}</p>`;
+            
+            if (token) {
+                try {
+                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    const now = Math.floor(Date.now() / 1000);
+                    const isExpired = payload.exp < now;
+                    
+                    status += `<p><strong>Token Expiry:</strong> ${isExpired ? '❌ Expired' : '✅ Valid'}</p>`;
+                    status += `<p><strong>User Role:</strong> ${payload.role || 'Unknown'}</p>`;
+                    status += `<p><strong>Expires At:</strong> ${new Date(payload.exp * 1000).toLocaleString()}</p>`;
+                } catch (error) {
+                    status += `<p><strong>Token Parse:</strong> ❌ Invalid format</p>`;
+                }
+            }
+            
+            document.getElementById('authStatus').innerHTML = status;
+        }
+        
+        // Auto-check auth status on page load
+        window.onload = function() {
+            checkAuthStatus();
+            log('🔐 Authentication Test Page Loaded', 'info');
+        };
+    </script>
+</body>
+</html>
