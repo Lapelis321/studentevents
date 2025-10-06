@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Deployment Test</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+</head>
+<body>
+    <h1>Deployment Test - Authentication Fix</h1>
+    <p>This page tests if the authentication fixes are deployed.</p>
+    
+    <h2>Test Admin Login API Call</h2>
+    <button onclick="testAdminAPI()">Test Admin Login API</button>
+    <div id="adminResult"></div>
+    
+    <h2>Test Worker Login API Call</h2>
+    <button onclick="testWorkerAPI()">Test Worker Login API</button>
+    <div id="workerResult"></div>
+    
+    <h2>Check Current Code</h2>
+    <button onclick="checkCode()">Check if new code is deployed</button>
+    <div id="codeResult"></div>
+
+    <script>
+        const API_BASE_URL = 'https://studentevents-production.up.railway.app';
+        
+        async function testAdminAPI() {
+            try {
+                console.log('Testing admin API...');
+                const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'admin@studentevents.com',
+                        password: 'admin123'
+                    })
+                });
+                
+                const data = await response.json();
+                console.log('Admin API response:', data);
+                
+                document.getElementById('adminResult').innerHTML = `
+                    <h3>✅ Admin API Test Result:</h3>
+                    <p><strong>Status:</strong> ${response.status}</p>
+                    <p><strong>Success:</strong> ${data.success}</p>
+                    <p><strong>Token:</strong> ${data.token ? data.token.substring(0, 30) + '...' : 'None'}</p>
+                    <p><strong>User:</strong> ${data.user ? data.user.name + ' (' + data.user.role + ')' : 'None'}</p>
+                    <p><strong>Email:</strong> ${data.user ? data.user.email : 'None'}</p>
+                `;
+                
+            } catch (error) {
+                console.error('Admin API error:', error);
+                document.getElementById('adminResult').innerHTML = `
+                    <h3>❌ Admin API Error:</h3>
+                    <p><strong>Error:</strong> ${error.message}</p>
+                `;
+            }
+        }
+        
+        async function testWorkerAPI() {
+            try {
+                console.log('Testing worker API...');
+                const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'john.worker@studentevents.com',
+                        password: 'worker123'
+                    })
+                });
+                
+                const data = await response.json();
+                console.log('Worker API response:', data);
+                
+                document.getElementById('workerResult').innerHTML = `
+                    <h3>✅ Worker API Test Result:</h3>
+                    <p><strong>Status:</strong> ${response.status}</p>
+                    <p><strong>Success:</strong> ${data.success}</p>
+                    <p><strong>Token:</strong> ${data.token ? data.token.substring(0, 30) + '...' : 'None'}</p>
+                    <p><strong>User:</strong> ${data.user ? data.user.name + ' (' + data.user.role + ')' : 'None'}</p>
+                    <p><strong>Email:</strong> ${data.user ? data.user.email : 'None'}</p>
+                `;
+                
+            } catch (error) {
+                console.error('Worker API error:', error);
+                document.getElementById('workerResult').innerHTML = `
+                    <h3>❌ Worker API Error:</h3>
+                    <p><strong>Error:</strong> ${error.message}</p>
+                `;
+            }
+        }
+        
+        function checkCode() {
+            // Check if we can access the admin login page and see if it has the new code
+            fetch('/admin/login.html')
+                .then(response => response.text())
+                .then(html => {
+                    const hasNewCode = html.includes('fetch(`${API_BASE_URL}/api/auth/login`');
+                    const hasOldCode = html.includes('if (username === \'admin\' && password === \'admin123\')');
+                    
+                    document.getElementById('codeResult').innerHTML = `
+                        <h3>Code Deployment Check:</h3>
+                        <p><strong>Has New API Code:</strong> ${hasNewCode ? '✅ YES' : '❌ NO'}</p>
+                        <p><strong>Has Old Fake Code:</strong> ${hasOldCode ? '❌ YES (OLD CODE)' : '✅ NO (GOOD)'}</p>
+                        <p><strong>Deployment Status:</strong> ${hasNewCode && !hasOldCode ? '✅ DEPLOYED' : '❌ NOT DEPLOYED'}</p>
+                    `;
+                })
+                .catch(error => {
+                    document.getElementById('codeResult').innerHTML = `
+                        <h3>❌ Code Check Error:</h3>
+                        <p><strong>Error:</strong> ${error.message}</p>
+                    `;
+                });
+        }
+        
+        // Auto-run tests on page load
+        window.onload = function() {
+            console.log('Deployment test page loaded');
+            checkCode();
+        };
+    </script>
+</body>
+</html>
