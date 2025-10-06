@@ -7,6 +7,7 @@ const jwt = require('jsonwebtoken');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+const FRONTEND_URL = process.env.FRONTEND_URL || 'https://fabulous-pothos-8d2cf9.netlify.app';
 
 // Database connection
 const pool = new Pool({
@@ -55,7 +56,7 @@ app.get('/api/events/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const result = await pool.query(
-      'SELECT * FROM events WHERE id =  AND is_active = true',
+      'SELECT * FROM events WHERE id = $1 AND is_active = true',
       [id]
     );
     
@@ -77,7 +78,7 @@ app.post('/api/auth/login', async (req, res) => {
     
     // Find user in database
     const result = await pool.query(
-      'SELECT id, name, email, password_hash, role FROM users WHERE email = ',
+      'SELECT id, name, email, password_hash, role FROM users WHERE email = $1',
       [email]
     );
     
