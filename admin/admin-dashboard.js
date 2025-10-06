@@ -1072,7 +1072,7 @@ document.addEventListener('DOMContentLoaded', () => {
 (async function() {
     const API_BASE_URL = 'https://studentevents-production.up.railway.app';
     try {
-        const response = await fetch(${API_BASE_URL}/api/events);
+        const response = await fetch(`${API_BASE_URL}/api/events`);
         const apiEvents = await response.json();
         if (window.adminDashboard) {
             window.adminDashboard.events = apiEvents.map(e => ({
