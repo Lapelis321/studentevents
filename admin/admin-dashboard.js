@@ -1,4 +1,4 @@
-// ===== ADMIN DASHBOARD JAVASCRIPT =====
+﻿// ===== ADMIN DASHBOARD JAVASCRIPT =====
 
 class AdminDashboard {
     constructor() {
@@ -9,8 +9,8 @@ class AdminDashboard {
         this.init();
     }
 
-    init() {
-        this.loadMockData();
+    async init() {
+        await this.loadMockData();
         this.loadSettingsFromStorage();
         this.setupEventListeners();
         this.renderCurrentTab();
@@ -44,7 +44,7 @@ class AdminDashboard {
         });
     }
 
-    loadMockData() {
+    async loadMockData() {
         // Mock events data
         this.events = [
             {
@@ -218,7 +218,7 @@ class AdminDashboard {
 
         document.getElementById('totalEvents').textContent = totalEvents;
         document.getElementById('totalTickets').textContent = totalTickets.toLocaleString();
-        document.getElementById('totalRevenue').textContent = `€${totalRevenue.toLocaleString()}`;
+        document.getElementById('totalRevenue').textContent = `â‚¬${totalRevenue.toLocaleString()}`;
         document.getElementById('upcomingEvents').textContent = upcomingEvents;
     }
 
@@ -306,7 +306,7 @@ class AdminDashboard {
                     <td><code>${worker.username}</code></td>
                     <td>
                         <div class="password-field">
-                            <span class="password-text" id="password-${worker.id}" data-password="${worker.password}">••••••••</span>
+                            <span class="password-text" id="password-${worker.id}" data-password="${worker.password}">â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢</span>
                             <button class="password-toggle-btn" onclick="adminDashboard.togglePassword(${worker.id})" title="Show/Hide Password">
                                 <i class="fas fa-eye" id="eye-${worker.id}"></i>
                             </button>
@@ -426,7 +426,7 @@ class AdminDashboard {
                 <input type="text" class="form-input" name="${prefix}PriceTierName${index}" value="${tier.name}" required>
             </div>
             <div class="form-group">
-                <label class="form-label">Price (€)</label>
+                <label class="form-label">Price (â‚¬)</label>
                 <input type="number" class="form-input" name="${prefix}PriceTierPrice${index}" value="${tier.price}" step="0.01" min="0" required>
             </div>
             <div class="form-group">
@@ -573,7 +573,7 @@ class AdminDashboard {
                     'Email': participant.email,
                     'Phone': participant.phone,
                     'Ticket Type': participant.ticketType,
-                    'Price Paid': `€${participant.pricePaid}`,
+                    'Price Paid': `â‚¬${participant.pricePaid}`,
                     'Purchase Date': participant.purchaseDate,
                     'Status': participant.status
                 });
@@ -708,7 +708,7 @@ class AdminDashboard {
         
         if (!passwordElement || !eyeElement) return;
         
-        const isHidden = passwordElement.textContent === '••••••••';
+        const isHidden = passwordElement.textContent === 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢';
         const actualPassword = passwordElement.getAttribute('data-password');
         
         if (isHidden) {
@@ -718,7 +718,7 @@ class AdminDashboard {
             passwordElement.style.fontFamily = 'monospace';
         } else {
             // Hide password
-            passwordElement.textContent = '••••••••';
+            passwordElement.textContent = 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢';
             eyeElement.className = 'fas fa-eye';
             passwordElement.style.fontFamily = '';
         }
@@ -1083,7 +1083,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }));
             window.adminDashboard.updateEventsStatistics();
             window.adminDashboard.renderCurrentTab();
-            console.log('✅ Loaded ' + apiEvents.length + ' events from API');
+            console.log('âœ… Loaded ' + apiEvents.length + ' events from API');
         }
     } catch(e) { console.error('API load failed:', e); }
 })();
