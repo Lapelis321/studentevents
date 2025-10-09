@@ -1,6 +1,6 @@
 {
   "name": "studentevents",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "StudentEvents - Full-stack event ticketing platform",
   "main": "server.js",
   "scripts": {
