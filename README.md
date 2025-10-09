@@ -14,6 +14,20 @@ A modern, full-stack event ticketing platform designed for student organizations
 - **Mobile Responsive**: Works perfectly on all devices
 - **Real-time Updates**: Live ticket availability updates
 
+## 🌐 Live Deployment
+
+### Production URLs
+- **Frontend**: https://afterstateevents.netlify.app
+- **Backend API**: https://studentevents-production.up.railway.app
+- **Admin Panel**: https://afterstateevents.netlify.app/admin
+- **Worker Panel**: https://afterstateevents.netlify.app/worker
+
+### Deployment Status
+- ✅ **Backend (Railway)**: Fully operational
+- ⚠️ **Frontend (Netlify)**: Requires manual deployment trigger
+
+**See [DEPLOYMENT_STATUS_REPORT.md](./DEPLOYMENT_STATUS_REPORT.md) for detailed deployment information.**
+
 ## 🚀 Quick Start
 ### Prerequisites
 - Node.js 18+
