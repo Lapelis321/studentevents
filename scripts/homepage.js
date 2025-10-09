@@ -1,4 +1,5 @@
 // ===== HOMEPAGE SPECIFIC JAVASCRIPT =====
+// Version: 1.0.3 - Status badges and filtering
 
 class Homepage {
     constructor() {
