@@ -27,7 +27,15 @@
         const originalLoadMockData = window.adminDashboard.loadMockData.bind(window.adminDashboard);
         
         window.adminDashboard.loadMockData = async function() {
-            console.log('📡 Loading events from API...');
+            // ALWAYS check localStorage FIRST - it takes absolute priority!
+            const savedEvents = localStorage.getItem('adminEvents');
+            if (savedEvents) {
+                console.log('📦 localStorage has data - SKIPPING API and using stored events');
+                await originalLoadMockData();
+                return;
+            }
+            
+            console.log('📡 No localStorage data - Loading events from API...');
             try {
                 const response = await fetch(`${API_BASE_URL}/api/events`);
                 if (!response.ok) throw new Error('API request failed');
@@ -50,13 +58,25 @@
                 }));
                 
                 console.log('✅ Events transformed:', this.events.length);
+                
+                // IMPORTANT: Save to localStorage immediately so it persists!
+                this.saveEventsToStorage();
+                
+                // CRITICAL: Ensure events stay in memory!
+                console.log('✅ Events array in memory:', this.events.length, 'events');
+                
                 this.updateEventsStatistics();
                 this.renderCurrentTab();
+                
+                // Double-check: Log events after render to ensure they persist
+                setTimeout(() => {
+                    console.log('🔍 Post-render check - events in memory:', window.adminDashboard.events.length);
+                }, 100);
                 
             } catch (error) {
                 console.error('❌ API failed:', error);
                 console.log('⚠️ Using fallback data');
-                originalLoadMockData();
+                await originalLoadMockData();
             }
         };
         
@@ -68,7 +88,16 @@
             
             const token = getAuthToken();
             if (!token) {
-                alert('Please login first to delete events');
+                console.log('⚠️ No auth token, performing local-only delete');
+                // Perform local delete without API call
+                this.events = this.events.filter(e => e.id != eventId);  // Use loose comparison
+                this.saveEventsToStorage();
+                this.renderEventsTab();
+                if (this.showNotification) {
+                    this.showNotification('Event deleted locally', 'success');
+                } else {
+                    alert('Event deleted successfully');
+                }
                 return;
             }
             
@@ -82,13 +111,31 @@
                 if (!response.ok) throw new Error('Delete failed');
                 
                 console.log('✅ Event deleted from API');
-                this.events = this.events.filter(e => e.id !== eventId);
-                EventTicketingApp.showNotification('Event deleted successfully', 'success');
-                this.renderCurrentTab();
+                this.events = this.events.filter(e => e.id != eventId);  // Use loose comparison
+                this.saveEventsToStorage();  // Save to localStorage
+                console.log('✅ Event removed from localStorage');
+                
+                this.renderEventsTab();
+                if (this.showNotification) {
+                    this.showNotification('Event deleted successfully', 'success');
+                } else {
+                    alert('Event deleted successfully');
+                }
                 
             } catch (error) {
                 console.error('❌ Delete failed:', error);
-                EventTicketingApp.showNotification('Failed to delete event: ' + error.message, 'error');
+                // Fall back to local delete if API fails
+                console.log('⚠️ API delete failed, performing local-only delete...');
+                this.events = this.events.filter(e => e.id != eventId);  // Use loose comparison
+                this.saveEventsToStorage();
+                console.log('✅ Event removed locally (API unavailable)');
+                
+                this.renderEventsTab();
+                if (this.showNotification) {
+                    this.showNotification('Event deleted locally (server unavailable)', 'warning');
+                } else {
+                    alert('Event deleted locally');
+                }
             }
         };
         
@@ -100,30 +147,39 @@
             
             const token = getAuthToken();
             if (!token) {
-                alert('Please login first to save changes');
-                return;
+                console.log('⚠️ No auth token, falling back to local-only save');
+                // Fall back to original function for local-only save
+                return originalSaveEditedEvent.call(this);
             }
             
-            const event = this.events.find(e => e.id === this.editingEventId);
-            if (!event) return;
+            const event = this.events.find(e => e.id == this.editingEventId);  // Use loose comparison
+            if (!event) {
+                console.error('Event not found:', this.editingEventId);
+                return;
+            }
             
             // Get form data
             const form = document.getElementById('editEventForm');
             const formData = new FormData(form);
+            
+            // Get price and totalTickets from form
+            const price = parseFloat(document.getElementById('editEventPrice')?.value) || event.price || 0;
+            const totalTickets = parseInt(document.getElementById('editEventTotalTickets')?.value) || event.totalTickets || 100;
             
             // Prepare event data for API
             const eventData = {
                 title: formData.get('editEventName') || event.name,
                 date: (formData.get('editEventDate') || event.date.substring(0, 16)) + ':00Z',
                 location: formData.get('editEventLocation') || event.location,
-                price: parseFloat(event.price) || 0,
+                price: price,
                 currency: 'EUR',
                 minAge: 18,
                 dressCode: 'Casual',
                 description: formData.get('editEventDescription') || event.description || '',
-                additionalInfo: '',
-                availableTickets: event.totalTickets - event.soldTickets,
-                totalTickets: event.totalTickets || 100
+                additionalInfo: formData.get('editEventImage') || event.image || '',
+                availableTickets: totalTickets - (event.soldTickets || 0),
+                totalTickets: totalTickets,
+                is_active: formData.get('editEventStatus') === 'upcoming' || formData.get('editEventStatus') === 'active'
             };
             
             try {
@@ -138,26 +194,72 @@
                 });
                 
                 if (!response.ok) {
-                    const error = await response.json();
+                    const error = await response.json().catch(() => ({ error: 'Update failed' }));
                     throw new Error(error.error || 'Update failed');
                 }
                 
                 const result = await response.json();
                 console.log('✅ Event updated on API:', result);
                 
-                // Update local event
+                // Update local event with ALL fields
                 event.name = eventData.title;
                 event.date = eventData.date;
                 event.location = eventData.location;
                 event.description = eventData.description;
+                event.image = eventData.additionalInfo;
+                event.price = eventData.price;
+                event.totalTickets = eventData.totalTickets;
+                event.status = eventData.is_active ? 'upcoming' : 'completed';
+                
+                // CRITICAL: Save to localStorage!
+                this.saveEventsToStorage();
+                console.log('✅ Event saved to localStorage');
                 
                 this.closeEditEventModal();
                 this.renderEventsTab();
-                EventTicketingApp.showNotification(`Event "${eventData.title}" updated successfully`, 'success');
+                
+                // Use showNotification method if available, otherwise alert
+                if (this.showNotification) {
+                    this.showNotification(`Event "${eventData.title}" updated successfully`, 'success');
+                } else {
+                    alert(`Event "${eventData.title}" updated successfully`);
+                }
                 
             } catch (error) {
                 console.error('❌ Update failed:', error);
-                EventTicketingApp.showNotification('Failed to update event: ' + error.message, 'error');
+                // Try to fall back to local-only save if API fails
+                console.log('⚠️ API update failed, attempting local-only save...');
+                try {
+                    // Update local event
+                    event.name = formData.get('editEventName') || event.name;
+                    event.date = formData.get('editEventDate') || event.date;
+                    event.location = formData.get('editEventLocation') || event.location;
+                    event.description = formData.get('editEventDescription') || event.description;
+                    event.image = formData.get('editEventImage') || event.image;
+                    event.price = price;
+                    event.totalTickets = totalTickets;
+                    event.status = formData.get('editEventStatus') || event.status;
+                    
+                    // Save to localStorage
+                    this.saveEventsToStorage();
+                    console.log('✅ Event saved locally (API unavailable)');
+                    
+                    this.closeEditEventModal();
+                    this.renderEventsTab();
+                    
+                    if (this.showNotification) {
+                        this.showNotification(`Event "${event.name}" updated locally (server unavailable)`, 'warning');
+                    } else {
+                        alert(`Event "${event.name}" updated locally`);
+                    }
+                } catch (localError) {
+                    console.error('❌ Local save also failed:', localError);
+                    if (this.showNotification) {
+                        this.showNotification('Failed to update event: ' + error.message, 'error');
+                    } else {
+                        alert('Failed to update event: ' + error.message);
+                    }
+                }
             }
         };
         

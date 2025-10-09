@@ -30,13 +30,13 @@
                             <i class="fas fa-qrcode"></i>
                             <span>Worker Portal</span>
                         </div>
-                        <button class="logout-btn" onclick="workerLogout()" title="Logout">
+                        <button class="logout-btn" onclick="workerLogout()">
                             <i class="fas fa-sign-out-alt"></i>
                             <span class="logout-text">Logout</span>
                         </button>
                     </div>
                     <div class="header-actions">
-                        <button class="mobile-menu-toggle" aria-label="Toggle menu">
+                        <button class="mobile-menu-toggle" aria-label="Toggle menu" title="Toggle menu">
                             <i class="fas fa-bars"></i>
                         </button>
                     </div>
@@ -47,8 +47,8 @@
 
     <!-- Mobile Navigation -->
     <nav class="mobile-nav">
-                        <a href="/index.html" class="mobile-nav-link">Back to Events</a>
-                        <a href="/rules.html" class="mobile-nav-link">Rules & Policy</a>
+        <a href="/index.html" class="mobile-nav-link">Back to Events</a>
+        <a href="/rules.html" class="mobile-nav-link">Rules & Policy</a>
         <a href="#contact" class="mobile-nav-link">Contact</a>
     </nav>
 
@@ -82,7 +82,7 @@
                         </div>
                         <canvas id="cameraCanvas"></canvas>
                     </div>
-                    
+
                     <div class="camera-controls">
                         <button class="btn btn-primary" id="startCameraBtn" onclick="workerScan.startCamera()">
                             <i class="fas fa-camera"></i>
@@ -104,23 +104,23 @@
                     <div class="section-divider">
                         <span>OR</span>
                     </div>
-                    
+
                     <div class="manual-input-container">
                         <h2 class="manual-title">
                             <i class="fas fa-keyboard"></i>
                             Manual Entry
                         </h2>
-                        
+
                         <form class="manual-form" id="manualForm">
                             <div class="form-group">
                                 <label class="form-label" for="ticketId">Ticket ID</label>
-                                <input type="text" 
-                                       class="form-input" 
-                                       id="ticketId" 
+                                <input type="text"
+                                       class="form-input"
+                                       id="ticketId"
                                        placeholder="Enter ticket ID or scan code"
                                        autocomplete="off">
                             </div>
-                            
+
                             <button type="submit" class="btn btn-primary btn-lg">
                                 <i class="fas fa-search"></i>
                                 Verify Ticket
@@ -140,7 +140,7 @@
                         <i class="fas fa-chart-bar"></i>
                         Today's Statistics
                     </h2>
-                    
+
                     <div class="stats-grid">
                         <div class="stat-card stat-card-success">
                             <div class="stat-icon">
@@ -151,7 +151,7 @@
                                 <div class="stat-label">Valid Scans</div>
                             </div>
                         </div>
-                        
+
                         <div class="stat-card stat-card-error">
                             <div class="stat-icon">
                                 <i class="fas fa-times-circle"></i>
@@ -161,7 +161,7 @@
                                 <div class="stat-label">Invalid Scans</div>
                             </div>
                         </div>
-                        
+
                         <div class="stat-card stat-card-info">
                             <div class="stat-icon">
                                 <i class="fas fa-clock"></i>
@@ -200,28 +200,33 @@
         document.addEventListener('DOMContentLoaded', () => {
             const hasAccess = sessionStorage.getItem('workerAccess');
             if (!hasAccess) {
-                window.location.href = 'login.html';
+                window.location.href = '/worker/login.html';
             } else {
                 // Display worker info in header if logged in
                 const workerData = JSON.parse(sessionStorage.getItem('workerData') || '{}');
                 if (workerData.name) {
                     updateWorkerBadge(workerData);
                 }
+                
+                // Initialize worker scanner
+                if (typeof WorkerScan !== 'undefined') {
+                    window.workerScan = new WorkerScan();
+                }
             }
         });
-        
+
         function updateWorkerBadge(workerData) {
             const workerBadge = document.querySelector('.worker-badge span');
             if (workerBadge) {
                 workerBadge.textContent = `${workerData.name} (${workerData.role})`;
             }
         }
-        
+
         function workerLogout() {
             if (confirm('Are you sure you want to logout?')) {
                 sessionStorage.removeItem('workerAccess');
                 sessionStorage.removeItem('workerData');
-                window.location.href = 'login.html';
+                window.location.href = '/worker/login.html';
             }
         }
     </script>

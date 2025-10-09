@@ -14,11 +14,48 @@ A modern, full-stack event ticketing platform designed for student organizations
 - **Mobile Responsive**: Works perfectly on all devices
 - **Real-time Updates**: Live ticket availability updates
 
-## 🚀 Quick Start - Get Online in 15 Minutes!
+## 🚀 Quick Start
+### Prerequisites
+- Node.js 18+
+- npm or yarn
+- PostgreSQL (or use Supabase)
 
-**Want to deploy immediately?** Follow our [Quick Deploy Guide](QUICK_DEPLOY.md)
+### Local Development Setup
 
-For detailed setup instructions, see [DEPLOYMENT.md](DEPLOYMENT.md)
+1. **Clone and setup environment**
+   ```bash
+   git clone <your-repo-url>
+   cd studentevents
+   node setup-environment.js
+   ```
+
+2. **Configure environment variables**
+   ```bash
+   # Copy and edit the environment file
+   cp backend/env.example backend/.env
+   # Edit backend/.env with your actual API keys
+   ```
+
+3. **Install dependencies**
+   ```bash
+   cd backend
+   npm install
+   ```
+
+4. **Start development servers**
+   ```bash
+   # Backend (Terminal 1)
+   cd backend
+   npm start
+
+   # Frontend (Terminal 2)
+   python -m http.server 8000
+   ```
+
+5. **Open in browser**
+   - Frontend: http://localhost:8000
+   - Backend API: http://localhost:3001
+   - Health Check: http://localhost:3001/health
 
 ## 🛠️ Technology Stack
 
@@ -29,7 +66,6 @@ For detailed setup instructions, see [DEPLOYMENT.md](DEPLOYMENT.md)
 
 ### Backend
 - **Node.js** with Express.js
-- **TypeScript** for type safety
 - **PostgreSQL** database (via Supabase)
 - **JWT** authentication
 - **Stripe** payment processing
@@ -47,18 +83,18 @@ For detailed setup instructions, see [DEPLOYMENT.md](DEPLOYMENT.md)
 ```
 studentevents/
 ├── 📁 backend/              # Node.js API server
-│   ├── 📁 src/             # TypeScript source code
-│   ├── 📁 dist/            # Compiled JavaScript
-│   ├── 📄 package.json     # Backend dependencies
-│   └── 📄 railway.json     # Railway deployment config
-├── 📁 scripts/             # Frontend JavaScript
-├── 📁 styles/              # CSS stylesheets
-├── 📁 admin/               # Admin dashboard
-├── 📁 worker/              # Worker interface
-├── 📄 index.html           # Homepage
-├── 📄 netlify.toml         # Netlify deployment config
-├── 📄 QUICK_DEPLOY.md      # 15-minute deployment guide
-└── 📄 DEPLOYMENT.md        # Detailed deployment guide
+│   ├── 📄 railway-server.js # Main server file
+│   ├── 📄 package.json      # Backend dependencies
+│   ├── 📄 railway.json      # Railway deployment config
+│   ├── 📄 Procfile          # Heroku deployment config
+│   └── 📄 env.example       # Environment variables template
+├── 📁 scripts/              # Frontend JavaScript
+├── 📁 styles/               # CSS stylesheets
+├── 📁 admin/                # Admin dashboard
+├── 📁 worker/               # Worker interface
+├── 📄 index.html            # Homepage
+├── 📄 netlify.toml          # Netlify deployment config
+└── 📄 setup-environment.js  # Environment setup script
 ```
 
 ## 🎯 Live Demo
@@ -67,101 +103,67 @@ studentevents/
 - **Admin Panel**: [Your site]/admin/
 - **Worker Interface**: [Your site]/worker/
 
-### Demo Accounts (after deployment)
+### Demo Accounts
 - **Admin**: admin@studentevents.com / admin123
 - **Worker**: john.worker@studentevents.com / worker123
 
-## 🔧 Local Development
-
-### Prerequisites
-- Node.js 18+
-- npm or yarn
-- PostgreSQL (or use Supabase)
-
-### Setup
-1. **Clone the repository**
-   ```bash
-   git clone <your-repo-url>
-   cd studentevents
-   ```
-
-2. **Install backend dependencies**
-   ```bash
-   cd backend
-   npm install
-   ```
-
-3. **Set up environment variables**
-   ```bash
-   cp env.example .env
-   # Edit .env with your actual values
-   ```
-
-4. **Run database migrations**
-   ```bash
-   npm run seed
-   ```
-
-5. **Start development servers**
-   ```bash
-   # Backend (Terminal 1)
-   npm run dev
-
-   # Frontend (Terminal 2)
-   cd ..
-   python -m http.server 8000
-   ```
-
-6. **Open in browser**
-   - Frontend: http://localhost:8000
-   - Backend API: http://localhost:3001
-
 ## 🚀 Deployment
 
-### Quick Deployment (15 minutes)
-Follow our [Quick Deploy Guide](QUICK_DEPLOY.md) for the fastest way to get online.
+### Backend Deployment (Railway)
 
-### Automated Deployment
-```bash
-# Deploy everything
-npm run deploy
+1. **Connect to Railway**
+   ```bash
+   cd backend
+   railway login
+   railway up
+   ```
 
-# Deploy backend only
-npm run deploy:backend
+2. **Set environment variables in Railway dashboard**
+   - `NODE_ENV=production`
+   - `FRONTEND_URL=https://your-netlify-url.netlify.app`
+   - `DATABASE_URL=your-supabase-connection-string`
+   - `JWT_SECRET=your-secret-key`
+   - `STRIPE_SECRET_KEY=your-stripe-key`
 
-# Deploy frontend only
-npm run deploy:frontend
-```
+### Frontend Deployment (Netlify)
 
-### Manual Deployment
-See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed instructions.
+1. **Deploy to Netlify**
+   - Go to [netlify.com](https://netlify.com)
+   - Drag and drop your project folder
+   - Wait for deployment
+
+2. **Update API configuration**
+   - Edit `scripts/config.js`
+   - Update `API_BASE_URL` with your Railway URL
+
+### Database Setup (Supabase)
+
+1. **Create Supabase project**
+2. **Run SQL setup script**
+   ```sql
+   -- Copy contents from backend/supabase-setup.sql
+   ```
+3. **Get connection string**
+4. **Update Railway environment variables**
 
 ## 📚 API Documentation
 
 ### Authentication Endpoints
-- `POST /api/auth/register` - Register new user
-- `POST /api/auth/login` - User login
-- `GET /api/auth/profile` - Get user profile
+- `POST /api/admin/login` - Admin login
+- `POST /api/worker/login` - Worker login
 
 ### Event Endpoints
 - `GET /api/events` - Get all active events
 - `GET /api/events/:id` - Get event by ID
-- `POST /api/events` - Create event (Admin only)
-- `PUT /api/events/:id` - Update event (Admin only)
 
-### Ticket Endpoints
-- `POST /api/tickets/purchase` - Purchase tickets
-- `GET /api/tickets/my-tickets` - Get user's tickets
-- `POST /api/tickets/validate` - Validate ticket (Worker only)
-
-### Full API documentation available at `/api/docs` (when deployed)
+### Health Check
+- `GET /health` - Server health status
+- `GET /api/health` - API health status
 
 ## 🔐 Security Features
 
 - **JWT Authentication** with secure token handling
-- **Password Hashing** with bcrypt
 - **CORS Protection** configured for your domain
-- **Rate Limiting** to prevent abuse
 - **Input Validation** and sanitization
 - **HTTPS Enforcement** in production
 - **Environment Variable** protection
@@ -191,7 +193,6 @@ See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed instructions.
 - Health check endpoints
 - Error logging
 - Performance monitoring
-- Uptime monitoring (via UptimeRobot)
 
 ## 🤝 Contributing
 
@@ -203,17 +204,13 @@ See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed instructions.
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License.
 
 ## 🆘 Support
 
-### Documentation
-- [Quick Deploy Guide](QUICK_DEPLOY.md) - Get online in 15 minutes
-- [Deployment Guide](DEPLOYMENT.md) - Detailed deployment instructions
-
 ### Getting Help
 - Check the [Issues](../../issues) page
-- Review the troubleshooting sections in our guides
+- Review the troubleshooting sections
 - Contact the development team
 
 ### Common Issues
@@ -231,6 +228,6 @@ This system has been successfully deployed by:
 
 ---
 
-**🚀 Ready to get started?** Follow our [Quick Deploy Guide](QUICK_DEPLOY.md) and have your event ticketing system online in just 15 minutes!
+**🚀 Ready to get started?** Run `node setup-environment.js` and have your event ticketing system running locally in just 5 minutes!
 
 **⭐ If this project helped you, please give it a star on GitHub!**

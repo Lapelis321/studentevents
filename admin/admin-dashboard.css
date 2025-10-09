@@ -906,3 +906,101 @@ select.form-input {
 .settings-section {
     animation: fadeIn 0.3s ease-out;
 }
+
+/* ===== DETAIL VIEW STYLES ===== */
+
+.event-details-view,
+.worker-details-view {
+    padding: var(--space-4);
+}
+
+.detail-row {
+    display: grid;
+    grid-template-columns: 150px 1fr;
+    gap: var(--space-3);
+    padding: var(--space-3);
+    border-bottom: 1px solid var(--border-light);
+}
+
+.detail-row:last-child {
+    border-bottom: none;
+}
+
+.detail-label {
+    font-weight: 600;
+    color: var(--text-muted);
+    font-size: var(--font-size-sm);
+}
+
+.detail-value {
+    color: var(--text-primary);
+    font-size: var(--font-size-sm);
+}
+
+.detail-value code {
+    background: var(--background-light);
+    padding: 4px 8px;
+    border-radius: var(--radius-sm);
+    font-family: 'Courier New', monospace;
+    font-size: 0.9em;
+}
+
+.modal-body {
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+/* Badge styles for status */
+.badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.85em;
+    font-weight: 600;
+}
+
+.badge-success {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--accent-green);
+}
+
+.badge-warning {
+    background: rgba(245, 158, 11, 0.1);
+    color: #f59e0b;
+}
+
+.badge-danger {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--accent-red);
+}
+
+.badge-secondary {
+    background: var(--background-light);
+    color: var(--text-muted);
+}
+
+/* Danger Button */
+.btn-danger {
+    background: #ef4444;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-danger:hover {
+    background: #dc2626;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.btn-danger:active {
+    transform: translateY(0);
+}

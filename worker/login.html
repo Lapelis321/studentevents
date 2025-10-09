@@ -167,12 +167,12 @@
             
             console.log('Email entered:', email);
             
-            const API_BASE_URL = window.CONFIG?.API_BASE_URL || 'https://afterstate.events/.netlify/functions';
+            const API_BASE_URL = window.CONFIG?.API_BASE_URL || 'http://localhost:3001/api';
             
             try {
                 console.log('📡 Calling API login...');
                 
-                const response = await fetch(`${API_BASE_URL}/worker-login`, {
+                const response = await fetch(`${API_BASE_URL}/worker/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password })
@@ -192,7 +192,7 @@
                     console.log('✅ Token saved:', data.token.substring(0, 20) + '...');
                     
                     alert(`Login successful! Welcome ${data.user.name}`);
-                    window.location.href = 'index.html';
+                    window.location.href = '/worker/index.html';
                 } else {
                     console.log('❌ Login failed: Not a worker account');
                     alert('Invalid credentials or not a worker account!');

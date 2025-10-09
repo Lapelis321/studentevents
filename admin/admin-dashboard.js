@@ -6,14 +6,57 @@ class AdminDashboard {
         this.events = [];
         this.workers = [];
         this.settings = {};
+        this.initialized = false;
         this.init();
     }
 
     async init() {
+        // Prevent double initialization
+        if (this.initialized) {
+            console.log('⚠️ Dashboard already initialized, skipping...');
+            return;
+        }
+        
+        this.checkAndCleanOldData();
         await this.loadMockData();
         this.loadSettingsFromStorage();
         this.setupEventListeners();
         this.renderCurrentTab();
+        
+        this.initialized = true;
+        console.log('✅ Dashboard initialized');
+    }
+
+    checkAndCleanOldData() {
+        try {
+            const currentVersion = '1.0';
+            const storedVersion = localStorage.getItem('adminDataVersion');
+            
+            console.log('🔍 Checking data version. Stored:', storedVersion, 'Current:', currentVersion);
+            
+            // ONLY clear data if there's NO version at all (first time running new code)
+            if (!storedVersion) {
+                console.log('🧹 No version found - clearing any old data format...');
+                localStorage.removeItem('adminEvents');
+                localStorage.removeItem('adminWorkers');
+                localStorage.setItem('adminDataVersion', currentVersion);
+                console.log('✅ Data cleared and version set to', currentVersion);
+                return;
+            }
+            
+            // If version exists and matches, data is good - don't touch it!
+            if (storedVersion === currentVersion) {
+                console.log('✅ Data version matches - no cleanup needed');
+                return;
+            }
+            
+            // If version exists but doesn't match, handle migration here
+            console.log('⚠️ Version mismatch - may need migration from', storedVersion, 'to', currentVersion);
+            
+            console.log('✅ Data version check complete');
+        } catch (error) {
+            console.error('Error in checkAndCleanOldData:', error);
+        }
     }
 
     setupEventListeners() {
@@ -33,6 +76,33 @@ class AdminDashboard {
             this.saveSystemSettings();
         });
 
+        // Event delegation for worker buttons
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('.password-toggle-btn')) {
+                const workerId = e.target.closest('.password-toggle-btn').dataset.workerId;
+                this.togglePassword(workerId);
+            } else if (e.target.closest('.action-btn')) {
+                const button = e.target.closest('.action-btn');
+                const workerId = button.dataset.workerId;
+                const action = button.dataset.action;
+                
+                switch (action) {
+                    case 'view':
+                        this.viewWorker(workerId);
+                        break;
+                    case 'edit-credentials':
+                        this.editWorkerCredentials(workerId);
+                        break;
+                    case 'edit':
+                        this.editWorker(workerId);
+                        break;
+                    case 'delete':
+                        this.deleteWorker(workerId);
+                        break;
+                }
+            }
+        });
+
         document.getElementById('policyTextForm')?.addEventListener('submit', (e) => {
             e.preventDefault();
             this.savePolicyText();
@@ -42,138 +112,133 @@ class AdminDashboard {
             e.preventDefault();
             this.saveEditedEvent();
         });
+
+        document.getElementById('createEventForm')?.addEventListener('submit', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            this.saveNewEvent();
+        }, { once: false });
+
+        document.getElementById('createWorkerForm')?.addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.saveNewWorker();
+        });
     }
 
     async loadMockData() {
-        try {
-            // Try to load from API first
-            console.log('📡 Loading events from API...');
-            const API_BASE_URL = window.CONFIG?.API_BASE_URL?.replace('/api', '') || 'https://studentevents-production.up.railway.app';
-            const response = await fetch(`${API_BASE_URL}/api/events`);
-            
-            if (response.ok) {
-                const apiEvents = await response.json();
-                console.log(`✅ Loaded ${apiEvents.length} events from API`);
-                
-                // Transform API events to dashboard format
-                this.events = apiEvents.map(event => ({
-                    id: event.id,
-                    name: event.title,
-                    date: event.date,
-                    location: event.location,
-                    price: event.price,
-                    totalTickets: event.totalTickets || 100,
-                    soldTickets: (event.totalTickets || 100) - (event.availableTickets || 0),
-                    status: event.is_active ? 'upcoming' : 'completed',
-                    description: event.description || '',
-                    image: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800'
-                }));
-            } else {
-                throw new Error(`API responded with status: ${response.status}`);
-            }
-        } catch (error) {
-            console.warn('API load failed, using fallback data:', error);
-            
-            // Fallback to hardcoded data only if API fails
-            console.log('📦 Using fallback data...');
-            this.events = [
-            {
-                id: 1,
-                name: 'Spring Music Festival',
-                date: '2024-04-15T19:00:00Z',
-                location: 'University Campus',
-                price: 25.00, // Legacy single price for backward compatibility
-                priceTiers: [
-                    { name: "General Admission", price: 25.00, totalTickets: 300, soldTickets: 200, enabled: true },
-                    { name: "VIP", price: 50.00, totalTickets: 100, soldTickets: 80, enabled: true },
-                    { name: "Student", price: 15.00, totalTickets: 100, soldTickets: 70, enabled: true }
-                ],
-                totalTickets: 500,
-                soldTickets: 350,
-                status: 'upcoming',
-                description: 'A wonderful evening of live music featuring local artists.',
-                image: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800'
-            },
-            {
-                id: 2,
-                name: 'Tech Innovation Summit',
-                date: '2024-04-22T14:00:00Z',
-                location: 'Convention Center',
-                price: 15.00,
-                totalTickets: 300,
-                soldTickets: 200,
-                status: 'upcoming'
-            },
-            {
-                id: 3,
-                name: 'Art & Culture Night',
-                date: '2024-04-28T18:30:00Z',
-                location: 'City Art Gallery',
-                price: 12.00,
-                totalTickets: 100,
-                soldTickets: 80,
-                status: 'upcoming'
-            },
-            {
-                id: 4,
-                name: 'Winter Gala 2023',
-                date: '2023-12-15T20:00:00Z',
-                location: 'Grand Hotel',
-                price: 45.00,
-                totalTickets: 200,
-                soldTickets: 200,
-                status: 'completed'
-            },
-            {
-                id: 5,
-                name: 'Sports Championship Finals',
-                date: '2024-05-05T16:00:00Z',
-                location: 'Stadium Arena',
-                price: 30.00,
-                totalTickets: 1000,
-                soldTickets: 500,
-                status: 'upcoming'
-            }
-        ];
+        // ALWAYS try to load from localStorage first - this takes absolute priority
+        const savedEvents = this.loadEventsFromStorage();
+        const savedWorkers = this.loadWorkersFromStorage();
+        
+        console.log('🔍 Checking localStorage for saved events...');
+        console.log('Saved events found:', savedEvents);
+        
+        // Load events - localStorage takes absolute priority
+        if (savedEvents && savedEvents.length > 0) {
+            console.log(`📦 ✅ Using ${savedEvents.length} events from localStorage (PRIORITY)`);
+            this.events = savedEvents;
+            // Do NOT call API or use fallback if localStorage has data
+        } else {
+            console.log('⚠️ No saved events in localStorage, starting with empty array');
+            // Start with empty array - admin can add events through the interface
+            this.events = [];
+            // DO NOT save empty/fallback data to localStorage
+            // This allows created events to be the first ones saved
         }
 
-        // Load workers from API or use empty array
-        try {
-            console.log('📡 Loading workers from API...');
-            const API_BASE_URL = window.CONFIG?.API_BASE_URL?.replace('/api', '') || 'https://studentevents-production.up.railway.app';
-            const response = await fetch(`${API_BASE_URL}/api/workers`);
-            
-            if (response.ok) {
-                const apiWorkers = await response.json();
-                console.log(`✅ Loaded ${apiWorkers.length} workers from API`);
-                this.workers = apiWorkers;
-            } else {
-                throw new Error(`API responded with status: ${response.status}`);
-            }
-        } catch (error) {
-            console.warn('Workers API load failed, using empty array:', error);
-            // Start with empty workers array - admin can add workers through the interface
+        // Load workers from localStorage (priority) or start empty
+        if (savedWorkers && savedWorkers.length > 0) {
+            console.log(`📦 ✅ Using ${savedWorkers.length} workers from localStorage (PRIORITY)`);
+            this.workers = savedWorkers;
+        } else {
+            console.log('⚠️ No saved workers, starting with empty array');
             this.workers = [];
         }
+    }
 
-        // Store workers in localStorage for worker login system
-        this.saveWorkersToStorage();
+    saveEventsToStorage() {
+        try {
+            const eventsJson = JSON.stringify(this.events);
+            localStorage.setItem('adminEvents', eventsJson);
+            localStorage.setItem('adminDataVersion', '1.0');
+            console.log(`💾 Saved ${this.events.length} events to localStorage`);
+            console.log('Events data:', this.events);
+            
+            // Verify it was saved
+            const verification = localStorage.getItem('adminEvents');
+            if (verification) {
+                console.log('✅ Verification: Data successfully saved to localStorage');
+            } else {
+                console.error('❌ Verification failed: Data not found in localStorage');
+            }
+        } catch (error) {
+            console.error('❌ Failed to save events to localStorage:', error);
+        }
+    }
+
+    loadEventsFromStorage() {
+        try {
+            const savedEvents = localStorage.getItem('adminEvents');
+            console.log('📖 Reading from localStorage. Raw data:', savedEvents ? `${savedEvents.length} characters` : 'null');
+            if (savedEvents) {
+                const parsed = JSON.parse(savedEvents);
+                console.log(`✅ Successfully parsed ${parsed.length} events from localStorage`);
+                return parsed;
+            }
+            console.log('⚠️ No events found in localStorage');
+        } catch (error) {
+            console.error('❌ Failed to load events from localStorage:', error);
+        }
+        return null;
     }
 
     saveWorkersToStorage() {
-        // Create a simplified version for worker login system
-        const workerCredentials = {};
-        this.workers.forEach(worker => {
-            if (worker.status === 'active') {
-                workerCredentials[worker.username] = {
-                    password: worker.password,
-                    role: worker.role,
-                    name: worker.name,
-                    id: worker.id
-                };
+        try {
+            // Save full worker data
+            localStorage.setItem('adminWorkers', JSON.stringify(this.workers));
+            localStorage.setItem('adminDataVersion', '1.0');
+            
+            // Create a simplified version for worker login system
+            const workerCredentials = {};
+            this.workers.forEach(worker => {
+                if (worker.status === 'active') {
+                    workerCredentials[worker.username] = {
+                        password: worker.password,
+                        role: worker.role,
+                        name: worker.name,
+                        id: worker.id
+                    };
+                }
+            });
+            localStorage.setItem('workerCredentials', JSON.stringify(workerCredentials));
+            console.log('💾 Workers saved to localStorage');
+        } catch (error) {
+            console.error('Failed to save workers to localStorage:', error);
+        }
+    }
+
+    loadWorkersFromStorage() {
+        try {
+            const savedWorkers = localStorage.getItem('adminWorkers');
+            if (savedWorkers) {
+                return JSON.parse(savedWorkers);
             }
-        });
-        localStorage.setItem('workerCredentials', JSON.stringify(workerCredentials));
+        } catch (error) {
+            console.error('Failed to load workers from localStorage:', error);
+        }
+        return null;
+    }
+
+    showNotification(message, type = 'info') {
+        // Try to use EventTicketingApp if available
+        if (window.EventTicketingApp && typeof window.EventTicketingApp.showNotification === 'function') {
+            window.EventTicketingApp.showNotification(message, type);
+        } else {
+            // Fallback to simple alert
+            console.log(`[${type.toUpperCase()}] ${message}`);
+            alert(message);
+        }
     }
 
     switchTab(tabName) {
@@ -245,7 +310,7 @@ class AdminDashboard {
 
         tbody.innerHTML = this.events.map(event => {
             const formattedDate = this.formatDate(event.date);
-            const formattedPrice = EventTicketingApp.formatPrice(event.price, 'EUR');
+            const formattedPrice = `€${event.price.toFixed(2)}`;
             const ticketsSold = `${event.soldTickets}/${event.totalTickets}`;
             const statusBadge = this.createStatusBadge(event.status);
 
@@ -259,13 +324,13 @@ class AdminDashboard {
                     <td>${statusBadge}</td>
                     <td>
                         <div class="table-row-actions">
-                            <button class="action-btn view" onclick="adminDashboard.viewEvent(${event.id})" title="View Details">
+                            <button class="action-btn view" onclick="adminDashboard.viewEvent('${event.id}')" title="View Event Details">
                                 <i class="fas fa-eye"></i>
                             </button>
-                            <button class="action-btn edit" onclick="adminDashboard.editEvent(${event.id})" title="Edit Event">
+                            <button class="action-btn edit" onclick="adminDashboard.editEvent('${event.id}')" title="Edit Event">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button class="action-btn delete" onclick="adminDashboard.deleteEvent(${event.id})" title="Delete Event">
+                            <button class="action-btn delete" onclick="adminDashboard.deleteEvent('${event.id}')" title="Delete Event">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </div>
@@ -309,7 +374,7 @@ class AdminDashboard {
                     <td>
                         <div class="password-field">
                             <span class="password-text" id="password-${worker.id}" data-password="${worker.password}">â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢</span>
-                            <button class="password-toggle-btn" onclick="adminDashboard.togglePassword(${worker.id})" title="Show/Hide Password">
+                            <button class="password-toggle-btn" data-worker-id="${worker.id}" title="Show/Hide Password">
                                 <i class="fas fa-eye" id="eye-${worker.id}"></i>
                             </button>
                         </div>
@@ -320,16 +385,16 @@ class AdminDashboard {
                     <td>${lastActive}</td>
                     <td>
                         <div class="table-row-actions">
-                            <button class="action-btn view" onclick="adminDashboard.viewWorker(${worker.id})" title="View Details">
+                            <button class="action-btn view" data-worker-id="${worker.id}" data-action="view" title="View Details">
                                 <i class="fas fa-eye"></i>
                             </button>
-                            <button class="action-btn edit" onclick="adminDashboard.editWorkerCredentials(${worker.id})" title="Edit Credentials">
+                            <button class="action-btn edit" data-worker-id="${worker.id}" data-action="edit-credentials" title="Edit Credentials">
                                 <i class="fas fa-key"></i>
                             </button>
-                            <button class="action-btn edit" onclick="adminDashboard.editWorker(${worker.id})" title="Edit Worker">
+                            <button class="action-btn edit" data-worker-id="${worker.id}" data-action="edit" title="Edit Worker">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button class="action-btn delete" onclick="adminDashboard.deleteWorker(${worker.id})" title="Delete Worker">
+                            <button class="action-btn delete" data-worker-id="${worker.id}" data-action="delete" title="Delete Worker">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </div>
@@ -377,19 +442,196 @@ class AdminDashboard {
 
     // Event Management Methods
     showCreateEventModal() {
-        EventTicketingApp.showNotification('Create Event modal would open here', 'info');
-    }
-
-    viewEvent(eventId) {
-        const event = this.events.find(e => e.id === eventId);
-        if (event) {
-            EventTicketingApp.showNotification(`Viewing event: ${event.name}`, 'info');
+        try {
+            console.log('📝 Opening create event modal...');
+            
+            // Reset the form
+            const form = document.getElementById('createEventForm');
+            if (!form) {
+                console.error('❌ Create event form not found!');
+                return;
+            }
+            form.reset();
+            
+            // Set default date to tomorrow
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const defaultDate = tomorrow.toISOString().slice(0, 16);
+            
+            const dateInput = document.getElementById('createEventDate');
+            if (dateInput) {
+                dateInput.value = defaultDate;
+            }
+            
+            // Show the modal
+            const modal = document.getElementById('createEventModal');
+            if (!modal) {
+                console.error('❌ Create event modal not found!');
+                return;
+            }
+            modal.classList.add('active');
+            console.log('✅ Modal opened successfully');
+        } catch (error) {
+            console.error('❌ Error opening modal:', error);
+            alert('Error opening create event form: ' + error.message);
         }
     }
 
+    closeCreateEventModal() {
+        const modal = document.getElementById('createEventModal');
+        const form = document.getElementById('createEventForm');
+        
+        if (modal) {
+            modal.classList.remove('active');
+        }
+        
+        // Reset form after modal is fully closed and flag is reset
+        setTimeout(() => {
+            if (form && !this.isSubmitting) {
+                form.reset();
+            }
+        }, 600);
+    }
+
+    async saveNewEvent() {
+        // Prevent double submission
+        if (this.isSubmitting) {
+            console.log('⚠️ Already submitting, ignoring duplicate call');
+            return;
+        }
+        
+        this.isSubmitting = true;
+        
+        try {
+            console.log('💾 Saving new event...');
+            
+            const nameInput = document.getElementById('createEventName');
+            const dateInput = document.getElementById('createEventDate');
+            const locationInput = document.getElementById('createEventLocation');
+            const priceInput = document.getElementById('createEventPrice');
+            const ticketsInput = document.getElementById('createEventTotalTickets');
+            
+            if (!nameInput || !dateInput || !locationInput || !priceInput || !ticketsInput) {
+                console.error('❌ Required form fields not found!');
+                this.showNotification('Error: Form fields not found. Please try refreshing the page.', 'error');
+                this.isSubmitting = false;
+                return;
+            }
+            
+            // Validate required fields have values
+            if (!nameInput.value || !dateInput.value || !locationInput.value || !priceInput.value || !ticketsInput.value) {
+                console.error('❌ Required fields are empty!');
+                this.showNotification('Please fill in all required fields', 'error');
+                this.isSubmitting = false;
+                return;
+            }
+            
+            const newEvent = {
+                id: `event-${Date.now()}`,
+                name: nameInput.value,
+                date: dateInput.value,
+                location: locationInput.value,
+                description: document.getElementById('createEventDescription')?.value || '',
+                image: document.getElementById('createEventImage')?.value || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800',
+                price: parseFloat(priceInput.value) || 0,
+                totalTickets: parseInt(ticketsInput.value) || 100,
+                soldTickets: 0,
+                status: document.getElementById('createEventStatus')?.value || 'active',
+                priceTiers: []
+            };
+
+            console.log('✅ New event data:', newEvent);
+            this.events.push(newEvent);
+            console.log('✅ Event added to array. Total events:', this.events.length);
+            
+            this.saveEventsToStorage();
+            console.log('✅ Saved to localStorage');
+            
+            this.renderEventsTab();
+            console.log('✅ Events tab rendered');
+            
+            this.closeCreateEventModal();
+            console.log('✅ Modal closed');
+            
+            this.showNotification(`Event "${newEvent.name}" created successfully!`, 'success');
+        } catch (error) {
+            console.error('❌ Error creating event:', error);
+            this.showNotification('Failed to create event: ' + error.message, 'error');
+        } finally {
+            // Reset the flag after a short delay to allow for re-submission if needed
+            setTimeout(() => {
+                this.isSubmitting = false;
+            }, 500);
+        }
+    }
+
+    viewEvent(eventId) {
+        const event = this.events.find(e => e.id == eventId);  // Use == for loose comparison
+        if (!event) {
+            console.error('Event not found:', eventId, 'Available events:', this.events);
+            return;
+        }
+
+        const statusBadge = event.status === 'active' ? '<span class="badge badge-success">Active</span>' :
+                           event.status === 'sold-out' ? '<span class="badge badge-warning">Sold Out</span>' :
+                           event.status === 'cancelled' ? '<span class="badge badge-danger">Cancelled</span>' :
+                           '<span class="badge badge-secondary">Completed</span>';
+
+        const content = `
+            <div class="event-details-view">
+                <div class="detail-row">
+                    <div class="detail-label">Event Name:</div>
+                    <div class="detail-value"><strong>${event.name}</strong></div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Date & Time:</div>
+                    <div class="detail-value">${this.formatDate(event.date)}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Location:</div>
+                    <div class="detail-value">${event.location}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Description:</div>
+                    <div class="detail-value">${event.description || 'No description provided'}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Price:</div>
+                    <div class="detail-value">€${event.price.toFixed(2)}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Tickets:</div>
+                    <div class="detail-value">${event.soldTickets} / ${event.totalTickets} sold</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Status:</div>
+                    <div class="detail-value">${statusBadge}</div>
+                </div>
+                ${event.image ? `
+                <div class="detail-row">
+                    <div class="detail-label">Event Image:</div>
+                    <div class="detail-value">
+                        <img src="${event.image}" alt="${event.name}" style="max-width: 100%; max-height: 300px; border-radius: 8px; margin-top: 10px;">
+                    </div>
+                </div>
+                ` : ''}
+            </div>
+        `;
+
+        document.getElementById('viewEventContent').innerHTML = content;
+        document.getElementById('viewEventModal').classList.add('active');
+    }
+
+    closeViewEventModal() {
+        document.getElementById('viewEventModal').classList.remove('active');
+    }
+
     editEvent(eventId) {
-        const event = this.events.find(e => e.id === eventId);
-        if (!event) return;
+        const event = this.events.find(e => e.id == eventId);  // Use == for loose comparison
+        if (!event) {
+            console.error('Event not found for editing:', eventId, 'Available events:', this.events);
+            return;
+        }
 
         // Store the current event ID for saving
         this.editingEventId = eventId;
@@ -400,10 +642,15 @@ class AdminDashboard {
         document.getElementById('editEventLocation').value = event.location;
         document.getElementById('editEventDescription').value = event.description || '';
         document.getElementById('editEventImage').value = event.image || '';
+        document.getElementById('editEventPrice').value = event.price || 0;
+        document.getElementById('editEventTotalTickets').value = event.totalTickets || 100;
         document.getElementById('editEventStatus').value = event.status;
 
-        // Populate price tiers
-        this.populatePriceTiers(event.priceTiers || [{ name: 'General', price: event.price, totalTickets: event.totalTickets, soldTickets: event.soldTickets, enabled: true }]);
+        // Populate price tiers (optional - only if container exists)
+        const priceTiersContainer = document.getElementById('editPriceTiers');
+        if (priceTiersContainer) {
+            this.populatePriceTiers(event.priceTiers || [{ name: 'General', price: event.price, totalTickets: event.totalTickets, soldTickets: event.soldTickets, enabled: true }]);
+        }
 
         // Show the modal
         document.getElementById('editEventModal').classList.add('active');
@@ -464,7 +711,7 @@ class AdminDashboard {
         if (container.children.length > 1) {
             button.parentElement.remove();
         } else {
-            EventTicketingApp.showNotification('At least one price tier is required', 'warning');
+            this.showNotification('At least one price tier is required', 'warning');
         }
     }
 
@@ -476,130 +723,62 @@ class AdminDashboard {
     async saveEditedEvent() {
         if (!this.editingEventId) return;
 
-        const event = this.events.find(e => e.id === this.editingEventId);
+        const event = this.events.find(e => e.id == this.editingEventId);  // Use == for loose comparison
         if (!event) {
-            EventTicketingApp.showNotification('Event not found', 'error');
+            console.error('Event not found for saving:', this.editingEventId, 'Available events:', this.events);
+            this.showNotification('Event not found', 'error');
             return;
         }
 
+        console.log('💾 Saving edited event:', event.id);
+
         try {
-            // Show loading state
-            this.showLoadingState('Updating event...');
+            // Get form values directly from DOM (more reliable than FormData)
+            const name = document.getElementById('editEventName').value;
+            const date = document.getElementById('editEventDate').value;
+            const location = document.getElementById('editEventLocation').value;
+            const description = document.getElementById('editEventDescription').value;
+            const image = document.getElementById('editEventImage').value;
+            const price = parseFloat(document.getElementById('editEventPrice').value) || event.price || 0;
+            const totalTickets = parseInt(document.getElementById('editEventTotalTickets').value) || event.totalTickets || 100;
+            const status = document.getElementById('editEventStatus').value;
             
-            // Get authentication token
-            const token = localStorage.getItem('adminToken');
-            if (!token) {
-                throw new Error('Not authenticated. Please login again.');
-            }
+            console.log('📝 Form values:', { name, date, location, price, totalTickets, status });
             
-            // Get form data
-            const formData = new FormData(document.getElementById('editEventForm'));
-            
-            // Prepare API data
-            const apiData = {
-                title: formData.get('editEventName'),
-                date: formData.get('editEventDate') + ':00Z',
-                location: formData.get('editEventLocation'),
-                description: formData.get('editEventDescription'),
-                additionalInfo: formData.get('editEventImage') || '',
-                is_active: formData.get('editEventStatus') === 'upcoming'
-            };
-            
-            // Process price tiers for API
-            const priceTiers = [];
-            let totalTickets = 0;
-            let soldTickets = 0;
-            let lowestPrice = Infinity;
-
-            // Collect all price tier data
-            const tierData = {};
-            for (let [key, value] of formData.entries()) {
-                if (key.startsWith('editPriceTier')) {
-                    const match = key.match(/editPriceTier(\w+)(\d+)/);
-                    if (match) {
-                        const [, field, index] = match;
-                        if (!tierData[index]) tierData[index] = {};
-                        tierData[index][field] = value;
-                    }
-                }
-            }
-
-            // Process each tier
-            Object.keys(tierData).forEach(index => {
-                const tier = tierData[index];
-                const priceTier = {
-                    name: tier.Name || '',
-                    price: parseFloat(tier.Price) || 0,
-                    totalTickets: parseInt(tier.Total) || 0,
-                    soldTickets: parseInt(tier.Sold) || 0,
-                    enabled: tier.Enabled === 'on'
-                };
-                
-                if (tier.Name && tier.Price) {
-                    priceTiers.push(priceTier);
-                    totalTickets += priceTier.totalTickets;
-                    soldTickets += priceTier.soldTickets;
-                    if (priceTier.price < lowestPrice) {
-                        lowestPrice = priceTier.price;
-                    }
-                }
-            });
-
-            // Add calculated fields to API data
-            apiData.price = lowestPrice;
-            apiData.currency = 'EUR';
-            apiData.minAge = 18;
-            apiData.dressCode = 'Casual';
-            apiData.totalTickets = totalTickets;
-            apiData.availableTickets = totalTickets - soldTickets;
-            
-            // Get API base URL
-            const API_BASE_URL = window.CONFIG?.API_BASE_URL?.replace('/api', '') || 'https://studentevents-production.up.railway.app';
-            
-            // Call API to update event
-            const response = await fetch(`${API_BASE_URL}/api/events/${this.editingEventId}`, {
-                method: 'PUT',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(apiData)
-            });
-            
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({ error: 'Update failed' }));
-                throw new Error(errorData.error || `Update failed: ${response.status} ${response.statusText}`);
-            }
-            
-            // Update local object only after API success
-            event.name = apiData.title;
-            event.date = apiData.date;
-            event.location = apiData.location;
-            event.description = apiData.description;
-            event.image = apiData.additionalInfo;
-            event.status = apiData.is_active ? 'upcoming' : 'completed';
-            event.priceTiers = priceTiers;
+            // Update local object FIRST (offline-first approach)
+            event.name = name;
+            event.date = date;
+            event.location = location;
+            event.description = description;
+            event.image = image;
+            event.price = price;
             event.totalTickets = totalTickets;
-            event.soldTickets = soldTickets;
-            event.price = lowestPrice;
-
-            // Close modal and refresh
+            event.status = status;
+            
+            console.log('✅ Local event updated:', event);
+            
+            // Save to localStorage IMMEDIATELY
+            this.saveEventsToStorage();
+            console.log('✅ Saved to localStorage');
+            
+            // Close modal and refresh UI
             this.closeEditEventModal();
             this.renderEventsTab();
-            this.hideLoadingState();
             
-            EventTicketingApp.showNotification(`Event "${event.name}" updated successfully`, 'success');
+            this.showNotification(`Event "${event.name}" updated successfully!`, 'success');
+            console.log('✅ Event edit completed');
             
         } catch (error) {
-            this.hideLoadingState();
-            this.handleApiError(error, 'update event');
+            console.error('❌ Error saving event:', error);
+            this.showNotification('Failed to save event: ' + error.message, 'error');
         }
     }
 
     async deleteEvent(eventId) {
-        const event = this.events.find(e => e.id === eventId);
+        const event = this.events.find(e => e.id == eventId);  // Use == for loose comparison
         if (!event) {
-            EventTicketingApp.showNotification('Event not found', 'error');
+            console.error('Event not found for deletion:', eventId, 'Available events:', this.events);
+            this.showNotification('Event not found', 'error');
             return;
         }
         
@@ -635,11 +814,15 @@ class AdminDashboard {
             }
             
             // Remove from local array only after API success
-            this.events = this.events.filter(e => e.id !== eventId);
+            this.events = this.events.filter(e => e.id != eventId);  // Use != for loose comparison
+            
+            // Save to localStorage
+            this.saveEventsToStorage();
+            
             this.renderEventsTab();
             this.hideLoadingState();
             
-            EventTicketingApp.showNotification(`Event "${event.name}" deleted successfully`, 'success');
+            this.showNotification(`Event "${event.name}" deleted successfully`, 'success');
             
         } catch (error) {
             this.hideLoadingState();
@@ -747,7 +930,7 @@ class AdminDashboard {
             userMessage = error.message;
         }
         
-        EventTicketingApp.showNotification(`Failed to ${operation}: ${userMessage}`, 'error');
+        this.showNotification(`Failed to ${operation}: ${userMessage}`, 'error');
         
         // Show retry option for certain errors
         if (error.message.includes('Network') || error.message.includes('500')) {
@@ -786,7 +969,7 @@ class AdminDashboard {
     exportEvents() {
         const csvContent = this.generateEventsCSV();
         this.downloadCSV(csvContent, 'events.csv');
-        EventTicketingApp.showNotification('Events exported successfully', 'success');
+        this.showNotification('Events exported successfully', 'success');
     }
 
     exportParticipants() {
@@ -815,7 +998,7 @@ class AdminDashboard {
 
         // Export to CSV
         this.downloadCSV(participantData, 'event_participants.csv');
-        EventTicketingApp.showNotification('Participant data exported successfully', 'success');
+        this.showNotification('Participant data exported successfully', 'success');
     }
 
     generateMockParticipants(event) {
@@ -860,14 +1043,94 @@ class AdminDashboard {
 
     // Worker Management Methods
     showCreateWorkerModal() {
-        EventTicketingApp.showNotification('Create Worker modal would open here', 'info');
+        // Reset the form
+        document.getElementById('createWorkerForm').reset();
+        
+        // Show the modal
+        document.getElementById('createWorkerModal').classList.add('active');
+    }
+
+    closeCreateWorkerModal() {
+        document.getElementById('createWorkerModal').classList.remove('active');
+        document.getElementById('createWorkerForm').reset();
+    }
+
+    async saveNewWorker() {
+        try {
+            const newWorker = {
+                id: `worker-${Date.now()}`,
+                name: document.getElementById('createWorkerName').value,
+                username: document.getElementById('createWorkerUsername').value,
+                password: document.getElementById('createWorkerPassword').value,
+                email: document.getElementById('createWorkerEmail').value,
+                role: document.getElementById('createWorkerRole').value,
+                status: 'active',
+                lastActive: new Date().toISOString(),
+                createdAt: new Date().toISOString()
+            };
+
+            this.workers.push(newWorker);
+            this.saveWorkersToStorage();
+            this.renderWorkersTab();
+            this.closeCreateWorkerModal();
+            
+            this.showNotification(`Worker "${newWorker.name}" added successfully!`, 'success');
+        } catch (error) {
+            console.error('Error creating worker:', error);
+            this.showNotification('Failed to add worker', 'error');
+        }
     }
 
     viewWorker(workerId) {
         const worker = this.workers.find(w => w.id === workerId);
-        if (worker) {
-            EventTicketingApp.showNotification(`Viewing worker: ${worker.name}`, 'info');
-        }
+        if (!worker) return;
+
+        const statusBadge = worker.status === 'active' ? '<span class="badge badge-success">Active</span>' :
+                           worker.status === 'inactive' ? '<span class="badge badge-secondary">Inactive</span>' :
+                           '<span class="badge badge-warning">Suspended</span>';
+
+        const lastActive = worker.lastActive ? 
+            this.formatDate(worker.lastActive) : 'Never';
+
+        const content = `
+            <div class="worker-details-view">
+                <div class="detail-row">
+                    <div class="detail-label">Name:</div>
+                    <div class="detail-value"><strong>${worker.name}</strong></div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Username:</div>
+                    <div class="detail-value"><code>${worker.username}</code></div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Email:</div>
+                    <div class="detail-value">${worker.email}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Role:</div>
+                    <div class="detail-value">${worker.role}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Status:</div>
+                    <div class="detail-value">${statusBadge}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Last Active:</div>
+                    <div class="detail-value">${lastActive}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Created:</div>
+                    <div class="detail-value">${this.formatDate(worker.createdAt)}</div>
+                </div>
+            </div>
+        `;
+
+        document.getElementById('viewWorkerContent').innerHTML = content;
+        document.getElementById('viewWorkerModal').classList.add('active');
+    }
+
+    closeViewWorkerModal() {
+        document.getElementById('viewWorkerModal').classList.remove('active');
     }
 
     editWorkerCredentials(workerId) {
@@ -925,13 +1188,13 @@ class AdminDashboard {
         // Re-render the table
         this.renderWorkersTable();
 
-        EventTicketingApp.showNotification(`Credentials updated for ${worker.name}`, 'success');
+        this.showNotification(`Credentials updated for ${worker.name}`, 'success');
     }
 
     editWorker(workerId) {
         const worker = this.workers.find(w => w.id === workerId);
         if (worker) {
-            EventTicketingApp.showNotification(`Full worker edit modal would open here for ${worker.name}`, 'info');
+            this.showNotification(`Full worker edit modal would open here for ${worker.name}`, 'info');
         }
     }
 
@@ -987,14 +1250,14 @@ class AdminDashboard {
             this.workers = this.workers.filter(w => w.id !== workerId);
             this.saveWorkersToStorage(); // Update localStorage
             this.renderWorkersTab();
-            EventTicketingApp.showNotification(`Worker "${worker.name}" deleted successfully`, 'success');
+            this.showNotification(`Worker "${worker.name}" deleted successfully`, 'success');
         }
     }
 
     exportWorkers() {
         const csvContent = this.generateWorkersCSV();
         this.downloadCSV(csvContent, 'workers.csv');
-        EventTicketingApp.showNotification('Workers exported successfully', 'success');
+        this.showNotification('Workers exported successfully', 'success');
     }
 
     generateWorkersCSV() {
@@ -1035,7 +1298,7 @@ class AdminDashboard {
         this.applyOrganizationName(settings.orgName);
         
         console.log('Saving organization settings:', settings);
-        EventTicketingApp.showNotification('Organization settings saved successfully', 'success');
+        this.showNotification('Organization settings saved successfully', 'success');
     }
 
     savePolicySettings() {
@@ -1055,7 +1318,7 @@ class AdminDashboard {
         this.applyPolicyChanges(settings);
         
         console.log('Saving policy settings:', settings);
-        EventTicketingApp.showNotification('Policy settings saved successfully', 'success');
+        this.showNotification('Policy settings saved successfully', 'success');
     }
 
     saveSystemSettings() {
@@ -1072,7 +1335,48 @@ class AdminDashboard {
         this.settings = { ...this.settings, system: settings };
         
         console.log('Saving system settings:', settings);
-        EventTicketingApp.showNotification('System settings saved successfully', 'success');
+        this.showNotification('System settings saved successfully', 'success');
+    }
+
+    resetDashboardData() {
+        const confirmed = confirm(
+            '⚠️ WARNING: This will permanently delete all events, workers, and settings data from your browser.\n\n' +
+            'This action CANNOT be undone!\n\n' +
+            'Are you sure you want to continue?'
+        );
+        
+        if (!confirmed) {
+            console.log('Reset cancelled by user');
+            return;
+        }
+        
+        try {
+            console.log('🧹 Resetting all dashboard data...');
+            
+            // Clear all localStorage items
+            localStorage.removeItem('adminEvents');
+            localStorage.removeItem('adminWorkers');
+            localStorage.removeItem('adminSettings');
+            localStorage.removeItem('workerCredentials');
+            localStorage.removeItem('adminDataVersion');
+            
+            console.log('✅ All data cleared from localStorage');
+            
+            // Reset in-memory data
+            this.events = [];
+            this.workers = [];
+            this.settings = {};
+            
+            // Re-render the current tab
+            this.renderCurrentTab();
+            
+            this.showNotification('Dashboard data has been reset successfully', 'success');
+            
+            console.log('✅ Dashboard reset complete');
+        } catch (error) {
+            console.error('❌ Error resetting dashboard:', error);
+            alert('Failed to reset dashboard: ' + error.message);
+        }
     }
 
     savePolicyText() {
@@ -1092,7 +1396,7 @@ class AdminDashboard {
         this.applyPolicyTextChanges(policyTexts);
         
         console.log('Saving policy text:', policyTexts);
-        EventTicketingApp.showNotification('Policy text saved successfully', 'success');
+        this.showNotification('Policy text saved successfully', 'success');
     }
 
     // Helper methods to apply settings changes
@@ -1237,7 +1541,7 @@ class AdminDashboard {
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
 
-        EventTicketingApp.showNotification('Data backup created successfully', 'success');
+        this.showNotification('Data backup created successfully', 'success');
     }
 
     exportAllData() {
@@ -1260,7 +1564,7 @@ class AdminDashboard {
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
 
-        EventTicketingApp.showNotification('All data exported successfully', 'success');
+        this.showNotification('All data exported successfully', 'success');
     }
 
     clearOldData() {
@@ -1278,7 +1582,7 @@ class AdminDashboard {
             const removedCount = originalCount - this.events.length;
             this.renderEventsTab();
             
-            EventTicketingApp.showNotification(`Cleared ${removedCount} old events`, 'success');
+            this.showNotification(`Cleared ${removedCount} old events`, 'success');
         }
     }
 

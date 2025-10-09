@@ -30,13 +30,13 @@
                             <i class="fas fa-cog"></i>
                             <span>Admin Portal</span>
                         </div>
-                        <button class="logout-btn" onclick="adminLogout()" title="Logout">
+                        <button class="logout-btn" onclick="adminLogout()">
                             <i class="fas fa-sign-out-alt"></i>
                             <span class="logout-text">Logout</span>
                         </button>
                     </div>
                     <div class="header-actions">
-                        <button class="mobile-menu-toggle" aria-label="Toggle menu">
+                        <button class="mobile-menu-toggle" aria-label="Toggle menu" title="Toggle menu">
                             <i class="fas fa-bars"></i>
                         </button>
                     </div>
@@ -244,79 +244,6 @@
                             </form>
                         </div>
 
-                        <!-- Policy Settings -->
-                        <div class="settings-section">
-                            <h3 class="settings-section-title">
-                                <i class="fas fa-file-contract"></i>
-                                Policies
-                            </h3>
-                            <form class="settings-form" id="policyForm">
-                                <div class="form-group">
-                                    <label class="form-label" for="policyVersion">Policy Version</label>
-                                    <input type="text" class="form-input" id="policyVersion" value="v2.1">
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label" for="refundPolicy">Refund Policy (hours before event)</label>
-                                    <input type="number" class="form-input" id="refundPolicy" value="24" min="0" max="168">
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label" for="serviceFee">Service Fee (€)</label>
-                                    <input type="number" class="form-input" id="serviceFee" value="2.50" min="0" step="0.01">
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label" for="minAge">Minimum Age for Events</label>
-                                    <input type="number" class="form-input" id="minAge" value="16" min="0" max="25">
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label" for="dressCode">Default Dress Code</label>
-                                    <select class="form-input" id="dressCode">
-                                        <option value="Casual">Casual</option>
-                                        <option value="Smart Casual">Smart Casual</option>
-                                        <option value="Business Casual">Business Casual</option>
-                                        <option value="Formal">Formal</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label" for="contactEmail">Contact Email</label>
-                                    <input type="email" class="form-input" id="contactEmail" value="contact@studentevents.com">
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label" for="contactPhone">Contact Phone</label>
-                                    <input type="tel" class="form-input" id="contactPhone" value="+1 (555) 123-4567">
-                                </div>
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-save"></i>
-                                    Save Policy Changes
-                                </button>
-                            </form>
-                        </div>
-
-                        <!-- Policy Text Editor -->
-                        <div class="settings-section">
-                            <h3 class="settings-section-title">
-                                <i class="fas fa-edit"></i>
-                                Policy Text Editor
-                            </h3>
-                            <form class="settings-form" id="policyTextForm">
-                                <div class="form-group">
-                                    <label class="form-label" for="privacyPolicyText">Privacy Policy Text</label>
-                                    <textarea class="form-textarea" id="privacyPolicyText" rows="8" placeholder="Enter privacy policy text here...">We collect information you provide directly to us, such as when you create an account, purchase tickets, or contact us for support. This may include name, email address, and phone number. We use this information to provide and improve our services.</textarea>
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label" for="refundPolicyText">Refund Policy Text</label>
-                                    <textarea class="form-textarea" id="refundPolicyText" rows="6" placeholder="Enter refund policy text here...">Refunds are available up to 24 hours before the event. Service fees are non-refundable. To request a refund, contact us with your ticket information.</textarea>
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label" for="termsOfServiceText">Terms of Service Text</label>
-                                    <textarea class="form-textarea" id="termsOfServiceText" rows="6" placeholder="Enter terms of service text here...">By using our service, you agree to follow our code of conduct and respect other attendees. We reserve the right to remove anyone who violates these terms.</textarea>
-                                </div>
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-save"></i>
-                                    Save Policy Text
-                                </button>
-                            </form>
-                        </div>
-
                         <!-- System Settings -->
                         <div class="settings-section">
                             <h3 class="settings-section-title">
@@ -342,15 +269,6 @@
                                         <label for="autoBackup">Automatic Backups</label>
                                     </div>
                                 </div>
-                                <div class="form-group">
-                                    <label class="form-label" for="timezone">Timezone</label>
-                                    <select class="form-input" id="timezone">
-                                        <option value="UTC">UTC</option>
-                                        <option value="Europe/London">Europe/London</option>
-                                        <option value="Europe/Berlin" selected>Europe/Berlin</option>
-                                        <option value="America/New_York">America/New_York</option>
-                                    </select>
-                                </div>
                                 <button type="submit" class="btn btn-primary">
                                     <i class="fas fa-save"></i>
                                     Save Changes
@@ -358,24 +276,19 @@
                             </form>
                         </div>
 
-                        <!-- Backup & Export -->
+                        <!-- Data Management -->
                         <div class="settings-section">
                             <h3 class="settings-section-title">
                                 <i class="fas fa-database"></i>
                                 Data Management
                             </h3>
-                            <div class="settings-actions">
-                                <button class="btn btn-secondary" onclick="adminDashboard.backupData()">
-                                    <i class="fas fa-download"></i>
-                                    Backup Data
-                                </button>
-                                <button class="btn btn-secondary" onclick="adminDashboard.exportAllData()">
-                                    <i class="fas fa-file-export"></i>
-                                    Export All Data
-                                </button>
-                                <button class="btn btn-danger" onclick="adminDashboard.clearOldData()">
+                            <div class="settings-form">
+                                <p style="color: #666; margin-bottom: 15px; font-size: 0.9rem;">
+                                    Clear all locally stored data including events and workers. This action cannot be undone.
+                                </p>
+                                <button type="button" class="btn btn-danger" onclick="adminDashboard.resetDashboardData()" title="Clear all data">
                                     <i class="fas fa-trash-alt"></i>
-                                    Clear Old Data
+                                    Reset Dashboard Data
                                 </button>
                             </div>
                         </div>
@@ -400,60 +313,113 @@
         </div>
     </footer>
 
-    <script src="/scripts/main.js"></script>
-    <!-- Edit Event Modal -->
-    <div class="modal" id="editEventModal">
+    <!-- Create Event Modal -->
+    <div class="modal" id="createEventModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 class="modal-title">Edit Event</h3>
-                <button class="modal-close" onclick="adminDashboard.closeEditEventModal()">
+                <h3 class="modal-title">Create New Event</h3>
+                <button class="modal-close" onclick="adminDashboard.closeCreateEventModal()" title="Close">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            <form class="modal-form" id="editEventForm">
+            <form class="modal-form" id="createEventForm">
                 <div class="form-group">
-                    <label class="form-label" for="editEventName">Event Name</label>
-                    <input type="text" class="form-input" id="editEventName" required>
+                    <label class="form-label" for="createEventName">Event Name</label>
+                    <input type="text" class="form-input" id="createEventName" required>
                 </div>
                 <div class="form-group">
-                    <label class="form-label" for="editEventDate">Date & Time</label>
-                    <input type="datetime-local" class="form-input" id="editEventDate" required>
+                    <label class="form-label" for="createEventDate">Date & Time</label>
+                    <input type="datetime-local" class="form-input" id="createEventDate" required>
                 </div>
                 <div class="form-group">
-                    <label class="form-label" for="editEventLocation">Location</label>
-                    <input type="text" class="form-input" id="editEventLocation" required>
+                    <label class="form-label" for="createEventLocation">Location</label>
+                    <input type="text" class="form-input" id="createEventLocation" required>
                 </div>
                 <div class="form-group">
-                    <label class="form-label" for="editEventDescription">Description</label>
-                    <textarea class="form-textarea" id="editEventDescription" rows="4"></textarea>
+                    <label class="form-label" for="createEventDescription">Description</label>
+                    <textarea class="form-textarea" id="createEventDescription" rows="4"></textarea>
                 </div>
-                
-                <!-- Price Tiers Section -->
                 <div class="form-group">
-                    <label class="form-label">Price Tiers</label>
-                    <div id="editPriceTiers">
-                        <!-- Price tiers will be dynamically added here -->
-                    </div>
-                    <button type="button" class="btn btn-secondary btn-sm" onclick="adminDashboard.addPriceTier('edit')">
-                        <i class="fas fa-plus"></i> Add Price Tier
-                    </button>
+                    <label class="form-label" for="createEventImage">Event Image URL</label>
+                    <input type="url" class="form-input" id="createEventImage" placeholder="https://example.com/image.jpg">
                 </div>
-                
                 <div class="form-group">
-                    <label class="form-label" for="editEventImage">Event Image URL</label>
-                    <input type="url" class="form-input" id="editEventImage" placeholder="https://example.com/image.jpg">
+                    <label class="form-label" for="createEventPrice">Price (€)</label>
+                    <input type="number" class="form-input" id="createEventPrice" min="0" step="0.01" required>
                 </div>
-                
                 <div class="form-group">
-                    <label class="form-label" for="editEventStatus">Status</label>
-                    <select class="form-input" id="editEventStatus">
+                    <label class="form-label" for="createEventTotalTickets">Total Tickets</label>
+                    <input type="number" class="form-input" id="createEventTotalTickets" min="1" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="createEventStatus">Status</label>
+                    <select class="form-input" id="createEventStatus">
                         <option value="active">Active</option>
                         <option value="sold-out">Sold Out</option>
                         <option value="cancelled">Cancelled</option>
                         <option value="completed">Completed</option>
                     </select>
                 </div>
-                
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="adminDashboard.closeCreateEventModal()">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-plus"></i>
+                        Create Event
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Event Modal -->
+    <div class="modal" id="editEventModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Edit Event</h3>
+                <button class="modal-close" onclick="adminDashboard.closeEditEventModal()" title="Close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form class="modal-form" id="editEventForm">
+                <div class="form-group">
+                    <label class="form-label" for="editEventName">Event Name</label>
+                    <input type="text" class="form-input" id="editEventName" name="editEventName" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="editEventDate">Date & Time</label>
+                    <input type="datetime-local" class="form-input" id="editEventDate" name="editEventDate" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="editEventLocation">Location</label>
+                    <input type="text" class="form-input" id="editEventLocation" name="editEventLocation" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="editEventDescription">Description</label>
+                    <textarea class="form-textarea" id="editEventDescription" name="editEventDescription" rows="4"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="editEventImage">Event Image URL</label>
+                    <input type="url" class="form-input" id="editEventImage" name="editEventImage" placeholder="https://example.com/image.jpg">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="editEventPrice">Price (€)</label>
+                    <input type="number" class="form-input" id="editEventPrice" name="editEventPrice" min="0" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="editEventTotalTickets">Total Tickets</label>
+                    <input type="number" class="form-input" id="editEventTotalTickets" name="editEventTotalTickets" min="1" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="editEventStatus">Status</label>
+                    <select class="form-input" id="editEventStatus" name="editEventStatus">
+                        <option value="active">Active</option>
+                        <option value="sold-out">Sold Out</option>
+                        <option value="cancelled">Cancelled</option>
+                        <option value="completed">Completed</option>
+                    </select>
+                </div>
                 <div class="modal-actions">
                     <button type="button" class="btn btn-secondary" onclick="adminDashboard.closeEditEventModal()">
                         Cancel
@@ -467,6 +433,94 @@
         </div>
     </div>
 
+    <!-- View Event Modal -->
+    <div class="modal" id="viewEventModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Event Details</h3>
+                <button class="modal-close" onclick="adminDashboard.closeViewEventModal()" title="Close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="viewEventContent">
+                <!-- Content will be populated by JavaScript -->
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="adminDashboard.closeViewEventModal()">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Worker Modal -->
+    <div class="modal" id="createWorkerModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Add New Worker</h3>
+                <button class="modal-close" onclick="adminDashboard.closeCreateWorkerModal()" title="Close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form class="modal-form" id="createWorkerForm">
+                <div class="form-group">
+                    <label class="form-label" for="createWorkerName">Full Name</label>
+                    <input type="text" class="form-input" id="createWorkerName" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="createWorkerUsername">Username</label>
+                    <input type="text" class="form-input" id="createWorkerUsername" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="createWorkerPassword">Password</label>
+                    <input type="password" class="form-input" id="createWorkerPassword" required minlength="6">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="createWorkerEmail">Email</label>
+                    <input type="email" class="form-input" id="createWorkerEmail" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="createWorkerRole">Role</label>
+                    <select class="form-input" id="createWorkerRole">
+                        <option value="worker">Worker</option>
+                        <option value="supervisor">Supervisor</option>
+                        <option value="manager">Manager</option>
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="adminDashboard.closeCreateWorkerModal()">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-user-plus"></i>
+                        Add Worker
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- View Worker Modal -->
+    <div class="modal" id="viewWorkerModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Worker Details</h3>
+                <button class="modal-close" onclick="adminDashboard.closeViewWorkerModal()" title="Close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="viewWorkerContent">
+                <!-- Content will be populated by JavaScript -->
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="adminDashboard.closeViewWorkerModal()">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/scripts/main.js"></script>
     <script src="/scripts/config.js"></script>
     <script src="/admin/admin-dashboard.js"></script>
     <script src="/admin/admin-api-connector.js"></script>
@@ -475,10 +529,18 @@
         document.addEventListener('DOMContentLoaded', async () => {
             const isAuthenticated = await checkAuthentication();
             if (!isAuthenticated) {
-                window.location.href = 'login.html';
+                window.location.href = '/admin/login.html';
+            } else {
+                // Initialize admin dashboard ONLY if it doesn't exist yet
+                if (!window.adminDashboard) {
+                    console.log('📋 Creating new AdminDashboard instance...');
+                    window.adminDashboard = new AdminDashboard();
+                } else {
+                    console.log('✅ AdminDashboard already exists, reusing existing instance');
+                }
             }
         });
-        
+
         async function checkAuthentication() {
             try {
                 // Check if JWT token exists
@@ -487,12 +549,12 @@
                     console.log('❌ No JWT token found');
                     return false;
                 }
-                
+
                 // Check token expiration
                 try {
                     const payload = JSON.parse(atob(token.split('.')[1]));
                     const now = Math.floor(Date.now() / 1000);
-                    
+
                     if (payload.exp < now) {
                         console.log('❌ JWT token expired');
                         clearAuthData();
@@ -503,145 +565,32 @@
                     clearAuthData();
                     return false;
                 }
-                
-                // Verify token with server (with fallback)
-                const API_BASE_URL = window.CONFIG?.API_BASE_URL?.replace('/api', '') || 'https://studentevents-production.up.railway.app';
-                try {
-                    const response = await fetch(`${API_BASE_URL}/api/auth/verify`, {
-                        method: 'GET',
-                        headers: {
-                            'Authorization': `Bearer ${token}`,
-                            'Content-Type': 'application/json'
-                        }
-                    });
-                    
-                    if (response.ok) {
-                        const data = await response.json();
-                        if (!data.success || data.user.role !== 'admin') {
-                            console.log('❌ User is not an admin');
-                            clearAuthData();
-                            return false;
-                        }
-                        console.log('✅ Server token verification successful');
-                    } else {
-                        console.log('⚠️ Server verification failed, using client-side validation');
-                        // Fallback to client-side validation
-                        const payload = JSON.parse(atob(token.split('.')[1]));
-                        if (payload.role !== 'admin') {
-                            console.log('❌ User is not an admin (client-side check)');
-                            clearAuthData();
-                            return false;
-                        }
-                    }
-                } catch (error) {
-                    console.log('⚠️ Server verification error, using client-side validation:', error.message);
-                    // Fallback to client-side validation
-                    const payload = JSON.parse(atob(token.split('.')[1]));
-                    if (payload.role !== 'admin') {
-                        console.log('❌ User is not an admin (client-side check)');
-                        clearAuthData();
-                        return false;
-                    }
-                }
-                
+
                 console.log('✅ Authentication successful');
-                startTokenValidation(); // Start periodic token validation
                 return true;
-                
+
             } catch (error) {
                 console.error('❌ Authentication check failed:', error);
                 clearAuthData();
                 return false;
             }
         }
-        
+
         function clearAuthData() {
             localStorage.removeItem('adminToken');
             localStorage.removeItem('adminUser');
             sessionStorage.removeItem('adminAccess');
         }
-        
-        // Periodic token validation (every 5 minutes)
-        function startTokenValidation() {
-            setInterval(async () => {
-                const token = localStorage.getItem('adminToken');
-                if (token) {
-                    try {
-                        const payload = JSON.parse(atob(token.split('.')[1]));
-                        const now = Math.floor(Date.now() / 1000);
-                        const timeUntilExpiry = payload.exp - now;
-                        
-                        // If token expires in less than 5 minutes, refresh it
-                        if (timeUntilExpiry < 300) {
-                            console.log('🔄 Token expiring soon, refreshing...');
-                            await refreshToken();
-                        }
-                    } catch (error) {
-                        console.error('Token validation error:', error);
-                        clearAuthData();
-                        window.location.href = 'login.html';
-                    }
-                }
-            }, 300000); // Check every 5 minutes
-        }
-        
-        async function refreshToken() {
-            try {
-                const token = localStorage.getItem('adminToken');
-                const API_BASE_URL = window.CONFIG?.API_BASE_URL?.replace('/api', '') || 'https://studentevents-production.up.railway.app';
-                
-                const response = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    localStorage.setItem('adminToken', data.token);
-                    console.log('✅ Token refreshed successfully');
-                } else {
-                    throw new Error('Token refresh failed');
-                }
-            } catch (error) {
-                console.error('Token refresh failed:', error);
-                clearAuthData();
-                window.location.href = 'login.html';
-            }
-        }
-        
+
         function adminLogout() {
             if (confirm('Are you sure you want to logout?')) {
                 // Clear all authentication data
                 localStorage.removeItem('adminToken');
                 localStorage.removeItem('adminUser');
                 sessionStorage.removeItem('adminAccess');
-                
-                // Optional: Call logout API to invalidate token on server
-                const token = localStorage.getItem('adminToken');
-                if (token) {
-                    fetch('https://studentevents-production.up.railway.app/api/auth/logout', {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${token}`,
-                            'Content-Type': 'application/json'
-                        }
-                    }).then(response => {
-                        if (response.ok) {
-                            console.log('✅ Server logout successful');
-                        } else {
-                            console.log('⚠️ Server logout failed, but continuing with client logout');
-                        }
-                    }).catch(error => {
-                        console.warn('⚠️ Logout API call failed, but continuing with client logout:', error.message);
-                        // Continue with logout even if API call fails
-                    });
-                }
-                
+
                 // Redirect to login page
-                window.location.href = 'login.html';
+                window.location.href = '/admin/login.html';
             }
         }
     </script>

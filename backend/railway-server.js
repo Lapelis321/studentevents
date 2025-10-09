@@ -7,11 +7,13 @@ const jwt = require('jsonwebtoken');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
-const FRONTEND_URL = process.env.FRONTEND_URL || 'https://afterstate.events';
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:8000';
 
 // Middleware
 app.use(cors({
-  origin: [FRONTEND_URL, 'https://afterstate.events', 'https://afterstateevents.netlify.app'],
+  origin: process.env.NODE_ENV === 'production' 
+    ? [FRONTEND_URL, 'https://afterstate.events', 'https://afterstateevents.netlify.app']
+    : ['http://localhost:8000', 'http://127.0.0.1:8000'],
   credentials: true
 }));
 app.use(express.json());
@@ -157,8 +159,31 @@ app.post('/api/worker/login', async (req, res) => {
   }
 });
 
+// Workers endpoint
+app.get('/api/workers', async (req, res) => {
+  try {
+    // Mock workers data
+    const workers = [
+      {
+        id: 'worker-1',
+        name: 'John Worker',
+        email: 'john.worker@studentevents.com',
+        role: 'worker',
+        status: 'active',
+        lastActive: new Date().toISOString(),
+        createdAt: new Date().toISOString()
+      }
+    ];
+    
+    res.json(workers);
+  } catch (error) {
+    console.error('Workers API error:', error);
+    res.status(500).json({ error: 'Failed to fetch workers' });
+  }
+});
+
 // Catch-all for undefined routes
-app.all('*', (req, res) => {
+app.use((req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
 

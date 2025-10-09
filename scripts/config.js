@@ -13,8 +13,8 @@ const CONFIG = {
             return `http://${hostname}:3001/api`;
         }
         
-        // Production - Netlify Functions
-        return 'https://afterstate.events/.netlify/functions';
+        // Production - use environment variable or fallback
+        return window.API_BASE_URL || 'https://your-railway-url.up.railway.app/api';
     })(),
     
     // Stripe Configuration
