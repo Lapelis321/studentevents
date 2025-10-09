@@ -11,9 +11,14 @@ const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:8000';
 
 // Middleware
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? [FRONTEND_URL, 'https://afterstate.events', 'https://afterstateevents.netlify.app']
-    : ['http://localhost:8000', 'http://127.0.0.1:8000'],
+  origin: [
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
+    'https://afterstate.events',
+    'https://www.afterstate.events',
+    'https://afterstateevents.netlify.app',
+    FRONTEND_URL
+  ].filter(Boolean),
   credentials: true
 }));
 app.use(express.json());
