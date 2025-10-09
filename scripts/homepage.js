@@ -15,10 +15,17 @@ class Homepage {
     setupEventListeners() {
         // Refresh events when page becomes visible (for mobile app-like behavior)
         document.addEventListener('visibilitychange', () => {
-            if (!document.hidden && this.events.length === 0) {
+            if (!document.hidden) {
+                console.log('📱 Page became visible, refreshing events...');
                 this.loadEvents();
             }
         });
+        
+        // Auto-refresh events every 30 seconds to catch new events from admin
+        setInterval(() => {
+            console.log('🔄 Auto-refreshing events...');
+            this.loadEvents();
+        }, 30000);
     }
 
     async loadEvents() {
@@ -163,7 +170,10 @@ class Homepage {
         const eventsGrid = document.getElementById('eventsGrid');
         if (!eventsGrid) return;
 
-        if (this.events.length === 0) {
+        // Filter out completed events - they should not appear on main page
+        const visibleEvents = this.events.filter(event => event.status !== 'completed');
+
+        if (visibleEvents.length === 0) {
             eventsGrid.innerHTML = `
                 <div class="events-empty">
                     <i class="fas fa-calendar-times"></i>
@@ -174,7 +184,7 @@ class Homepage {
             return;
         }
 
-        eventsGrid.innerHTML = this.events.map(event => this.createEventCard(event)).join('');
+        eventsGrid.innerHTML = visibleEvents.map(event => this.createEventCard(event)).join('');
         
         // Add click listeners to event cards
         this.setupEventCardListeners();
@@ -184,8 +194,32 @@ class Homepage {
         const formattedDate = this.formatEventDate(event.date);
         const formattedPrice = EventTicketingApp.formatPrice(event.price, event.currency);
         
+        // Determine event state
+        const isSoldOut = event.availableTickets === 0 || event.availableTickets === '0' || event.status === 'sold-out';
+        const isCancelled = event.status === 'cancelled';
+        const isActive = event.status === 'active' && !isSoldOut;
+        
+        // Determine badge to show
+        let badge = '';
+        let cardClass = '';
+        let ctaText = 'View Details';
+        let ctaIcon = 'fa-arrow-right';
+        
+        if (isSoldOut) {
+            badge = '<div class="sold-out-badge"><i class="fas fa-ban"></i> SOLD OUT</div>';
+            cardClass = 'sold-out';
+            ctaText = 'Sold Out';
+            ctaIcon = 'fa-ban';
+        } else if (isCancelled) {
+            badge = '<div class="cancelled-badge"><i class="fas fa-times-circle"></i> CANCELLED</div>';
+            cardClass = 'cancelled';
+            ctaText = 'Event Cancelled';
+            ctaIcon = 'fa-times-circle';
+        }
+        
         return `
-            <article class="event-card" data-event-id="${event.id}" tabindex="0" role="button" aria-label="View details for ${event.title}">
+            <article class="event-card ${cardClass}" data-event-id="${event.id}" tabindex="0" role="button" aria-label="View details for ${event.title}">
+                ${badge}
                 <div class="event-card-image">
                     <i class="fas fa-calendar-star"></i>
                 </div>
@@ -215,8 +249,8 @@ class Homepage {
                             ${formattedPrice}
                         </div>
                         <div class="event-card-cta">
-                            <span>View Details</span>
-                            <i class="fas fa-arrow-right"></i>
+                            <span>${ctaText}</span>
+                            <i class="fas ${ctaIcon}"></i>
                         </div>
                     </div>
                 </div>

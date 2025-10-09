@@ -292,33 +292,71 @@ class RulesPage {
         }
     }
     
-    loadPolicyTexts() {
-        // Load policy texts from localStorage (set by admin)
-        const privacyPolicyText = localStorage.getItem('privacyPolicyText');
-        const refundPolicyText = localStorage.getItem('refundPolicyText');
-        const termsOfServiceText = localStorage.getItem('termsOfServiceText');
-        
-        if (privacyPolicyText) {
-            // Update privacy policy section
-            const privacySection = document.querySelector('#privacy-policy .section-content p');
-            if (privacySection) {
-                privacySection.textContent = privacyPolicyText;
+    async loadPolicyTexts() {
+        try {
+            const API_BASE_URL = window.CONFIG?.API_BASE_URL?.replace('/api', '') || 'http://localhost:3001';
+            const response = await fetch(`${API_BASE_URL}/api/policy`);
+            
+            if (response.ok) {
+                const policy = await response.json();
+                console.log('📄 Policy loaded from API:', policy);
+                
+                // Handle both old and new structure
+                const metadata = policy.metadata || { version: policy.version, lastUpdated: policy.lastUpdated };
+                const sections = policy.sections || [];
+                
+                // Update version and date
+                const versionBadge = document.querySelector('.version-badge');
+                const lastUpdated = document.querySelector('.last-updated');
+                if (versionBadge) versionBadge.textContent = `Version ${metadata.version}`;
+                if (lastUpdated) {
+                    const date = new Date(metadata.lastUpdated);
+                    lastUpdated.textContent = `Last updated: ${date.toLocaleDateString('en-US', { 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric' 
+                    })}`;
+                }
+                
+                // Update sections - new structure
+                if (sections.length > 0) {
+                    sections.forEach(section => {
+                        if (section.visible) {
+                            this.updateSection(section.id, section.content);
+                        }
+                    });
+                } else {
+                    // Fallback for old structure
+                    this.updateSection('terms-of-service', policy.termsOfService);
+                    this.updateSection('privacy-policy', policy.privacyPolicy);
+                    this.updateSection('event-guidelines', policy.eventGuidelines);
+                    this.updateSection('ticket-policy', policy.ticketPolicy);
+                    this.updateSection('refund-policy', policy.refundPolicy);
+                    this.updateSection('code-of-conduct', policy.codeOfConduct);
+                }
+            } else {
+                console.warn('Failed to load policy from API, using default content');
             }
+        } catch (error) {
+            console.error('Error loading policy texts:', error);
+            // Keep default hardcoded content if API fails
         }
+    }
+    
+    updateSection(sectionId, content) {
+        if (!content) return;
         
-        if (refundPolicyText) {
-            // Update refund policy section
-            const refundSection = document.querySelector('#refund-policy .section-content p');
-            if (refundSection) {
-                refundSection.textContent = refundPolicyText;
-            }
-        }
-        
-        if (termsOfServiceText) {
-            // Update terms of service section
-            const termsSection = document.querySelector('#code-of-conduct .section-content p');
-            if (termsSection) {
-                termsSection.textContent = termsOfServiceText;
+        const section = document.querySelector(`#${sectionId} .section-content`);
+        if (section) {
+            // Preserve the section structure but update the first paragraph
+            const firstP = section.querySelector('p');
+            if (firstP) {
+                firstP.textContent = content;
+            } else {
+                // If no paragraph exists, create one
+                const p = document.createElement('p');
+                p.textContent = content;
+                section.insertBefore(p, section.firstChild);
             }
         }
     }

@@ -194,12 +194,10 @@
                                 <thead>
                                     <tr>
                                         <th>Name</th>
-                                        <th>Username</th>
                                         <th>Password</th>
                                         <th>Email</th>
                                         <th>Role</th>
                                         <th>Status</th>
-                                        <th>Last Active</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
@@ -292,6 +290,47 @@
                                 </button>
                             </div>
                         </div>
+
+                        <!-- Policy & Rules Editor -->
+                        <div class="settings-section" style="grid-column: 1 / -1;">
+                            <h3 class="settings-section-title">
+                                <i class="fas fa-file-contract"></i>
+                                Policy & Rules Content
+                            </h3>
+                            <form class="settings-form" id="policyForm">
+                                <div class="form-group">
+                                    <label class="form-label" for="termsOfService">Terms of Service</label>
+                                    <textarea class="form-textarea" id="termsOfService" rows="4" placeholder="Enter terms of service content..."></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="privacyPolicy">Privacy Policy</label>
+                                    <textarea class="form-textarea" id="privacyPolicy" rows="4" placeholder="Enter privacy policy content..."></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="eventGuidelines">Event Guidelines</label>
+                                    <textarea class="form-textarea" id="eventGuidelines" rows="4" placeholder="Enter event guidelines content..."></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="ticketPolicy">Ticket Policy</label>
+                                    <textarea class="form-textarea" id="ticketPolicy" rows="4" placeholder="Enter ticket policy content..."></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="refundPolicy">Refund Policy</label>
+                                    <textarea class="form-textarea" id="refundPolicy" rows="4" placeholder="Enter refund policy content..."></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="codeOfConduct">Code of Conduct</label>
+                                    <textarea class="form-textarea" id="codeOfConduct" rows="4" placeholder="Enter code of conduct content..."></textarea>
+                                </div>
+                                <div class="policy-version-info" style="margin: 15px 0; padding: 10px; background: #f0f0f0; border-radius: 8px;">
+                                    <small>Current Version: <strong id="currentPolicyVersion">1.0</strong> | Last Updated: <strong id="policyLastUpdated">--</strong></small>
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i>
+                                    Update Policy & Rules
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -350,6 +389,16 @@
                 <div class="form-group">
                     <label class="form-label" for="createEventTotalTickets">Total Tickets</label>
                     <input type="number" class="form-input" id="createEventTotalTickets" min="1" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="createEventMinAge">Minimum Age</label>
+                    <input type="number" class="form-input" id="createEventMinAge" min="0" max="99" placeholder="e.g., 18">
+                    <small style="color: #666; font-size: 0.85rem;">Leave blank for all ages</small>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="createEventDressCode">Dress Code</label>
+                    <input type="text" class="form-input" id="createEventDressCode" placeholder="e.g., Casual, Formal, Themed...">
+                    <small style="color: #666; font-size: 0.85rem;">Leave blank for no specific dress code</small>
                 </div>
                 <div class="form-group">
                     <label class="form-label" for="createEventStatus">Status</label>
@@ -412,6 +461,16 @@
                     <input type="number" class="form-input" id="editEventTotalTickets" name="editEventTotalTickets" min="1" required>
                 </div>
                 <div class="form-group">
+                    <label class="form-label" for="editEventMinAge">Minimum Age</label>
+                    <input type="number" class="form-input" id="editEventMinAge" name="editEventMinAge" min="0" max="99" placeholder="e.g., 18">
+                    <small style="color: #666; font-size: 0.85rem;">Leave blank for all ages</small>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="editEventDressCode">Dress Code</label>
+                    <input type="text" class="form-input" id="editEventDressCode" name="editEventDressCode" placeholder="e.g., Casual, Formal, Themed...">
+                    <small style="color: #666; font-size: 0.85rem;">Leave blank for no specific dress code</small>
+                </div>
+                <div class="form-group">
                     <label class="form-label" for="editEventStatus">Status</label>
                     <select class="form-input" id="editEventStatus" name="editEventStatus">
                         <option value="active">Active</option>
@@ -468,16 +527,12 @@
                     <input type="text" class="form-input" id="createWorkerName" required>
                 </div>
                 <div class="form-group">
-                    <label class="form-label" for="createWorkerUsername">Username</label>
-                    <input type="text" class="form-input" id="createWorkerUsername" required>
+                    <label class="form-label" for="createWorkerEmail">Email</label>
+                    <input type="email" class="form-input" id="createWorkerEmail" required>
                 </div>
                 <div class="form-group">
                     <label class="form-label" for="createWorkerPassword">Password</label>
                     <input type="password" class="form-input" id="createWorkerPassword" required minlength="6">
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="createWorkerEmail">Email</label>
-                    <input type="email" class="form-input" id="createWorkerEmail" required>
                 </div>
                 <div class="form-group">
                     <label class="form-label" for="createWorkerRole">Role</label>
@@ -517,6 +572,52 @@
                     Close
                 </button>
             </div>
+        </div>
+    </div>
+
+    <!-- Edit Worker Modal -->
+    <div class="modal" id="editWorkerModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Edit Worker</h3>
+                <button class="modal-close" onclick="adminDashboard.closeEditWorkerModal()" title="Close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form class="modal-form" id="editWorkerForm">
+                <div class="form-group">
+                    <label class="form-label" for="editWorkerName">Full Name</label>
+                    <input type="text" class="form-input" id="editWorkerName" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="editWorkerEmail">Email</label>
+                    <input type="email" class="form-input" id="editWorkerEmail" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="editWorkerRole">Role</label>
+                    <select class="form-input" id="editWorkerRole">
+                        <option value="worker">Worker</option>
+                        <option value="supervisor">Supervisor</option>
+                        <option value="manager">Manager</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="editWorkerStatus">Status</label>
+                    <select class="form-input" id="editWorkerStatus">
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="adminDashboard.closeEditWorkerModal()">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i>
+                        Save Changes
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 

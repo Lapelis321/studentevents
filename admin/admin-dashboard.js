@@ -23,6 +23,9 @@ class AdminDashboard {
         this.setupEventListeners();
         this.renderCurrentTab();
         
+        // Load policy data
+        await this.loadPolicy();
+        
         this.initialized = true;
         console.log('✅ Dashboard initialized');
     }
@@ -68,7 +71,7 @@ class AdminDashboard {
 
         document.getElementById('policyForm')?.addEventListener('submit', (e) => {
             e.preventDefault();
-            this.savePolicySettings();
+            this.savePolicy();
         });
 
         document.getElementById('systemForm')?.addEventListener('submit', (e) => {
@@ -78,10 +81,7 @@ class AdminDashboard {
 
         // Event delegation for worker buttons
         document.addEventListener('click', (e) => {
-            if (e.target.closest('.password-toggle-btn')) {
-                const workerId = e.target.closest('.password-toggle-btn').dataset.workerId;
-                this.togglePassword(workerId);
-            } else if (e.target.closest('.action-btn')) {
+            if (e.target.closest('.action-btn')) {
                 const button = e.target.closest('.action-btn');
                 const workerId = button.dataset.workerId;
                 const action = button.dataset.action;
@@ -124,6 +124,11 @@ class AdminDashboard {
             e.preventDefault();
             this.saveNewWorker();
         });
+        
+        document.getElementById('editWorkerForm')?.addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.saveEditedWorker();
+        });
     }
 
     async loadMockData() {
@@ -139,7 +144,7 @@ class AdminDashboard {
             console.log(`📦 ✅ Using ${savedEvents.length} events from localStorage (PRIORITY)`);
             this.events = savedEvents;
             // Do NOT call API or use fallback if localStorage has data
-        } else {
+            } else {
             console.log('⚠️ No saved events in localStorage, starting with empty array');
             // Start with empty array - admin can add events through the interface
             this.events = [];
@@ -199,19 +204,19 @@ class AdminDashboard {
             localStorage.setItem('adminWorkers', JSON.stringify(this.workers));
             localStorage.setItem('adminDataVersion', '1.0');
             
-            // Create a simplified version for worker login system
-            const workerCredentials = {};
-            this.workers.forEach(worker => {
-                if (worker.status === 'active') {
-                    workerCredentials[worker.username] = {
-                        password: worker.password,
-                        role: worker.role,
-                        name: worker.name,
-                        id: worker.id
-                    };
-                }
-            });
-            localStorage.setItem('workerCredentials', JSON.stringify(workerCredentials));
+        // Create a simplified version for worker login system
+        const workerCredentials = {};
+        this.workers.forEach(worker => {
+            if (worker.status === 'active') {
+                workerCredentials[worker.username] = {
+                    password: worker.password,
+                    role: worker.role,
+                    name: worker.name,
+                    id: worker.id
+                };
+            }
+        });
+        localStorage.setItem('workerCredentials', JSON.stringify(workerCredentials));
             console.log('💾 Workers saved to localStorage');
         } catch (error) {
             console.error('Failed to save workers to localStorage:', error);
@@ -351,7 +356,7 @@ class AdminDashboard {
         if (this.workers.length === 0) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="8">
+                    <td colspan="6">
                         <div class="table-empty">
                             <i class="fas fa-users-slash"></i>
                             <h3>No workers found</h3>
@@ -364,25 +369,15 @@ class AdminDashboard {
         }
 
         tbody.innerHTML = this.workers.map(worker => {
-            const lastActive = this.formatDate(worker.lastActive);
             const statusBadge = this.createStatusBadge(worker.status);
 
             return `
                 <tr>
-                    <td><strong>${worker.name}</strong></td>
-                    <td><code>${worker.username}</code></td>
-                    <td>
-                        <div class="password-field">
-                            <span class="password-text" id="password-${worker.id}" data-password="${worker.password}">â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢</span>
-                            <button class="password-toggle-btn" data-worker-id="${worker.id}" title="Show/Hide Password">
-                                <i class="fas fa-eye" id="eye-${worker.id}"></i>
-                            </button>
-                        </div>
-                    </td>
+                    <td><strong>${worker.name || 'Unknown'}</strong></td>
+                    <td><code>${worker.password}</code></td>
                     <td>${worker.email}</td>
                     <td>${worker.role}</td>
                     <td>${statusBadge}</td>
-                    <td>${lastActive}</td>
                     <td>
                         <div class="table-row-actions">
                             <button class="action-btn view" data-worker-id="${worker.id}" data-action="view" title="View Details">
@@ -526,17 +521,71 @@ class AdminDashboard {
                 return;
             }
             
-            const newEvent = {
-                id: `event-${Date.now()}`,
-                name: nameInput.value,
-                date: dateInput.value,
+            // Prepare event data for API
+            const minAgeValue = document.getElementById('createEventMinAge')?.value;
+            const dressCodeValue = document.getElementById('createEventDressCode')?.value;
+            
+            const eventData = {
+                title: nameInput.value,
+                date: dateInput.value + ':00Z',  // Ensure proper date format
                 location: locationInput.value,
                 description: document.getElementById('createEventDescription')?.value || '',
-                image: document.getElementById('createEventImage')?.value || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800',
+                additionalInfo: document.getElementById('createEventImage')?.value || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800',
                 price: parseFloat(priceInput.value) || 0,
-                totalTickets: parseInt(ticketsInput.value) || 100,
+                currency: 'EUR',
+                minAge: minAgeValue ? parseInt(minAgeValue) : null,
+                dressCode: dressCodeValue || 'No specific dress code',
+                totalTickets: parseInt(ticketsInput.value) || 100
+            };
+            
+            // Try to save to backend API first
+            const API_BASE_URL = window.CONFIG?.API_BASE_URL?.replace('/api', '') || 'http://localhost:3001';
+            const token = localStorage.getItem('adminToken');
+            
+            let createdEvent = null;
+            
+            if (token) {
+                try {
+                    console.log('📡 Calling backend API to create event...');
+                    const response = await fetch(`${API_BASE_URL}/api/events`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify(eventData)
+                    });
+                    
+                    if (response.ok) {
+                        createdEvent = await response.json();
+                        console.log('✅ Event created on backend:', createdEvent);
+                    } else {
+                        const error = await response.json().catch(() => ({ error: 'Unknown error' }));
+                        console.warn('⚠️ Backend API failed:', error.error);
+                    }
+                } catch (apiError) {
+                    console.warn('⚠️ Backend API error:', apiError.message);
+                }
+            }
+            
+            // Create local event object
+            const status = document.getElementById('createEventStatus')?.value || 'active';
+            const availableTickets = status === 'sold-out' ? 0 : eventData.totalTickets;
+            
+            const newEvent = {
+                id: createdEvent?.id || `event-${Date.now()}`,
+                name: eventData.title,
+                date: eventData.date,
+                location: eventData.location,
+                description: eventData.description,
+                image: eventData.additionalInfo,
+                price: eventData.price,
+                totalTickets: eventData.totalTickets,
+                availableTickets: availableTickets,
                 soldTickets: 0,
-                status: document.getElementById('createEventStatus')?.value || 'active',
+                status: status,
+                minAge: eventData.minAge,
+                dressCode: eventData.dressCode,
                 priceTiers: []
             };
 
@@ -644,12 +693,14 @@ class AdminDashboard {
         document.getElementById('editEventImage').value = event.image || '';
         document.getElementById('editEventPrice').value = event.price || 0;
         document.getElementById('editEventTotalTickets').value = event.totalTickets || 100;
+        document.getElementById('editEventMinAge').value = event.minAge || '';
+        document.getElementById('editEventDressCode').value = event.dressCode || '';
         document.getElementById('editEventStatus').value = event.status;
 
         // Populate price tiers (optional - only if container exists)
         const priceTiersContainer = document.getElementById('editPriceTiers');
         if (priceTiersContainer) {
-            this.populatePriceTiers(event.priceTiers || [{ name: 'General', price: event.price, totalTickets: event.totalTickets, soldTickets: event.soldTickets, enabled: true }]);
+        this.populatePriceTiers(event.priceTiers || [{ name: 'General', price: event.price, totalTickets: event.totalTickets, soldTickets: event.soldTickets, enabled: true }]);
         }
 
         // Show the modal
@@ -1057,24 +1108,64 @@ class AdminDashboard {
 
     async saveNewWorker() {
         try {
+            const name = document.getElementById('createWorkerName').value;
+            const email = document.getElementById('createWorkerEmail').value;
+            const password = document.getElementById('createWorkerPassword').value;
+            const role = document.getElementById('createWorkerRole')?.value || 'worker';
+            
+            if (!name || !email || !password) {
+                this.showNotification('Name, email and password are required', 'error');
+                return;
+            }
+            
+            // Try to save to backend API
+            const API_BASE_URL = window.CONFIG?.API_BASE_URL?.replace('/api', '') || 'http://localhost:3001';
+            const token = localStorage.getItem('adminToken');
+            
+            let createdWorker = null;
+            
+            if (token) {
+                try {
+                    console.log('📡 Creating worker via API...');
+                    const response = await fetch(`${API_BASE_URL}/api/workers`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({ name, email, password, role })
+                    });
+                    
+                    if (response.ok) {
+                        createdWorker = await response.json();
+                        console.log('✅ Worker created on backend:', createdWorker);
+                    } else {
+                        const error = await response.json().catch(() => ({ error: 'Unknown error' }));
+                        console.warn('⚠️ Backend API failed:', error.error);
+                    }
+                } catch (apiError) {
+                    console.warn('⚠️ Backend API error:', apiError.message);
+                }
+            }
+            
+            // Create local worker object
             const newWorker = {
-                id: `worker-${Date.now()}`,
-                name: document.getElementById('createWorkerName').value,
-                username: document.getElementById('createWorkerUsername').value,
-                password: document.getElementById('createWorkerPassword').value,
-                email: document.getElementById('createWorkerEmail').value,
-                role: document.getElementById('createWorkerRole').value,
+                id: createdWorker?.id || `worker-${Date.now()}`,
+                name,
+                email,
+                password,
+                role,
                 status: 'active',
-                lastActive: new Date().toISOString(),
-                createdAt: new Date().toISOString()
+                lastActive: null,
+                createdAt: createdWorker?.createdAt || new Date().toISOString()
             };
-
+            
             this.workers.push(newWorker);
             this.saveWorkersToStorage();
             this.renderWorkersTab();
             this.closeCreateWorkerModal();
             
-            this.showNotification(`Worker "${newWorker.name}" added successfully!`, 'success');
+            this.showNotification(`Worker "${name}" added successfully!`, 'success');
         } catch (error) {
             console.error('Error creating worker:', error);
             this.showNotification('Failed to add worker', 'error');
@@ -1133,44 +1224,22 @@ class AdminDashboard {
         document.getElementById('viewWorkerModal').classList.remove('active');
     }
 
-    editWorkerCredentials(workerId) {
+    async editWorkerCredentials(workerId) {
         const worker = this.workers.find(w => w.id === workerId);
         if (!worker) return;
 
-        const action = confirm(`Edit credentials for ${worker.name}?\n\nClick OK to edit both username and password, or Cancel to edit just the password.`);
-        
-        if (action) {
-            // Edit both username and password
-            const newUsername = prompt(`Edit username for ${worker.name}:`, worker.username);
-            if (newUsername === null) return; // User cancelled
-
-            if (newUsername.trim() === '') {
-                alert('Username cannot be empty!');
-                return;
-            }
-
-            // Check if username already exists (excluding current worker)
-            const existingWorker = this.workers.find(w => w.username === newUsername.trim() && w.id !== workerId);
-            if (existingWorker) {
-                alert('Username already exists! Please choose a different username.');
-                return;
-            }
-
-            worker.username = newUsername.trim();
-        }
-
-        // Always allow password editing
-        const generatePassword = confirm(`Edit password for ${worker.name}?\n\nClick OK to enter a custom password, or Cancel to generate a secure password.`);
+        // Edit password
+        const generatePassword = confirm(`Edit password for ${worker.email}?\n\nClick OK to enter a custom password, or Cancel to generate a secure password.`);
         let newPassword;
         
         if (generatePassword) {
-            newPassword = prompt(`Enter new password for ${worker.name}:`, worker.password);
+            newPassword = prompt(`Enter new password for ${worker.email}:`, worker.password);
             if (newPassword === null) return; // User cancelled
         } else {
             newPassword = this.generateSecurePassword();
             const useGenerated = confirm(`Generated secure password: ${newPassword}\n\nClick OK to use this password, or Cancel to enter your own.`);
             if (!useGenerated) {
-                newPassword = prompt(`Enter new password for ${worker.name}:`, worker.password);
+                newPassword = prompt(`Enter new password for ${worker.email}:`, worker.password);
                 if (newPassword === null) return; // User cancelled
             }
         }
@@ -1180,45 +1249,118 @@ class AdminDashboard {
             return;
         }
 
-        worker.password = newPassword.trim();
+        const updatedPassword = newPassword.trim();
 
-        // Update localStorage
+        // Update via API
+        const token = localStorage.getItem('adminToken');
+        if (token) {
+            try {
+                console.log(`🔐 Updating worker credentials via API...`);
+                const API_BASE_URL = window.CONFIG?.API_BASE_URL?.replace('/api', '') || 'http://localhost:3001';
+                const response = await fetch(`${API_BASE_URL}/api/workers/${workerId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ password: updatedPassword })
+                });
+                
+                if (response.ok) {
+                    console.log('✅ Worker credentials updated on API');
+                } else {
+                    console.warn('⚠️ API update failed, updating locally only...');
+                }
+            } catch (error) {
+                console.warn('⚠️ API update error:', error.message);
+            }
+        }
+
+        // Update locally
+        worker.password = updatedPassword;
         this.saveWorkersToStorage();
-
-        // Re-render the table
         this.renderWorkersTable();
 
-        this.showNotification(`Credentials updated for ${worker.name}`, 'success');
+        this.showNotification(`Credentials updated for ${worker.email}`, 'success');
     }
 
     editWorker(workerId) {
         const worker = this.workers.find(w => w.id === workerId);
-        if (worker) {
-            this.showNotification(`Full worker edit modal would open here for ${worker.name}`, 'info');
+        if (!worker) {
+            console.error('Worker not found:', workerId);
+            return;
         }
+        
+        this.editingWorkerId = workerId;
+        
+        // Populate the form
+        document.getElementById('editWorkerName').value = worker.name || '';
+        document.getElementById('editWorkerEmail').value = worker.email || '';
+        document.getElementById('editWorkerRole').value = worker.role || 'worker';
+        document.getElementById('editWorkerStatus').value = worker.status || 'active';
+        
+        // Show the modal
+        document.getElementById('editWorkerModal').classList.add('active');
+    }
+    
+    closeEditWorkerModal() {
+        document.getElementById('editWorkerModal').classList.remove('active');
+        document.getElementById('editWorkerForm').reset();
+        this.editingWorkerId = null;
+    }
+    
+    async saveEditedWorker() {
+        if (!this.editingWorkerId) return;
+        
+        const worker = this.workers.find(w => w.id === this.editingWorkerId);
+        if (!worker) {
+            console.error('Worker not found:', this.editingWorkerId);
+            return;
+        }
+        
+        const name = document.getElementById('editWorkerName').value;
+        const email = document.getElementById('editWorkerEmail').value;
+        const role = document.getElementById('editWorkerRole').value;
+        const status = document.getElementById('editWorkerStatus').value;
+        
+        // Update via API
+        const token = localStorage.getItem('adminToken');
+        if (token) {
+            try {
+                console.log(`💾 Updating worker via API...`);
+                const API_BASE_URL = window.CONFIG?.API_BASE_URL?.replace('/api', '') || 'http://localhost:3001';
+                const response = await fetch(`${API_BASE_URL}/api/workers/${this.editingWorkerId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ name, email, role, status })
+                });
+                
+                if (response.ok) {
+                    console.log('✅ Worker updated on API');
+        } else {
+                    console.warn('⚠️ API update failed, updating locally only...');
+                }
+            } catch (error) {
+                console.warn('⚠️ API update error:', error.message);
+            }
+        }
+        
+        // Update locally
+        worker.name = name;
+        worker.email = email;
+        worker.role = role;
+        worker.status = status;
+        
+        this.saveWorkersToStorage();
+        this.renderWorkersTable();
+        this.closeEditWorkerModal();
+        
+        this.showNotification(`Worker "${name}" updated successfully`, 'success');
     }
 
-    togglePassword(workerId) {
-        const passwordElement = document.getElementById(`password-${workerId}`);
-        const eyeElement = document.getElementById(`eye-${workerId}`);
-        
-        if (!passwordElement || !eyeElement) return;
-        
-        const isHidden = passwordElement.textContent === 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢';
-        const actualPassword = passwordElement.getAttribute('data-password');
-        
-        if (isHidden) {
-            // Show password
-            passwordElement.textContent = actualPassword;
-            eyeElement.className = 'fas fa-eye-slash';
-            passwordElement.style.fontFamily = 'monospace';
-        } else {
-            // Hide password
-            passwordElement.textContent = 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢';
-            eyeElement.className = 'fas fa-eye';
-            passwordElement.style.fontFamily = '';
-        }
-    }
 
     generateSecurePassword(length = 12) {
         const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
@@ -1244,14 +1386,37 @@ class AdminDashboard {
         return password.split('').sort(() => Math.random() - 0.5).join('');
     }
 
-    deleteWorker(workerId) {
+    async deleteWorker(workerId) {
         const worker = this.workers.find(w => w.id === workerId);
-        if (worker && confirm(`Are you sure you want to delete "${worker.name}"?`)) {
-            this.workers = this.workers.filter(w => w.id !== workerId);
-            this.saveWorkersToStorage(); // Update localStorage
-            this.renderWorkersTab();
-            this.showNotification(`Worker "${worker.name}" deleted successfully`, 'success');
+        if (!worker || !confirm(`Are you sure you want to delete "${worker.email}"?`)) {
+            return;
         }
+        
+        const token = localStorage.getItem('adminToken');
+        if (token) {
+            try {
+                console.log(`🗑️ Deleting worker ${workerId} via API...`);
+                const API_BASE_URL = window.CONFIG?.API_BASE_URL?.replace('/api', '') || 'http://localhost:3001';
+                const response = await fetch(`${API_BASE_URL}/api/workers/${workerId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (response.ok) {
+                    console.log('✅ Worker deleted from API');
+                } else {
+                    console.warn('⚠️ API delete failed, performing local-only delete...');
+                }
+            } catch (error) {
+                console.warn('⚠️ API delete error:', error.message);
+            }
+        }
+        
+        // Delete locally
+            this.workers = this.workers.filter(w => w.id !== workerId);
+        this.saveWorkersToStorage();
+            this.renderWorkersTab();
+        this.showNotification(`Worker "${worker.email}" deleted successfully`, 'success');
     }
 
     exportWorkers() {
@@ -1338,9 +1503,13 @@ class AdminDashboard {
         this.showNotification('System settings saved successfully', 'success');
     }
 
-    resetDashboardData() {
+    async resetDashboardData() {
         const confirmed = confirm(
-            '⚠️ WARNING: This will permanently delete all events, workers, and settings data from your browser.\n\n' +
+            '⚠️ WARNING: This will permanently delete all events, workers, and settings data.\n\n' +
+            'This includes:\n' +
+            '- All events (will also clear from main page)\n' +
+            '- All workers and their credentials\n' +
+            '- All custom settings\n\n' +
             'This action CANNOT be undone!\n\n' +
             'Are you sure you want to continue?'
         );
@@ -1353,6 +1522,45 @@ class AdminDashboard {
         try {
             console.log('🧹 Resetting all dashboard data...');
             
+            const API_BASE_URL = window.CONFIG?.API_BASE_URL?.replace('/api', '') || 'http://localhost:3001';
+            const token = localStorage.getItem('adminToken');
+            
+            // Delete all events from backend
+            if (this.events.length > 0) {
+                console.log(`🗑️ Deleting ${this.events.length} events from backend...`);
+                for (const event of this.events) {
+                    try {
+                        await fetch(`${API_BASE_URL}/api/events/${event.id}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'Authorization': `Bearer ${token}`
+                            }
+                        });
+                        console.log(`✅ Deleted event: ${event.name}`);
+                    } catch (error) {
+                        console.warn(`⚠️ Failed to delete event ${event.id}:`, error);
+                    }
+                }
+            }
+            
+            // Delete all workers from backend
+            if (this.workers.length > 0) {
+                console.log(`🗑️ Deleting ${this.workers.length} workers from backend...`);
+                for (const worker of this.workers) {
+                    try {
+                        await fetch(`${API_BASE_URL}/api/workers/${worker.id}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'Authorization': `Bearer ${token}`
+                            }
+                        });
+                        console.log(`✅ Deleted worker: ${worker.name}`);
+                    } catch (error) {
+                        console.warn(`⚠️ Failed to delete worker ${worker.id}:`, error);
+                    }
+                }
+            }
+            
             // Clear all localStorage items
             localStorage.removeItem('adminEvents');
             localStorage.removeItem('adminWorkers');
@@ -1360,7 +1568,7 @@ class AdminDashboard {
             localStorage.removeItem('workerCredentials');
             localStorage.removeItem('adminDataVersion');
             
-            console.log('✅ All data cleared from localStorage');
+            console.log('✅ All data cleared from localStorage and backend');
             
             // Reset in-memory data
             this.events = [];
@@ -1370,7 +1578,7 @@ class AdminDashboard {
             // Re-render the current tab
             this.renderCurrentTab();
             
-            this.showNotification('Dashboard data has been reset successfully', 'success');
+            this.showNotification('Dashboard data has been reset successfully. Main page and worker data cleared.', 'success');
             
             console.log('✅ Dashboard reset complete');
         } catch (error) {
@@ -1598,6 +1806,106 @@ class AdminDashboard {
         link.click();
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
+    }
+
+    // ===== POLICY & RULES MANAGEMENT =====
+    
+    async loadPolicy() {
+        try {
+            const API_BASE_URL = window.CONFIG?.API_BASE_URL?.replace('/api', '') || 'http://localhost:3001';
+            const response = await fetch(`${API_BASE_URL}/api/policy`);
+            
+            if (response.ok) {
+                const policy = await response.json();
+                console.log('📄 Policy loaded:', policy);
+                
+                // Handle new structure with metadata and sections
+                if (policy.metadata && policy.sections) {
+                    // New structure - populate from sections
+                    const sectionMap = {};
+                    policy.sections.forEach(section => {
+                        sectionMap[section.id] = section.content;
+                    });
+                    
+                    document.getElementById('termsOfService').value = sectionMap['terms-of-service'] || '';
+                    document.getElementById('privacyPolicy').value = sectionMap['privacy-policy'] || '';
+                    document.getElementById('eventGuidelines').value = sectionMap['event-guidelines'] || '';
+                    document.getElementById('ticketPolicy').value = sectionMap['ticket-policy'] || '';
+                    document.getElementById('refundPolicy').value = sectionMap['refund-policy'] || '';
+                    document.getElementById('codeOfConduct').value = sectionMap['code-of-conduct'] || '';
+                    
+                    document.getElementById('currentPolicyVersion').textContent = policy.metadata.version || '1.0';
+                    document.getElementById('policyLastUpdated').textContent = policy.metadata.lastUpdated 
+                        ? new Date(policy.metadata.lastUpdated).toLocaleDateString() 
+                        : '--';
+                } else {
+                    // Old structure - direct properties
+                    document.getElementById('termsOfService').value = policy.termsOfService || '';
+                    document.getElementById('privacyPolicy').value = policy.privacyPolicy || '';
+                    document.getElementById('eventGuidelines').value = policy.eventGuidelines || '';
+                    document.getElementById('ticketPolicy').value = policy.ticketPolicy || '';
+                    document.getElementById('refundPolicy').value = policy.refundPolicy || '';
+                    document.getElementById('codeOfConduct').value = policy.codeOfConduct || '';
+                    document.getElementById('currentPolicyVersion').textContent = policy.version || '1.0';
+                    document.getElementById('policyLastUpdated').textContent = policy.lastUpdated 
+                        ? new Date(policy.lastUpdated).toLocaleDateString() 
+                        : '--';
+                }
+            } else {
+                console.warn('Failed to load policy from API');
+            }
+        } catch (error) {
+            console.error('Error loading policy:', error);
+        }
+    }
+    
+    async savePolicy() {
+        try {
+            // Build sections array from form fields
+            const sections = [
+                { id: 'terms-of-service', title: 'Terms of Service', icon: 'fa-gavel', content: document.getElementById('termsOfService').value, order: 1, visible: true, isDefault: true },
+                { id: 'privacy-policy', title: 'Privacy Policy', icon: 'fa-shield-alt', content: document.getElementById('privacyPolicy').value, order: 2, visible: true, isDefault: true },
+                { id: 'event-guidelines', title: 'Event Guidelines', icon: 'fa-calendar-check', content: document.getElementById('eventGuidelines').value, order: 3, visible: true, isDefault: true },
+                { id: 'ticket-policy', title: 'Ticket Policy', icon: 'fa-ticket-alt', content: document.getElementById('ticketPolicy').value, order: 4, visible: true, isDefault: true },
+                { id: 'refund-policy', title: 'Refund Policy', icon: 'fa-undo', content: document.getElementById('refundPolicy').value, order: 5, visible: true, isDefault: true },
+                { id: 'code-of-conduct', title: 'Code of Conduct', icon: 'fa-handshake', content: document.getElementById('codeOfConduct').value, order: 6, visible: true, isDefault: true }
+            ];
+            
+            const payload = {
+                metadata: {
+                    autoIncrementVersion: true,
+                    autoUpdateDate: true
+                },
+                sections: sections
+            };
+            
+            const API_BASE_URL = window.CONFIG?.API_BASE_URL?.replace('/api', '') || 'http://localhost:3001';
+            const token = localStorage.getItem('adminToken');
+            
+            const response = await fetch(`${API_BASE_URL}/api/policy`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(payload)
+            });
+            
+            if (response.ok) {
+                const updated = await response.json();
+                console.log('✅ Policy updated:', updated);
+                
+                document.getElementById('currentPolicyVersion').textContent = updated.metadata.version;
+                document.getElementById('policyLastUpdated').textContent = new Date(updated.metadata.lastUpdated).toLocaleDateString();
+                
+                this.showNotification('Policy & Rules updated successfully!', 'success');
+            } else {
+                throw new Error('Failed to update policy');
+            }
+        } catch (error) {
+            console.error('Error saving policy:', error);
+            this.showNotification('Failed to update policy', 'error');
+        }
     }
 }
 

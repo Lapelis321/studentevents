@@ -27,15 +27,8 @@
         const originalLoadMockData = window.adminDashboard.loadMockData.bind(window.adminDashboard);
         
         window.adminDashboard.loadMockData = async function() {
-            // ALWAYS check localStorage FIRST - it takes absolute priority!
-            const savedEvents = localStorage.getItem('adminEvents');
-            if (savedEvents) {
-                console.log('📦 localStorage has data - SKIPPING API and using stored events');
-                await originalLoadMockData();
-                return;
-            }
-            
-            console.log('📡 No localStorage data - Loading events from API...');
+            // ALWAYS try to load from API first to get the latest data
+            console.log('📡 Loading events from API...');
             try {
                 const response = await fetch(`${API_BASE_URL}/api/events`);
                 if (!response.ok) throw new Error('API request failed');
@@ -44,18 +37,35 @@
                 console.log(`✅ Loaded ${apiEvents.length} events from API`);
                 
                 // Transform API events to dashboard format
-                this.events = apiEvents.map(event => ({
-                    id: event.id,
-                    name: event.title,
-                    date: event.date,
-                    location: event.location,
-                    price: event.price,
-                    totalTickets: event.totalTickets || 100,
-                    soldTickets: (event.totalTickets || 100) - (event.availableTickets || 0),
-                    status: event.is_active ? 'upcoming' : 'completed',
-                    description: event.description || '',
-                    image: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800'
-                }));
+                this.events = apiEvents.map(event => {
+                    // Determine status: preserve backend status, or calculate if not provided
+                    let status = 'active';
+                    if (event.status === 'completed') {
+                        status = 'completed';
+                    } else if (event.status === 'cancelled') {
+                        status = 'cancelled';
+                    } else if (event.status === 'sold-out' || event.availableTickets === 0 || event.availableTickets === '0') {
+                        status = 'sold-out';
+                    } else if (!event.is_active) {
+                        status = 'completed';
+                    }
+                    
+                    return {
+                        id: event.id,
+                        name: event.title,
+                        date: event.date,
+                        location: event.location,
+                        price: event.price,
+                        totalTickets: event.totalTickets || 100,
+                        availableTickets: event.availableTickets || 0,
+                        soldTickets: (event.totalTickets || 100) - (event.availableTickets || 0),
+                        status: status,
+                        description: event.description || '',
+                        image: event.image || 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800',
+                        minAge: event.minAge,
+                        dressCode: event.dressCode
+                    };
+                });
                 
                 console.log('✅ Events transformed:', this.events.length);
                 
@@ -75,7 +85,7 @@
                 
             } catch (error) {
                 console.error('❌ API failed:', error);
-                console.log('⚠️ Using fallback data');
+                console.log('⚠️ Using fallback data from localStorage');
                 await originalLoadMockData();
             }
         };
@@ -165,6 +175,12 @@
             // Get price and totalTickets from form
             const price = parseFloat(document.getElementById('editEventPrice')?.value) || event.price || 0;
             const totalTickets = parseInt(document.getElementById('editEventTotalTickets')?.value) || event.totalTickets || 100;
+            const minAge = document.getElementById('editEventMinAge')?.value;
+            const dressCode = document.getElementById('editEventDressCode')?.value;
+            const status = formData.get('editEventStatus');
+            
+            // If status is "sold-out", set availableTickets to 0
+            const availableTickets = status === 'sold-out' ? 0 : totalTickets - (event.soldTickets || 0);
             
             // Prepare event data for API
             const eventData = {
@@ -173,13 +189,13 @@
                 location: formData.get('editEventLocation') || event.location,
                 price: price,
                 currency: 'EUR',
-                minAge: 18,
-                dressCode: 'Casual',
+                minAge: minAge ? parseInt(minAge) : null,
+                dressCode: dressCode || 'No specific dress code',
                 description: formData.get('editEventDescription') || event.description || '',
                 additionalInfo: formData.get('editEventImage') || event.image || '',
-                availableTickets: totalTickets - (event.soldTickets || 0),
+                availableTickets: availableTickets,
                 totalTickets: totalTickets,
-                is_active: formData.get('editEventStatus') === 'upcoming' || formData.get('editEventStatus') === 'active'
+                is_active: status === 'upcoming' || status === 'active'
             };
             
             try {
@@ -209,7 +225,10 @@
                 event.image = eventData.additionalInfo;
                 event.price = eventData.price;
                 event.totalTickets = eventData.totalTickets;
-                event.status = eventData.is_active ? 'upcoming' : 'completed';
+                event.availableTickets = eventData.availableTickets;
+                event.minAge = eventData.minAge;
+                event.dressCode = eventData.dressCode;
+                event.status = status;
                 
                 // CRITICAL: Save to localStorage!
                 this.saveEventsToStorage();
@@ -238,7 +257,10 @@
                     event.image = formData.get('editEventImage') || event.image;
                     event.price = price;
                     event.totalTickets = totalTickets;
-                    event.status = formData.get('editEventStatus') || event.status;
+                    event.availableTickets = availableTickets;
+                    event.minAge = minAge ? parseInt(minAge) : null;
+                    event.dressCode = dressCode || 'No specific dress code';
+                    event.status = status || event.status;
                     
                     // Save to localStorage
                     this.saveEventsToStorage();
