@@ -1,0 +1,6 @@
+# Netlify Build Trigger
+# This file forces Netlify to rebuild the site
+# Timestamp: 2025-10-09 18:45:00
+Version: 1.0.3
+Build: Force rebuild with latest homepage.js code including status badges
+
