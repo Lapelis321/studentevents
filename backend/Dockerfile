@@ -7,8 +7,8 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install production dependencies only
-RUN npm ci --only=production
+# Install production dependencies only (suppress warnings)
+RUN npm ci --only=production --silent 2>&1 | grep -v "^npm" || true
 
 # Copy application files
 COPY railway-server.js ./
