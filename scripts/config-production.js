@@ -1,14 +1,5 @@
-// Production configuration
-const CONFIG = {
-    API_BASE_URL: 'https://your-railway-url.up.railway.app/api',
-    STRIPE_PUBLISHABLE_KEY: 'pk_test_your_test_key_here',
-    APP_NAME: 'StudentEvents',
-    VERSION: '1.0.0',
-    FEATURES: {
-        REAL_PAYMENTS: false,
-        ANALYTICS: true,
-        ERROR_REPORTING: true
-    }
+// Production API Configuration
+// This file will be updated with the actual Railway URL after deployment
+window.CONFIG = {
+    API_BASE_URL: process.env.API_BASE_URL || 'https://studentevents-production.up.railway.app/api'
 };
-
-window.CONFIG = CONFIG;
