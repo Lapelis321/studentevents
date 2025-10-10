@@ -35,10 +35,10 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Database connection
-const pool = new Pool({
+const pool = process.env.DATABASE_URL ? new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
-});
+  ssl: { rejectUnauthorized: false } // Always use SSL for production databases
+}) : null;
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -241,7 +241,7 @@ app.get('/api/health', (req, res) => {
 // GET /api/events - Get all active events
 app.get('/api/events', async (req, res) => {
   try {
-    if (process.env.DATABASE_URL) {
+    if (pool) {
       // Use database - return all events, let frontend filter
       const result = await pool.query('SELECT * FROM events ORDER BY date ASC');
       res.json(result.rows);
@@ -251,7 +251,8 @@ app.get('/api/events', async (req, res) => {
     }
   } catch (error) {
     console.error('Error fetching events:', error);
-    res.status(500).json({ error: 'Failed to fetch events' });
+    console.error('Error details:', error.message, error.stack);
+    res.status(500).json({ error: 'Failed to fetch events', details: error.message });
   }
 });
 
@@ -260,7 +261,7 @@ app.get('/api/events/:id', async (req, res) => {
   try {
     const eventId = parseInt(req.params.id);
     
-    if (process.env.DATABASE_URL) {
+    if (pool) {
       // Use database
       const result = await pool.query('SELECT * FROM events WHERE id = $1', [eventId]);
       if (result.rows.length === 0) {
@@ -306,7 +307,7 @@ app.post('/api/events', verifyAdminToken, async (req, res) => {
       is_active: true
     };
     
-    if (process.env.DATABASE_URL) {
+    if (pool) {
       // Save to database
       const result = await pool.query(
         `INSERT INTO events (title, date, location, price, currency, min_age, dress_code, description, additional_info, total_tickets, available_tickets, is_active) 
@@ -335,7 +336,7 @@ app.put('/api/events/:id', verifyAdminToken, async (req, res) => {
     const eventId = parseInt(req.params.id);
     const { title, date, location, price, description, additionalInfo, totalTickets, availableTickets, minAge, dressCode, currency, is_active } = req.body;
     
-    if (process.env.DATABASE_URL) {
+    if (pool) {
       // Update in database
       const result = await pool.query(
         `UPDATE events SET title = $1, date = $2, location = $3, price = $4, currency = $5, min_age = $6, 
@@ -388,7 +389,7 @@ app.delete('/api/events/:id', verifyAdminToken, async (req, res) => {
   try {
     const eventId = parseInt(req.params.id);
     
-    if (process.env.DATABASE_URL) {
+    if (pool) {
       // Delete from database
       const result = await pool.query('DELETE FROM events WHERE id = $1 RETURNING *', [eventId]);
       
@@ -730,7 +731,7 @@ app.post('/api/create-payment-intent', async (req, res) => {
     
     // Get event details
     let event;
-    if (process.env.DATABASE_URL) {
+    if (pool) {
       const result = await pool.query('SELECT * FROM events WHERE id = $1', [eventId]);
       event = result.rows[0];
     } else {
@@ -897,7 +898,7 @@ app.post('/api/tickets/purchase', async (req, res) => {
     
     // Get event details
     let event;
-    if (process.env.DATABASE_URL) {
+    if (pool) {
       const result = await pool.query('SELECT * FROM events WHERE id = $1', [eventId]);
       event = result.rows[0];
     } else {
@@ -923,7 +924,7 @@ app.post('/api/tickets/purchase', async (req, res) => {
     }
     
     // Update available tickets
-    if (process.env.DATABASE_URL) {
+    if (pool) {
       await pool.query(
         'UPDATE events SET available_tickets = available_tickets - $1 WHERE id = $2',
         [quantity, eventId]
@@ -968,7 +969,7 @@ app.get('/api/tickets/validate/:ticketNumber', verifyWorkerToken, async (req, re
     const { ticketNumber } = req.params;
     
     let ticket;
-    if (process.env.DATABASE_URL) {
+    if (pool) {
       const result = await pool.query(
         'SELECT t.*, e.title as event_title FROM tickets t JOIN events e ON t.event_id = e.id WHERE t.ticket_number = $1',
         [ticketNumber]
@@ -1001,7 +1002,7 @@ app.post('/api/tickets/mark-used/:ticketNumber', verifyWorkerToken, async (req, 
   try {
     const { ticketNumber } = req.params;
     
-    if (process.env.DATABASE_URL) {
+    if (pool) {
       const result = await pool.query(
         'UPDATE tickets SET status = $1 WHERE ticket_number = $2 RETURNING *',
         ['used', ticketNumber]
