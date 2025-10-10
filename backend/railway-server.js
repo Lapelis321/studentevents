@@ -207,6 +207,26 @@ function verifyAdminToken(req, res, next) {
   }
 }
 
+// Middleware to verify worker token
+function verifyWorkerToken(req, res, next) {
+  try {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    if (!token) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+    
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    if (decoded.role !== 'worker' && decoded.role !== 'admin') {
+      return res.status(403).json({ error: 'Worker access required' });
+    }
+    
+    req.user = decoded;
+    next();
+  } catch (error) {
+    return res.status(401).json({ error: 'Invalid or expired token' });
+  }
+}
+
 // API routes
 app.get('/api/health', (req, res) => {
   res.json({
