@@ -50,6 +50,8 @@ class PostPayment {
                 </div>
 
                 <div class="order-details">
+                    ${this.renderQRCode()}
+                    
                     <h2>
                         <i class="fas fa-receipt"></i>
                         Order Details
@@ -125,6 +127,67 @@ class PostPayment {
 
         // Clean up sessionStorage
         this.cleanupSessionStorage();
+    }
+
+    renderQRCode() {
+        // Check if we have tickets with QR codes from the backend
+        if (this.orderData.tickets && this.orderData.tickets.length > 0) {
+            const ticketCards = this.orderData.tickets.map((ticket, index) => `
+                <div class="ticket-qr-card">
+                    <div class="qr-code-container">
+                        <img src="${ticket.qrCodeUrl}" alt="QR Code Ticket ${index + 1}" class="qr-code-image">
+                    </div>
+                    <div class="ticket-number">
+                        <i class="fas fa-ticket-alt"></i>
+                        Ticket: ${ticket.ticketNumber}
+                    </div>
+                </div>
+            `).join('');
+
+            return `
+                <div class="qr-tickets-section">
+                    <h2>
+                        <i class="fas fa-qrcode"></i>
+                        Your Ticket${this.orderData.tickets.length > 1 ? 's' : ''}
+                    </h2>
+                    <p class="qr-instructions">
+                        <i class="fas fa-info-circle"></i>
+                        Show this QR code at the entrance. Save a screenshot or check your email for the ticket.
+                    </p>
+                    <div class="qr-tickets-grid">
+                        ${ticketCards}
+                    </div>
+                </div>
+            `;
+        } else if (!this.orderData.isDemo) {
+            // Real payment but no QR code yet (shouldn't happen)
+            return `
+                <div class="qr-tickets-section">
+                    <h2>
+                        <i class="fas fa-envelope"></i>
+                        Tickets Sent to Email
+                    </h2>
+                    <p class="qr-instructions">
+                        <i class="fas fa-info-circle"></i>
+                        Your QR code tickets have been sent to your email. Please check your inbox.
+                    </p>
+                </div>
+            `;
+        } else {
+            // Demo mode - no real tickets
+            return `
+                <div class="qr-tickets-section demo-notice">
+                    <h2>
+                        <i class="fas fa-flask"></i>
+                        Demo Mode
+                    </h2>
+                    <p class="qr-instructions">
+                        <i class="fas fa-info-circle"></i>
+                        This is a demo purchase. In production, your QR code ticket would appear here.
+                    </p>
+                </div>
+            `;
+        }
     }
 
     renderAttendeesList() {

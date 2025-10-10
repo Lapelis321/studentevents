@@ -102,6 +102,15 @@ class Checkout {
                         </div>
 
                         <div class="payment-section">
+                            <div id="card-element-container" style="margin-bottom: 20px; display: none;">
+                                <label style="display: block; margin-bottom: 8px; font-weight: 500; color: #333;">
+                                    <i class="fas fa-credit-card"></i>
+                                    Card Information
+                                </label>
+                                <div id="card-element" style="padding: 12px; border: 1px solid #ddd; border-radius: 8px; background: white;"></div>
+                                <div id="card-errors" style="color: #e74c3c; margin-top: 8px; font-size: 14px;"></div>
+                            </div>
+                            
                             <button type="submit" class="payment-btn" id="paymentBtn" disabled>
                                 <span class="btn-text">
                                     <i class="fas fa-lock"></i>
@@ -446,53 +455,172 @@ class Checkout {
         this.showProcessingState();
 
         try {
-            // Prepare payment data
-            const paymentData = {
-                eventId: this.event.id,
-                quantity: this.ticketQuantity,
-                attendeeInfo: this.attendees[0], // Primary attendee
-                totalAmount: this.calculateTotalAmount()
-            };
+            // Check if Stripe is configured for real payments
+            const useRealPayments = CONFIG.STRIPE_PUBLISHABLE_KEY && 
+                                   !CONFIG.STRIPE_PUBLISHABLE_KEY.includes('...') &&
+                                   CONFIG.FEATURES?.REAL_PAYMENTS !== false;
 
-            // Create payment intent
-            const response = await fetch(`${CONFIG.API_BASE_URL}/tickets/purchase`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(paymentData)
-            });
-
-            if (!response.ok) {
-                throw new Error('Payment setup failed');
+            if (useRealPayments) {
+                // REAL STRIPE PAYMENT FLOW
+                await this.processStripePayment();
+            } else {
+                // DEMO/TEST FLOW (for testing without Stripe keys)
+                await this.processDemoPayment();
             }
-
-            const paymentResult = await response.json();
-            
-            // For demo purposes, simulate successful payment
-            // In production, you would integrate with Stripe Elements here
-            await this.delay(2000);
-            
-            // Store order data for confirmation page
-            const orderData = {
-                event: this.event,
-                attendees: this.attendees,
-                quantity: this.ticketQuantity,
-                totalAmount: this.calculateTotalAmount(),
-                orderNumber: paymentResult.orderNumber,
-                orderDate: new Date().toISOString()
-            };
-            
-            sessionStorage.setItem('orderData', JSON.stringify(orderData));
-            
-            // Redirect to confirmation page
-            window.location.href = 'post-payment.html';
             
         } catch (error) {
             console.error('Payment processing error:', error);
-            EventTicketingApp.showNotification('Payment failed. Please try again.', 'error');
+            EventTicketingApp.showNotification(error.message || 'Payment failed. Please try again.', 'error');
             this.hideProcessingState();
         }
+    }
+
+    async processStripePayment() {
+        // Prepare payment intent request
+        const paymentIntentData = {
+            eventId: this.event.id,
+            quantity: this.ticketQuantity,
+            attendeeInfo: this.attendees[0]
+        };
+
+        // Create payment intent on backend
+        const intentResponse = await fetch(`${CONFIG.API_BASE_URL}/create-payment-intent`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(paymentIntentData)
+        });
+
+        if (!intentResponse.ok) {
+            const error = await intentResponse.json();
+            throw new Error(error.error || 'Payment setup failed');
+        }
+
+        const { clientSecret } = await intentResponse.json();
+
+        // Initialize Stripe
+        const stripe = Stripe(CONFIG.STRIPE_PUBLISHABLE_KEY);
+        
+        // Create card element if not already created
+        if (!this.cardElement) {
+            const elements = stripe.elements({ clientSecret });
+            this.cardElement = elements.create('card', {
+                style: {
+                    base: {
+                        fontSize: '16px',
+                        color: '#32325d',
+                        fontFamily: 'Inter, sans-serif',
+                        '::placeholder': { color: '#aab7c4' }
+                    }
+                }
+            });
+            
+            // Show card element container
+            const cardElementContainer = document.getElementById('card-element-container');
+            if (cardElementContainer) {
+                cardElementContainer.style.display = 'block';
+            }
+            
+            // Mount card element to the payment section
+            const cardContainer = document.getElementById('card-element');
+            if (cardContainer) {
+                this.cardElement.mount('#card-element');
+            }
+            
+            // Handle card errors
+            this.cardElement.on('change', (event) => {
+                const displayError = document.getElementById('card-errors');
+                if (event.error) {
+                    displayError.textContent = event.error.message;
+                } else {
+                    displayError.textContent = '';
+                }
+            });
+        }
+
+        // Confirm payment with Stripe
+        const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
+            payment_method: {
+                card: this.cardElement,
+                billing_details: {
+                    name: `${this.attendees[0].firstName} ${this.attendees[0].lastName}`,
+                    email: this.attendees[0].email,
+                    phone: this.attendees[0].phone
+                }
+            }
+        });
+
+        if (error) {
+            throw new Error(error.message);
+        }
+
+        if (paymentIntent.status !== 'succeeded') {
+            throw new Error('Payment not completed');
+        }
+
+        // Complete purchase on backend
+        const purchaseResponse = await fetch(`${CONFIG.API_BASE_URL}/tickets/purchase`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                eventId: this.event.id,
+                quantity: this.ticketQuantity,
+                attendeeInfo: this.attendees[0],
+                paymentIntentId: paymentIntent.id
+            })
+        });
+
+        if (!purchaseResponse.ok) {
+            throw new Error('Failed to complete ticket purchase');
+        }
+
+        const purchaseResult = await purchaseResponse.json();
+        
+        // Store order data for confirmation page
+        const orderData = {
+            event: this.event,
+            attendees: this.attendees,
+            quantity: this.ticketQuantity,
+            totalAmount: this.calculateTotalAmount(),
+            orderNumber: purchaseResult.orderNumber,
+            orderDate: new Date().toISOString(),
+            tickets: purchaseResult.tickets
+        };
+        
+        sessionStorage.setItem('orderData', JSON.stringify(orderData));
+        
+        // Redirect to confirmation page
+        window.location.href = 'post-payment.html';
+    }
+
+    async processDemoPayment() {
+        // Demo flow for testing without Stripe
+        console.log('🧪 Running in DEMO mode - no real payment processing');
+        
+        const paymentData = {
+            eventId: this.event.id,
+            quantity: this.ticketQuantity,
+            attendeeInfo: this.attendees[0],
+            totalAmount: this.calculateTotalAmount()
+        };
+
+        // Simulate payment delay
+        await this.delay(2000);
+        
+        // Store order data for confirmation page
+        const orderData = {
+            event: this.event,
+            attendees: this.attendees,
+            quantity: this.ticketQuantity,
+            totalAmount: this.calculateTotalAmount(),
+            orderNumber: `DEMO-${Date.now()}`,
+            orderDate: new Date().toISOString(),
+            isDemo: true
+        };
+        
+        sessionStorage.setItem('orderData', JSON.stringify(orderData));
+        
+        // Redirect to confirmation page
+        window.location.href = 'post-payment.html';
     }
 
     showProcessingState() {

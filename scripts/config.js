@@ -23,11 +23,11 @@ const CONFIG = {
         
         // Local development - use test keys
         if (hostname === 'localhost' || hostname === '127.0.0.1') {
-            return 'pk_test_your_test_key_here';
+            return 'pk_test_51QRiazRrLGgfK3FJ...'; // Replace with your Stripe test key
         }
         
-        // Production - use live keys
-        return 'pk_live_your_live_key_here';
+        // Production - use live/test keys
+        return 'pk_test_51QRiazRrLGgfK3FJ...'; // Replace with your Stripe key
     })(),
     
     // App Configuration

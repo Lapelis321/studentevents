@@ -4,6 +4,16 @@ const cors = require('cors');
 const { Pool } = require('pg');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const QRCode = require('qrcode');
+const sgMail = require('@sendgrid/mail');
+
+// Initialize SendGrid if API key is provided
+if (process.env.SENDGRID_API_KEY) {
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+}
+
+// Initialize Stripe if secret key is provided
+const stripe = process.env.STRIPE_SECRET_KEY ? require('stripe')(process.env.STRIPE_SECRET_KEY) : null;
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -687,6 +697,311 @@ app.use((req, res) => {
 });
 
 // Error handling middleware
+// ===== PAYMENT & TICKETING ENDPOINTS =====
+
+// POST /api/create-payment-intent - Create Stripe payment intent
+app.post('/api/create-payment-intent', async (req, res) => {
+  try {
+    if (!stripe) {
+      return res.status(500).json({ error: 'Stripe not configured' });
+    }
+
+    const { eventId, quantity, attendeeInfo } = req.body;
+    
+    // Get event details
+    let event;
+    if (process.env.DATABASE_URL) {
+      const result = await pool.query('SELECT * FROM events WHERE id = $1', [eventId]);
+      event = result.rows[0];
+    } else {
+      event = inMemoryEvents.find(e => e.id == eventId);
+    }
+    
+    if (!event) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+    
+    const amount = Math.round(event.price * quantity * 100); // Convert to cents
+    
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: amount,
+      currency: (event.currency || 'EUR').toLowerCase(),
+      metadata: { 
+        eventId: eventId.toString(), 
+        quantity: quantity.toString(),
+        attendeeEmail: attendeeInfo.email 
+      }
+    });
+    
+    console.log(`💳 Payment intent created: ${paymentIntent.id} for ${amount/100} ${event.currency}`);
+    res.json({ clientSecret: paymentIntent.client_secret });
+  } catch (error) {
+    console.error('Error creating payment intent:', error);
+    res.status(500).json({ error: 'Failed to create payment intent' });
+  }
+});
+
+// Helper function to generate QR code ticket
+async function generateTicket(eventId, attendeeInfo, paymentIntentId, pricePaid) {
+  const ticketNumber = `TKT-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+  
+  // Generate QR code data
+  const qrData = JSON.stringify({
+    ticketNumber,
+    eventId,
+    attendee: attendeeInfo.email,
+    issuedAt: new Date().toISOString()
+  });
+  
+  const qrCodeUrl = await QRCode.toDataURL(qrData);
+  
+  // Save ticket to database or memory
+  const ticketData = {
+    eventId,
+    attendeeName: `${attendeeInfo.firstName} ${attendeeInfo.lastName}`,
+    attendeeEmail: attendeeInfo.email,
+    attendeePhone: attendeeInfo.phone || '',
+    ticketNumber,
+    qrCode: qrCodeUrl,
+    pricePaid,
+    stripePaymentIntentId: paymentIntentId,
+    status: 'valid'
+  };
+  
+  if (process.env.DATABASE_URL) {
+    await pool.query(
+      `INSERT INTO tickets (event_id, attendee_name, attendee_email, attendee_phone, 
+       ticket_number, qr_code, price_paid, stripe_payment_intent_id, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+      [ticketData.eventId, ticketData.attendeeName, ticketData.attendeeEmail, 
+       ticketData.attendeePhone, ticketData.ticketNumber, ticketData.qrCode, 
+       ticketData.pricePaid, ticketData.stripePaymentIntentId, ticketData.status]
+    );
+  }
+  
+  return { ticketNumber, qrCodeUrl };
+}
+
+// Helper function to send ticket email
+async function sendTicketEmail(attendeeEmail, eventDetails, tickets) {
+  if (!process.env.SENDGRID_API_KEY) {
+    console.log('⚠️ SendGrid not configured, skipping email');
+    return;
+  }
+  
+  const msg = {
+    to: attendeeEmail,
+    from: { 
+      email: process.env.FROM_EMAIL || 'noreply@studentevents.com', 
+      name: process.env.FROM_NAME || 'StudentEvents' 
+    },
+    subject: `Your Ticket for ${eventDetails.title}`,
+    html: `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+          .content { background: #f9f9f9; padding: 30px; }
+          .ticket { background: white; padding: 20px; margin: 20px 0; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+          .qr-code { text-align: center; margin: 20px 0; }
+          .qr-code img { max-width: 200px; }
+          .details { margin: 15px 0; }
+          .details strong { color: #667eea; }
+          .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>🎫 Your Ticket is Ready!</h1>
+          </div>
+          <div class="content">
+            <p>Hi there!</p>
+            <p>Thank you for your purchase. Your ticket for <strong>${eventDetails.title}</strong> is confirmed!</p>
+            
+            <div class="ticket">
+              <div class="details">
+                <p><strong>📅 Date:</strong> ${new Date(eventDetails.date).toLocaleString('en-US', { 
+                  weekday: 'long', 
+                  year: 'numeric', 
+                  month: 'long', 
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}</p>
+                <p><strong>📍 Location:</strong> ${eventDetails.location}</p>
+                <p><strong>🎟️ Ticket Number:</strong> ${tickets[0].ticketNumber}</p>
+              </div>
+              
+              <div class="qr-code">
+                <h3>Your QR Code Ticket</h3>
+                <img src="${tickets[0].qrCodeUrl}" alt="QR Code">
+                <p><small>Show this QR code at the entrance</small></p>
+              </div>
+            </div>
+            
+            <p><strong>Important:</strong> Please save this email or take a screenshot of the QR code. You'll need to present it at the event entrance.</p>
+          </div>
+          <div class="footer">
+            <p>StudentEvents - Your ticket to amazing experiences</p>
+            <p>Questions? Contact us at support@studentevents.com</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `
+  };
+  
+  await sgMail.send(msg);
+  console.log(`📧 Ticket email sent to ${attendeeEmail}`);
+}
+
+// POST /api/tickets/purchase - Complete ticket purchase after payment
+app.post('/api/tickets/purchase', async (req, res) => {
+  try {
+    const { eventId, quantity, attendeeInfo, paymentIntentId } = req.body;
+    
+    if (!stripe) {
+      return res.status(500).json({ error: 'Stripe not configured' });
+    }
+    
+    // Verify payment with Stripe
+    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+    
+    if (paymentIntent.status !== 'succeeded') {
+      return res.status(400).json({ error: 'Payment not completed' });
+    }
+    
+    // Get event details
+    let event;
+    if (process.env.DATABASE_URL) {
+      const result = await pool.query('SELECT * FROM events WHERE id = $1', [eventId]);
+      event = result.rows[0];
+    } else {
+      event = inMemoryEvents.find(e => e.id == eventId);
+    }
+    
+    if (!event) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+    
+    // Check ticket availability
+    if (event.available_tickets < quantity) {
+      return res.status(400).json({ error: 'Not enough tickets available' });
+    }
+    
+    // Generate tickets
+    const tickets = [];
+    const pricePaid = event.price;
+    
+    for (let i = 0; i < quantity; i++) {
+      const ticket = await generateTicket(eventId, attendeeInfo, paymentIntentId, pricePaid);
+      tickets.push(ticket);
+    }
+    
+    // Update available tickets
+    if (process.env.DATABASE_URL) {
+      await pool.query(
+        'UPDATE events SET available_tickets = available_tickets - $1 WHERE id = $2',
+        [quantity, eventId]
+      );
+    } else {
+      const eventIndex = inMemoryEvents.findIndex(e => e.id == eventId);
+      if (eventIndex !== -1) {
+        inMemoryEvents[eventIndex].availableTickets -= quantity;
+      }
+    }
+    
+    // Send confirmation email
+    try {
+      await sendTicketEmail(attendeeInfo.email, event, tickets);
+    } catch (emailError) {
+      console.error('Email send failed:', emailError);
+      // Continue even if email fails
+    }
+    
+    const orderNumber = `ORD-${Date.now()}`;
+    console.log(`✅ Tickets purchased: ${orderNumber} - ${quantity} ticket(s) for ${event.title}`);
+    
+    res.json({ 
+      success: true, 
+      tickets,
+      orderNumber,
+      event: {
+        title: event.title,
+        date: event.date,
+        location: event.location
+      }
+    });
+  } catch (error) {
+    console.error('Error processing ticket purchase:', error);
+    res.status(500).json({ error: 'Failed to process purchase' });
+  }
+});
+
+// GET /api/tickets/validate/:ticketNumber - Validate a ticket (for workers)
+app.get('/api/tickets/validate/:ticketNumber', verifyWorkerToken, async (req, res) => {
+  try {
+    const { ticketNumber } = req.params;
+    
+    let ticket;
+    if (process.env.DATABASE_URL) {
+      const result = await pool.query(
+        'SELECT t.*, e.title as event_title FROM tickets t JOIN events e ON t.event_id = e.id WHERE t.ticket_number = $1',
+        [ticketNumber]
+      );
+      ticket = result.rows[0];
+    }
+    
+    if (!ticket) {
+      return res.status(404).json({ error: 'Ticket not found' });
+    }
+    
+    res.json({
+      valid: ticket.status === 'valid',
+      ticket: {
+        number: ticket.ticket_number,
+        attendee: ticket.attendee_name,
+        email: ticket.attendee_email,
+        event: ticket.event_title,
+        status: ticket.status
+      }
+    });
+  } catch (error) {
+    console.error('Error validating ticket:', error);
+    res.status(500).json({ error: 'Failed to validate ticket' });
+  }
+});
+
+// POST /api/tickets/mark-used/:ticketNumber - Mark ticket as used (for workers)
+app.post('/api/tickets/mark-used/:ticketNumber', verifyWorkerToken, async (req, res) => {
+  try {
+    const { ticketNumber } = req.params;
+    
+    if (process.env.DATABASE_URL) {
+      const result = await pool.query(
+        'UPDATE tickets SET status = $1 WHERE ticket_number = $2 RETURNING *',
+        ['used', ticketNumber]
+      );
+      
+      if (result.rows.length === 0) {
+        return res.status(404).json({ error: 'Ticket not found' });
+      }
+      
+      console.log(`✅ Ticket marked as used: ${ticketNumber}`);
+      res.json({ success: true, ticket: result.rows[0] });
+    } else {
+      res.status(501).json({ error: 'Database required for ticket validation' });
+    }
+  } catch (error) {
+    console.error('Error marking ticket as used:', error);
+    res.status(500).json({ error: 'Failed to mark ticket as used' });
+  }
+});
+
 app.use((error, req, res, next) => {
   console.error('Server error:', error);
   res.status(500).json({ error: 'Internal server error' });
