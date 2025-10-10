@@ -343,7 +343,7 @@ class Checkout {
         }
     }
 
-    validateField(input) {
+    validateField(input, skipButtonUpdate = false) {
         const value = input.value.trim();
         const fieldName = input.name;
         const errorElement = document.getElementById(input.id + 'Error');
@@ -396,7 +396,9 @@ class Checkout {
             if (errorElement) errorElement.textContent = errorMessage;
         }
 
-        this.updatePaymentButtonState();
+        if (!skipButtonUpdate) {
+            this.updatePaymentButtonState();
+        }
         return isValid;
     }
 
@@ -406,12 +408,12 @@ class Checkout {
         if (errorElement) errorElement.textContent = '';
     }
 
-    validateAllFields() {
+    validateAllFields(skipButtonUpdate = false) {
         const inputs = document.querySelectorAll('.form-input');
         let allValid = true;
 
         inputs.forEach(input => {
-            if (!this.validateField(input)) {
+            if (!this.validateField(input, skipButtonUpdate)) {
                 allValid = false;
             }
         });
@@ -428,7 +430,7 @@ class Checkout {
         const paymentBtn = document.getElementById('paymentBtn');
         if (!paymentBtn) return;
 
-        const allFieldsValid = this.validateAllFields();
+        const allFieldsValid = this.validateAllFields(true); // Skip button update to prevent infinite loop
         const canProceed = allFieldsValid && this.termsAccepted && !this.isProcessing;
         
         paymentBtn.disabled = !canProceed;
