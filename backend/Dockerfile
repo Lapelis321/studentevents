@@ -10,8 +10,8 @@ COPY package*.json ./
 # Install production dependencies only (suppress warnings)
 RUN npm ci --only=production --silent 2>&1 | grep -v "^npm" || true
 
-# Copy application files
-COPY railway-server.js ./
+# Copy ALL application files (including railway-server.js and any dependencies)
+COPY . .
 
 # Expose port (Railway will override this with PORT env var)
 EXPOSE 8080
