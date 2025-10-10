@@ -137,6 +137,10 @@
                         <div class="table-header">
                             <h3>All Events</h3>
                             <div class="table-actions">
+                                <label class="filter-checkbox">
+                                    <input type="checkbox" id="showCompletedEvents" onchange="adminDashboard.toggleCompletedEvents(this.checked)" checked>
+                                    <span>Show Completed Events</span>
+                                </label>
                                 <button class="btn btn-secondary btn-sm" onclick="adminDashboard.exportEvents()">
                                     <i class="fas fa-download"></i>
                                     Export Events
@@ -406,7 +410,8 @@
                         <option value="active">Active</option>
                         <option value="sold-out">Sold Out</option>
                         <option value="cancelled">Cancelled</option>
-                        <option value="completed">Completed</option>
+                        <option value="completed">Completed (Not Shown on Main Page)</option>
+                        <option value="completed-shown">Completed (Shown on Main Page)</option>
                     </select>
                 </div>
                 <div class="modal-actions">
@@ -476,7 +481,8 @@
                         <option value="active">Active</option>
                         <option value="sold-out">Sold Out</option>
                         <option value="cancelled">Cancelled</option>
-                        <option value="completed">Completed</option>
+                        <option value="completed">Completed (Not Shown on Main Page)</option>
+                        <option value="completed-shown">Completed (Shown on Main Page)</option>
                     </select>
                 </div>
                 <div class="modal-actions">

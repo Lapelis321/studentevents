@@ -171,7 +171,7 @@ class Homepage {
         const eventsGrid = document.getElementById('eventsGrid');
         if (!eventsGrid) return;
 
-        // Filter out completed events - they should not appear on main page
+        // Filter out only "completed" events (hidden), but show "completed-shown" events
         const visibleEvents = this.events.filter(event => event.status !== 'completed');
 
         if (visibleEvents.length === 0) {
@@ -196,8 +196,9 @@ class Homepage {
         const formattedPrice = EventTicketingApp.formatPrice(event.price, event.currency);
         
         // Determine event state
-        const isSoldOut = event.availableTickets === 0 || event.availableTickets === '0' || event.status === 'sold-out';
+        const isCompletedVisible = event.status === 'completed-shown';
         const isCancelled = event.status === 'cancelled';
+        const isSoldOut = (event.availableTickets === 0 || event.availableTickets === '0' || event.status === 'sold-out') && !isCompletedVisible;
         const isActive = event.status === 'active' && !isSoldOut;
         
         // Determine badge to show
@@ -206,16 +207,21 @@ class Homepage {
         let ctaText = 'View Details';
         let ctaIcon = 'fa-arrow-right';
         
-        if (isSoldOut) {
-            badge = '<div class="sold-out-badge"><i class="fas fa-ban"></i> SOLD OUT</div>';
-            cardClass = 'sold-out';
-            ctaText = 'Sold Out';
-            ctaIcon = 'fa-ban';
+        if (isCompletedVisible) {
+            badge = '<div class="completed-badge"><i class="fas fa-check-circle"></i> COMPLETED</div>';
+            cardClass = 'completed';
+            ctaText = 'Event Completed';
+            ctaIcon = 'fa-check-circle';
         } else if (isCancelled) {
             badge = '<div class="cancelled-badge"><i class="fas fa-times-circle"></i> CANCELLED</div>';
             cardClass = 'cancelled';
             ctaText = 'Event Cancelled';
             ctaIcon = 'fa-times-circle';
+        } else if (isSoldOut) {
+            badge = '<div class="sold-out-badge"><i class="fas fa-ban"></i> SOLD OUT</div>';
+            cardClass = 'sold-out';
+            ctaText = 'Sold Out';
+            ctaIcon = 'fa-ban';
         }
         
         return `

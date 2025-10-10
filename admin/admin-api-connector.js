@@ -40,7 +40,9 @@
                 this.events = apiEvents.map(event => {
                     // Determine status: preserve backend status, or calculate if not provided
                     let status = 'active';
-                    if (event.status === 'completed') {
+                    if (event.status === 'completed-shown') {
+                        status = 'completed-shown';
+                    } else if (event.status === 'completed') {
                         status = 'completed';
                     } else if (event.status === 'cancelled') {
                         status = 'cancelled';
@@ -195,7 +197,8 @@
                 additionalInfo: formData.get('editEventImage') || event.image || '',
                 availableTickets: availableTickets,
                 totalTickets: totalTickets,
-                is_active: status === 'upcoming' || status === 'active'
+                is_active: status === 'upcoming' || status === 'active',
+                status: status
             };
             
             try {

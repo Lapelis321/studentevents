@@ -6,6 +6,7 @@ class AdminDashboard {
         this.events = [];
         this.workers = [];
         this.settings = {};
+        this.showCompletedEvents = true; // Default to showing all events
         this.initialized = false;
         this.init();
     }
@@ -20,6 +21,7 @@ class AdminDashboard {
         this.checkAndCleanOldData();
         await this.loadMockData();
         this.loadSettingsFromStorage();
+        this.loadCompletedEventsPreference();
         this.setupEventListeners();
         this.renderCurrentTab();
         
@@ -283,7 +285,12 @@ class AdminDashboard {
     }
 
     updateEventsStatistics() {
-        const totalEvents = this.events.length;
+        // Filter events based on showCompletedEvents preference
+        const displayedEvents = this.showCompletedEvents 
+            ? this.events 
+            : this.events.filter(e => e.status !== 'completed' && e.status !== 'completed-shown');
+
+        const totalEvents = displayedEvents.length;
         const totalTickets = this.events.reduce((sum, event) => sum + event.soldTickets, 0);
         const totalRevenue = this.events.reduce((sum, event) => sum + (event.soldTickets * event.price), 0);
         const upcomingEvents = this.events.filter(event => event.status === 'upcoming').length;
@@ -294,18 +301,46 @@ class AdminDashboard {
         document.getElementById('upcomingEvents').textContent = upcomingEvents;
     }
 
+    loadCompletedEventsPreference() {
+        const saved = localStorage.getItem('showCompletedEvents');
+        this.showCompletedEvents = saved === null ? true : saved === 'true';
+        
+        // Update checkbox if it exists
+        const checkbox = document.getElementById('showCompletedEvents');
+        if (checkbox) {
+            checkbox.checked = this.showCompletedEvents;
+        }
+        
+        console.log('✅ Loaded completed events preference:', this.showCompletedEvents);
+    }
+
+    toggleCompletedEvents(show) {
+        this.showCompletedEvents = show;
+        localStorage.setItem('showCompletedEvents', show.toString());
+        console.log('💾 Saved completed events preference:', show);
+        
+        // Re-render the events table
+        this.renderEventsTable();
+        this.updateEventsStatistics();
+    }
+
     renderEventsTable() {
         const tbody = document.getElementById('eventsTableBody');
         if (!tbody) return;
 
-        if (this.events.length === 0) {
+        // Filter events based on showCompletedEvents preference
+        const filteredEvents = this.showCompletedEvents 
+            ? this.events 
+            : this.events.filter(e => e.status !== 'completed' && e.status !== 'completed-shown');
+
+        if (filteredEvents.length === 0) {
             tbody.innerHTML = `
                 <tr>
                     <td colspan="7">
                         <div class="table-empty">
                             <i class="fas fa-calendar-times"></i>
                             <h3>No events found</h3>
-                            <p>Create your first event to get started</p>
+                            <p>${this.events.length === 0 ? 'Create your first event to get started' : 'No events match the current filter'}</p>
                         </div>
                     </td>
                 </tr>
@@ -313,7 +348,7 @@ class AdminDashboard {
             return;
         }
 
-        tbody.innerHTML = this.events.map(event => {
+        tbody.innerHTML = filteredEvents.map(event => {
             const formattedDate = this.formatDate(event.date);
             const formattedPrice = `€${event.price.toFixed(2)}`;
             const ticketsSold = `${event.soldTickets}/${event.totalTickets}`;
@@ -409,7 +444,10 @@ class AdminDashboard {
             active: { icon: 'check-circle', text: 'Active' },
             inactive: { icon: 'times-circle', text: 'Inactive' },
             upcoming: { icon: 'clock', text: 'Upcoming' },
-            completed: { icon: 'check', text: 'Completed' },
+            completed: { icon: 'check', text: 'Completed (Hidden)' },
+            'completed-shown': { icon: 'check-circle', text: 'Completed (Visible)' },
+            'sold-out': { icon: 'ban', text: 'Sold Out' },
+            cancelled: { icon: 'times-circle', text: 'Cancelled' },
             pending: { icon: 'hourglass-half', text: 'Pending' }
         };
 

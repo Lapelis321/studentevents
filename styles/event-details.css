@@ -335,6 +335,16 @@
     color: var(--accent-red);
 }
 
+.availability-status.completed {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+}
+
+.availability-status.cancelled {
+    background-color: rgba(245, 158, 11, 0.1);
+    color: var(--accent-orange);
+}
+
 .buy-ticket-btn {
     width: 100%;
     padding: var(--space-4) var(--space-6);

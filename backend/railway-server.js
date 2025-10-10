@@ -104,7 +104,7 @@ let inMemoryEvents = [
     availableTickets: 0,
     totalTickets: 300,
     is_active: false,
-    status: 'completed'
+    status: 'completed-shown'
   }
 ];
 
@@ -222,6 +222,32 @@ app.get('/api/events', async (req, res) => {
   } catch (error) {
     console.error('Error fetching events:', error);
     res.status(500).json({ error: 'Failed to fetch events' });
+  }
+});
+
+// GET /api/events/:id - Get single event by ID
+app.get('/api/events/:id', async (req, res) => {
+  try {
+    const eventId = parseInt(req.params.id);
+    
+    if (process.env.DATABASE_URL) {
+      // Use database
+      const result = await pool.query('SELECT * FROM events WHERE id = $1', [eventId]);
+      if (result.rows.length === 0) {
+        return res.status(404).json({ error: 'Event not found' });
+      }
+      res.json(result.rows[0]);
+    } else {
+      // Use in-memory storage
+      const event = inMemoryEvents.find(e => e.id === eventId);
+      if (!event) {
+        return res.status(404).json({ error: 'Event not found' });
+      }
+      res.json(event);
+    }
+  } catch (error) {
+    console.error('Error fetching event:', error);
+    res.status(500).json({ error: 'Failed to fetch event' });
   }
 });
 

@@ -11,19 +11,19 @@ class EventDetails {
     }
 
     loadEventData() {
-        // Try to get event data from sessionStorage first
-        const storedEvent = sessionStorage.getItem('selectedEvent');
+        // Always try to fetch fresh data from API first
+        const urlParams = new URLSearchParams(window.location.search);
+        const eventId = urlParams.get('id');
         
-        if (storedEvent) {
-            this.event = JSON.parse(storedEvent);
-            this.renderEventDetails();
+        if (eventId) {
+            this.fetchEventById(eventId);
         } else {
-            // Fallback: try to get event ID from URL and fetch data
-            const urlParams = new URLSearchParams(window.location.search);
-            const eventId = urlParams.get('id');
+            // Fallback to sessionStorage if no ID in URL
+            const storedEvent = sessionStorage.getItem('selectedEvent');
             
-            if (eventId) {
-                this.fetchEventById(eventId);
+            if (storedEvent) {
+                this.event = JSON.parse(storedEvent);
+                this.renderEventDetails();
             } else {
                 this.showErrorState('Event not found');
             }
@@ -159,6 +159,27 @@ class EventDetails {
         const formattedPrice = EventTicketingApp.formatPrice(this.event.price, this.event.currency);
         const availabilityStatus = this.getAvailabilityStatus();
 
+        // Determine if button should be disabled
+        const isCompleted = this.event.status === 'completed' || this.event.status === 'completed-shown';
+        const isSoldOut = this.event.availableTickets === 0 || this.event.availableTickets === '0' || this.event.status === 'sold-out';
+        const isCancelled = this.event.status === 'cancelled';
+        const isButtonDisabled = isCompleted || isSoldOut || isCancelled;
+
+        // Determine button text and icon
+        let buttonText = 'Buy Ticket';
+        let buttonIcon = 'fa-ticket-alt';
+        
+        if (isCompleted) {
+            buttonText = 'Event Completed';
+            buttonIcon = 'fa-check-circle';
+        } else if (isCancelled) {
+            buttonText = 'Event Cancelled';
+            buttonIcon = 'fa-times-circle';
+        } else if (isSoldOut) {
+            buttonText = 'Sold Out';
+            buttonIcon = 'fa-ban';
+        }
+
         container.innerHTML = `
             <div class="event-header">
                 <div class="event-image">
@@ -227,9 +248,9 @@ class EventDetails {
 
                     <button class="buy-ticket-btn" 
                             onclick="eventDetails.proceedToCheckout()" 
-                            ${this.event.availableTickets === 0 ? 'disabled' : ''}>
-                        <i class="fas fa-ticket-alt"></i>
-                        ${this.event.availableTickets === 0 ? 'Sold Out' : 'Buy Ticket'}
+                            ${isButtonDisabled ? 'disabled' : ''}>
+                        <i class="fas ${buttonIcon}"></i>
+                        ${buttonText}
                     </button>
 
                     <div class="booking-info">
@@ -314,10 +335,29 @@ class EventDetails {
         const total = this.event.totalTickets || 500;
         const percentage = (available / total) * 100;
 
-        if (available === 0) {
+        // Check for completed status
+        if (this.event.status === 'completed' || this.event.status === 'completed-shown') {
+            return {
+                class: 'completed',
+                icon: 'check-circle',
+                text: 'Event Completed'
+            };
+        }
+
+        // Check for cancelled status
+        if (this.event.status === 'cancelled') {
+            return {
+                class: 'cancelled',
+                icon: 'times-circle',
+                text: 'Event Cancelled'
+            };
+        }
+
+        // Check for sold out
+        if (available === 0 || available === '0' || this.event.status === 'sold-out') {
             return {
                 class: 'sold-out',
-                icon: 'times-circle',
+                icon: 'ban',
                 text: 'Sold Out'
             };
         } else if (percentage <= 20) {
@@ -349,7 +389,20 @@ class EventDetails {
     }
 
     proceedToCheckout() {
-        if (this.event.availableTickets === 0) {
+        // Check if event is completed
+        if (this.event.status === 'completed' || this.event.status === 'completed-shown') {
+            EventTicketingApp.showNotification('This event has already ended', 'error');
+            return;
+        }
+
+        // Check if event is cancelled
+        if (this.event.status === 'cancelled') {
+            EventTicketingApp.showNotification('This event has been cancelled', 'error');
+            return;
+        }
+
+        // Check if event is sold out
+        if (this.event.availableTickets === 0 || this.event.availableTickets === '0' || this.event.status === 'sold-out') {
             EventTicketingApp.showNotification('This event is sold out', 'error');
             return;
         }
