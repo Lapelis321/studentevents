@@ -418,6 +418,179 @@ app.delete('/api/events/:id', verifyAdminToken, async (req, res) => {
   }
 });
 
+// ========================================
+// SETTINGS API ENDPOINTS
+// ========================================
+
+// GET /api/settings - Get all settings (public)
+app.get('/api/settings', async (req, res) => {
+  try {
+    if (pool) {
+      const result = await pool.query('SELECT key, value FROM settings ORDER BY category, key');
+      const settings = {};
+      result.rows.forEach(row => {
+        settings[row.key] = row.value;
+      });
+      res.json(settings);
+    } else {
+      // Fallback settings
+      res.json({
+        bank_recipient_name: 'ISM Events Organization',
+        bank_iban: 'LT12 3456 7890 1234 5678',
+        base_ticket_price: '20.00',
+        ism_student_discount: '1.00',
+        support_email: 'support@studentevents.com',
+        payment_deadline_hours: '24'
+      });
+    }
+  } catch (error) {
+    console.error('Error fetching settings:', error);
+    res.status(500).json({ error: 'Failed to fetch settings' });
+  }
+});
+
+// PUT /api/admin/settings/:key - Update setting (admin only)
+app.put('/api/admin/settings/:key', verifyAdminToken, async (req, res) => {
+  try {
+    const { key } = req.params;
+    const { value } = req.body;
+
+    if (!pool) {
+      return res.status(503).json({ error: 'Database not available' });
+    }
+
+    const result = await pool.query(`
+      UPDATE settings 
+      SET value = $1, updated_at = NOW(), updated_by = $2
+      WHERE key = $3
+      RETURNING *
+    `, [value, req.user.email, key]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Setting not found' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error updating setting:', error);
+    res.status(500).json({ error: 'Failed to update setting' });
+  }
+});
+
+// ========================================
+// BOOKINGS API ENDPOINTS
+// ========================================
+
+// POST /api/bookings - Create booking
+app.post('/api/bookings', async (req, res) => {
+  try {
+    const {
+      eventId,
+      firstName,
+      lastName,
+      email,
+      phone,
+      isISMStudent,
+      quantity
+    } = req.body;
+
+    // Validate required fields
+    if (!eventId || !firstName || !lastName || !email || !phone || !quantity) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    if (!pool) {
+      return res.status(503).json({ error: 'Database not available' });
+    }
+
+    // Get event details
+    const eventResult = await pool.query('SELECT * FROM events WHERE id = $1', [eventId]);
+    if (eventResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+    const event = eventResult.rows[0];
+
+    // Get settings
+    const settingsResult = await pool.query('SELECT key, value FROM settings');
+    const settings = {};
+    settingsResult.rows.forEach(row => {
+      settings[row.key] = row.value;
+    });
+
+    // Calculate pricing
+    const basePrice = parseFloat(event.price);
+    const discount = isISMStudent ? 0 : parseFloat(settings.ism_student_discount || '1.00');
+    const unitPrice = basePrice;
+    const totalAmount = (basePrice + discount) * quantity;
+
+    // Generate unique payment reference
+    const timestamp = Date.now().toString(36).toUpperCase();
+    const random = Math.random().toString(36).substr(2, 5).toUpperCase();
+    const paymentReference = `TICKET-${timestamp}-${random}`;
+
+    // Calculate payment deadline
+    const deadlineHours = parseInt(settings.payment_deadline_hours || '24');
+    const paymentDeadline = new Date(Date.now() + deadlineHours * 60 * 60 * 1000);
+
+    // Create booking
+    const bookingResult = await pool.query(`
+      INSERT INTO bookings (
+        event_id, first_name, last_name, email, phone,
+        is_ism_student, quantity, unit_price, discount,
+        total_amount, payment_reference, payment_deadline
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+      RETURNING *
+    `, [
+      eventId, firstName, lastName, email, phone,
+      isISMStudent, quantity, unitPrice, discount,
+      totalAmount, paymentReference, paymentDeadline
+    ]);
+
+    const booking = bookingResult.rows[0];
+
+    // Prepare response with bank details
+    const response = {
+      booking,
+      event,
+      bankDetails: {
+        recipient: settings.bank_recipient_name || 'ISM Events Organization',
+        iban: settings.bank_iban || 'LT12 3456 7890 1234 5678',
+        amount: totalAmount.toFixed(2),
+        reference: paymentReference
+      }
+    };
+
+    res.status(201).json(response);
+  } catch (error) {
+    console.error('Error creating booking:', error);
+    res.status(500).json({ error: 'Failed to create booking' });
+  }
+});
+
+// GET /api/admin/bookings - Get all bookings (admin only)
+app.get('/api/admin/bookings', verifyAdminToken, async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(503).json({ error: 'Database not available' });
+    }
+
+    const result = await pool.query(`
+      SELECT 
+        b.*,
+        e.title as event_title,
+        e.date as event_date
+      FROM bookings b
+      JOIN events e ON b.event_id = e.id
+      ORDER BY b.created_at DESC
+    `);
+
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error fetching bookings:', error);
+    res.status(500).json({ error: 'Failed to fetch bookings' });
+  }
+});
+
 // Admin login endpoint
 app.post('/api/admin/login', async (req, res) => {
   try {
