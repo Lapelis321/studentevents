@@ -9,6 +9,9 @@ class Homepage {
     }
 
     init() {
+        console.log('=== Homepage Init ===');
+        console.log('API Base URL:', CONFIG.API_BASE_URL);
+        console.log('Window location:', window.location.href);
         this.loadEvents();
         this.setupEventListeners();
     }
@@ -36,26 +39,31 @@ class Homepage {
         this.showLoadingState();
 
         try {
-            // Try to load from API first
-            const response = await fetch(`${CONFIG.API_BASE_URL}/events`);
+            const apiUrl = `${CONFIG.API_BASE_URL}/events`;
+            console.log('🔍 Fetching events from:', apiUrl);
+            
+            const response = await fetch(apiUrl);
+            console.log('📡 API Response status:', response.status);
+            
             if (response.ok) {
                 this.events = await response.json();
+                console.log('✅ Loaded events from API:', this.events.length, 'events');
+                this.renderEvents();
             } else {
-                // Fallback to mock data
-                this.events = this.getMockEvents();
+                console.error('❌ API returned error:', response.status);
+                this.showErrorState();
             }
-            this.renderEvents();
         } catch (error) {
-            console.error('Error loading events:', error);
-            // Fallback to mock data
-            this.events = this.getMockEvents();
-            this.renderEvents();
+            console.error('❌ Error loading events:', error);
+            this.showErrorState();
         } finally {
             this.isLoading = false;
         }
     }
 
+    // DEPRECATED: Mock events no longer used - all events come from database
     getMockEvents() {
+        console.warn('⚠️ getMockEvents() called - this should not happen in production!');
         return [
             {
                 id: 1,
