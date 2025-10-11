@@ -123,9 +123,13 @@ class PaymentInstructions {
             </div>
 
             <div class="actions-section">
-                <button class="btn btn-primary btn-large" onclick="paymentInstructions.downloadInstructions()">
+                <button class="btn btn-primary btn-large" onclick="paymentInstructions.downloadTicketPDF()">
+                    <i class="fas fa-ticket-alt"></i>
+                    Download Pending Ticket PDF
+                </button>
+                <button class="btn btn-secondary btn-large" onclick="paymentInstructions.downloadInstructions()">
                     <i class="fas fa-download"></i>
-                    Download Instructions
+                    Download Instructions (Text)
                 </button>
                 <a href="index.html" class="btn btn-secondary btn-large">
                     <i class="fas fa-home"></i>
@@ -196,6 +200,160 @@ Created: ${new Date().toLocaleString()}
         a.download = `payment-instructions-${booking.payment_reference}.txt`;
         a.click();
         URL.revokeObjectURL(url);
+    }
+    
+    async downloadTicketPDF() {
+        try {
+            const { booking, event } = this.booking;
+            const { jsPDF } = window.jspdf;
+            
+            if (!jsPDF) {
+                alert('PDF library not loaded. Please refresh the page and try again.');
+                return;
+            }
+            
+            // Create PDF
+            const doc = new jsPDF();
+            const pageWidth = doc.internal.pageSize.width;
+            const pageHeight = doc.internal.pageSize.height;
+            
+            // Add red border for pending payment
+            doc.setDrawColor(220, 38, 38);
+            doc.setLineWidth(2);
+            doc.rect(5, 5, pageWidth - 10, pageHeight - 10);
+            
+            // Header
+            doc.setFontSize(24);
+            doc.setFont(undefined, 'bold');
+            doc.text('STUDENT EVENTS', pageWidth / 2, 25, { align: 'center' });
+            
+            doc.setFontSize(16);
+            doc.text('E-TICKET', pageWidth / 2, 35, { align: 'center' });
+            
+            // HIGHLIGHTED NOTE - PENDING PAYMENT
+            doc.setFillColor(254, 226, 226); // Light red background
+            doc.roundedRect(15, 45, pageWidth - 30, 25, 3, 3, 'F');
+            doc.setDrawColor(220, 38, 38);
+            doc.setLineWidth(1);
+            doc.roundedRect(15, 45, pageWidth - 30, 25, 3, 3, 'S');
+            
+            doc.setFontSize(12);
+            doc.setTextColor(185, 28, 28); // Dark red text
+            doc.setFont(undefined, 'bold');
+            doc.text('⚠ PAYMENT PENDING - NOT VALID UNTIL PAID', pageWidth / 2, 55, { align: 'center' });
+            doc.setFont(undefined, 'normal');
+            doc.setFontSize(9);
+            doc.text('This ticket will become valid after payment confirmation by admin', pageWidth / 2, 63, { align: 'center' });
+            
+            // Reset text color
+            doc.setTextColor(0, 0, 0);
+            
+            // Event Details
+            let yPos = 80;
+            doc.setFontSize(14);
+            doc.setFont(undefined, 'bold');
+            doc.text('EVENT DETAILS', 15, yPos);
+            
+            yPos += 8;
+            doc.setFontSize(11);
+            doc.setFont(undefined, 'bold');
+            doc.text(event.title || 'Event Name', 15, yPos);
+            
+            yPos += 7;
+            doc.setFont(undefined, 'normal');
+            doc.setFontSize(10);
+            doc.text(`Date: ${event.date ? new Date(event.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : 'TBD'}`, 15, yPos);
+            
+            if (event.time) {
+                yPos += 5;
+                doc.text(`Time: ${event.time}`, 15, yPos);
+            }
+            
+            yPos += 5;
+            doc.text(`Location: ${event.location || 'TBD'}`, 15, yPos);
+            
+            if (event.min_age) {
+                yPos += 5;
+                doc.text(`Age Restriction: ${event.min_age}+`, 15, yPos);
+            }
+            
+            if (event.dress_code) {
+                yPos += 5;
+                doc.text(`Dress Code: ${event.dress_code}`, 15, yPos);
+            }
+            
+            // Attendee Details
+            yPos += 12;
+            doc.setFontSize(14);
+            doc.setFont(undefined, 'bold');
+            doc.text('ATTENDEE INFORMATION', 15, yPos);
+            
+            yPos += 8;
+            doc.setFontSize(10);
+            doc.setFont(undefined, 'normal');
+            doc.text(`Name: ${booking.first_name} ${booking.last_name}`, 15, yPos);
+            
+            yPos += 5;
+            doc.text(`Email: ${booking.email}`, 15, yPos);
+            
+            yPos += 5;
+            doc.text(`Phone: ${booking.phone}`, 15, yPos);
+            
+            yPos += 5;
+            doc.text(`Tickets: ${booking.quantity}`, 15, yPos);
+            
+            yPos += 5;
+            doc.setFont(undefined, 'bold');
+            doc.text(`Total Amount: €${parseFloat(booking.total_amount).toFixed(2)}`, 15, yPos);
+            
+            // Ticket Number & QR Code
+            yPos += 12;
+            doc.setFontSize(14);
+            doc.setFont(undefined, 'bold');
+            doc.text('TICKET NUMBER', 15, yPos);
+            
+            yPos += 8;
+            doc.setFontSize(12);
+            doc.setFont(undefined, 'normal');
+            doc.text(booking.payment_reference, 15, yPos);
+            
+            // Generate QR Code
+            const qrContainer = document.createElement('div');
+            qrContainer.style.display = 'none';
+            document.body.appendChild(qrContainer);
+            
+            const qrCode = new QRCode(qrContainer, {
+                text: booking.payment_reference,
+                width: 128,
+                height: 128
+            });
+            
+            // Wait for QR code to generate
+            await new Promise(resolve => setTimeout(resolve, 200));
+            
+            const qrImage = qrContainer.querySelector('canvas');
+            if (qrImage) {
+                const qrDataUrl = qrImage.toDataURL('image/png');
+                doc.addImage(qrDataUrl, 'PNG', pageWidth - 60, yPos - 10, 40, 40);
+            }
+            
+            document.body.removeChild(qrContainer);
+            
+            // Footer
+            yPos = pageHeight - 30;
+            doc.setFontSize(8);
+            doc.setTextColor(100, 100, 100);
+            doc.text('For support, please contact: support@studentevents.com', pageWidth / 2, yPos, { align: 'center' });
+            yPos += 5;
+            doc.text('A valid ticket is required for event entry', pageWidth / 2, yPos, { align: 'center' });
+            
+            // Save PDF
+            doc.save(`pending-ticket-${booking.payment_reference}.pdf`);
+            
+        } catch (error) {
+            console.error('Error generating PDF:', error);
+            alert('Failed to generate PDF. Please try again.');
+        }
     }
 
     formatDeadline(deadlineString) {

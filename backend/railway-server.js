@@ -640,6 +640,137 @@ app.post('/api/admin/bookings/:id/cancel', verifyAdminToken, async (req, res) =>
   }
 });
 
+// POST /api/admin/bookings/:id/confirm - Confirm booking and send tickets (admin only)
+app.post('/api/admin/bookings/:id/confirm', verifyAdminToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!pool) {
+      return res.status(503).json({ error: 'Database not available' });
+    }
+
+    // Get booking with event details
+    const bookingResult = await pool.query(`
+      SELECT 
+        b.*,
+        e.title as event_title,
+        e.date as event_date,
+        e.time as event_time,
+        e.location as event_location,
+        e.description as event_description,
+        e.min_age as event_min_age,
+        e.dress_code as event_dress_code
+      FROM bookings b
+      JOIN events e ON b.event_id = e.id
+      WHERE b.id = $1
+    `, [id]);
+
+    if (bookingResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Booking not found' });
+    }
+
+    const booking = bookingResult.rows[0];
+
+    // Update booking status to paid
+    await pool.query(`
+      UPDATE bookings 
+      SET payment_status = 'paid', updated_at = NOW()
+      WHERE id = $1
+    `, [id]);
+
+    // Generate tickets for each attendee
+    const tickets = [];
+    const additionalAttendees = JSON.parse(booking.additional_attendees || '[]');
+    const totalAttendees = 1 + additionalAttendees.length; // Primary + additional
+
+    // Primary attendee ticket
+    const primaryTicketNumber = `TICKET-${booking.event_id.substring(0, 8)}-${booking.id.substring(0, 8)}-001`;
+    tickets.push({
+      ticketNumber: primaryTicketNumber,
+      firstName: booking.first_name,
+      lastName: booking.last_name,
+      email: booking.email
+    });
+
+    // Additional attendees tickets
+    additionalAttendees.forEach((attendee, index) => {
+      const ticketNumber = `TICKET-${booking.event_id.substring(0, 8)}-${booking.id.substring(0, 8)}-${String(index + 2).padStart(3, '0')}`;
+      tickets.push({
+        ticketNumber,
+        firstName: attendee.firstName,
+        lastName: attendee.lastName,
+        email: attendee.email || booking.email // Fallback to primary email
+      });
+    });
+
+    // Generate QR codes for each ticket
+    const ticketsWithQR = [];
+    for (const ticket of tickets) {
+      const qrDataUrl = await QRCode.toDataURL(ticket.ticketNumber, {
+        width: 200,
+        margin: 1
+      });
+      ticketsWithQR.push({ ...ticket, qrCode: qrDataUrl });
+    }
+
+    // Send email with tickets (if SendGrid is configured)
+    if (sgMail && process.env.SENDGRID_API_KEY) {
+      const emailBody = `
+        <h2>Your Ticket for ${booking.event_title}</h2>
+        <p>Dear ${booking.first_name} ${booking.last_name},</p>
+        <p>Your payment has been confirmed! Your ticket${tickets.length > 1 ? 's' : ''} for <strong>${booking.event_title}</strong> ${tickets.length > 1 ? 'are' : 'is'} now valid.</p>
+        
+        <h3>Event Details:</h3>
+        <ul>
+          <li><strong>Event:</strong> ${booking.event_title}</li>
+          <li><strong>Date:</strong> ${new Date(booking.event_date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</li>
+          <li><strong>Time:</strong> ${booking.event_time || 'TBD'}</li>
+          <li><strong>Location:</strong> ${booking.event_location || 'TBD'}</li>
+          ${booking.event_min_age ? `<li><strong>Age Restriction:</strong> ${booking.event_min_age}+</li>` : ''}
+          ${booking.event_dress_code ? `<li><strong>Dress Code:</strong> ${booking.event_dress_code}</li>` : ''}
+        </ul>
+
+        <h3>Your Ticket${tickets.length > 1 ? 's' : ''}:</h3>
+        ${ticketsWithQR.map((t, i) => `
+          <div style="border: 2px solid #059669; border-radius: 8px; padding: 20px; margin: 15px 0; background-color: #f0fdf4;">
+            <h4 style="color: #059669; margin-top: 0;">✓ VALID TICKET ${i + 1} of ${tickets.length}</h4>
+            <p><strong>Name:</strong> ${t.firstName} ${t.lastName}</p>
+            <p><strong>Ticket Number:</strong> ${t.ticketNumber}</p>
+            <img src="${t.qrCode}" alt="QR Code" style="width: 200px; height: 200px; margin: 10px 0;" />
+          </div>
+        `).join('')}
+
+        <p style="color: #059669; font-weight: bold;">This is a valid ticket. Please show this at the event entrance.</p>
+        <p>Questions? Contact us at support@studentevents.com</p>
+      `;
+
+      const msg = {
+        to: booking.email,
+        from: process.env.SENDGRID_FROM_EMAIL || 'noreply@studentevents.com',
+        subject: `Your Ticket for ${booking.event_title} - Payment Confirmed ✓`,
+        html: emailBody
+      };
+
+      try {
+        await sgMail.send(msg);
+        console.log(`✉️ Ticket email sent to ${booking.email}`);
+      } catch (emailError) {
+        console.error('Error sending ticket email:', emailError);
+        // Don't fail the request if email fails
+      }
+    }
+
+    res.json({ 
+      message: 'Booking confirmed and tickets sent',
+      tickets: ticketsWithQR
+    });
+
+  } catch (error) {
+    console.error('Error confirming booking:', error);
+    res.status(500).json({ error: 'Failed to confirm booking' });
+  }
+});
+
 // Admin login endpoint
 app.post('/api/admin/login', async (req, res) => {
   try {
