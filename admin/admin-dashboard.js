@@ -270,11 +270,15 @@ class AdminDashboard {
             case 'events':
                 this.renderEventsTab();
                 break;
+            case 'bookings':
+                this.loadBookings();
+                break;
             case 'workers':
                 this.renderWorkersTab();
                 break;
             case 'settings':
                 this.renderSettingsTab();
+                this.loadBankSettings();
                 break;
         }
     }
@@ -1943,6 +1947,282 @@ class AdminDashboard {
         } catch (error) {
             console.error('Error saving policy:', error);
             this.showNotification('Failed to update policy', 'error');
+        }
+    }
+
+    // ===== BOOKINGS MANAGEMENT =====
+    
+    async loadBookings() {
+        try {
+            const API_BASE_URL = window.CONFIG?.API_BASE_URL?.replace('/api', '') || 'http://localhost:3001';
+            const token = localStorage.getItem('adminToken');
+            
+            const response = await fetch(`${API_BASE_URL}/api/admin/bookings`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            
+            if (response.ok) {
+                this.bookings = await response.json();
+                console.log('✅ Loaded bookings:', this.bookings.length);
+                this.renderBookings();
+                this.updateBookingsStats();
+            } else {
+                throw new Error('Failed to load bookings');
+            }
+        } catch (error) {
+            console.error('Error loading bookings:', error);
+            this.showNotification('Failed to load bookings', 'error');
+        }
+    }
+    
+    renderBookings(filter = 'pending') {
+        const tbody = document.getElementById('bookingsTableBody');
+        if (!tbody) return;
+        
+        let filteredBookings = this.bookings || [];
+        if (filter !== 'all') {
+            filteredBookings = filteredBookings.filter(b => b.payment_status === filter);
+        }
+        
+        if (filteredBookings.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="10" class="empty-state">
+                        <i class="fas fa-inbox"></i>
+                        <p>No ${filter !== 'all' ? filter : ''} bookings</p>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+        
+        tbody.innerHTML = filteredBookings.map(booking => {
+            const isExpired = new Date(booking.payment_deadline) < new Date();
+            const statusBadge = this.getBookingStatusBadge(booking.payment_status, isExpired);
+            
+            return `
+                <tr>
+                    <td><code style="font-size: 0.85em;">${booking.payment_reference}</code></td>
+                    <td>
+                        <strong>${booking.event_title || 'N/A'}</strong><br>
+                        <small style="color: #666;">${booking.event_date ? new Date(booking.event_date).toLocaleDateString() : ''}</small>
+                    </td>
+                    <td>${booking.first_name} ${booking.last_name}</td>
+                    <td>
+                        <small>${booking.email}</small><br>
+                        <small style="color: #666;">${booking.phone}</small>
+                    </td>
+                    <td>${booking.quantity}</td>
+                    <td><strong>€${parseFloat(booking.total_amount).toFixed(2)}</strong></td>
+                    <td>${statusBadge}</td>
+                    <td>
+                        <small style="color: ${isExpired ? '#e53e3e' : '#666'};">
+                            ${new Date(booking.payment_deadline).toLocaleString()}
+                        </small>
+                    </td>
+                    <td><small>${new Date(booking.created_at).toLocaleString()}</small></td>
+                    <td>
+                        <div class="action-buttons">
+                            ${booking.payment_status === 'pending' ? `
+                                <button class="action-btn action-btn-primary" onclick="adminDashboard.markBookingAsPaid('${booking.id}')" title="Mark as Paid">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                                <button class="action-btn action-btn-danger" onclick="adminDashboard.cancelBooking('${booking.id}')" title="Cancel">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            ` : ''}
+                            <button class="action-btn" onclick="adminDashboard.viewBooking('${booking.id}')" title="View Details">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+    
+    getBookingStatusBadge(status, isExpired) {
+        if (status === 'pending' && isExpired) {
+            return '<span style="display: inline-block; padding: 4px 8px; background: #feb2b2; color: #c53030; border-radius: 4px; font-size: 0.85em; font-weight: 600;">EXPIRED</span>';
+        }
+        
+        const badges = {
+            pending: '<span style="display: inline-block; padding: 4px 8px; background: #fef3c7; color: #d97706; border-radius: 4px; font-size: 0.85em; font-weight: 600;">PENDING</span>',
+            paid: '<span style="display: inline-block; padding: 4px 8px; background: #d1fae5; color: #059669; border-radius: 4px; font-size: 0.85em; font-weight: 600;">PAID</span>',
+            cancelled: '<span style="display: inline-block; padding: 4px 8px; background: #e5e7eb; color: #6b7280; border-radius: 4px; font-size: 0.85em; font-weight: 600;">CANCELLED</span>',
+            refunded: '<span style="display: inline-block; padding: 4px 8px; background: #dbeafe; color: #3b82f6; border-radius: 4px; font-size: 0.85em; font-weight: 600;">REFUNDED</span>'
+        };
+        
+        return badges[status] || status;
+    }
+    
+    updateBookingsStats() {
+        const pending = (this.bookings || []).filter(b => b.payment_status === 'pending').length;
+        const paid = (this.bookings || []).filter(b => b.payment_status === 'paid').length;
+        const expired = (this.bookings || []).filter(b => {
+            return b.payment_status === 'pending' && new Date(b.payment_deadline) < new Date();
+        }).length;
+        const pendingRevenue = (this.bookings || [])
+            .filter(b => b.payment_status === 'pending')
+            .reduce((sum, b) => sum + parseFloat(b.total_amount), 0);
+        
+        document.getElementById('pendingBookings').textContent = pending;
+        document.getElementById('paidBookings').textContent = paid;
+        document.getElementById('expiredBookings').textContent = expired;
+        document.getElementById('pendingRevenue').textContent = `€${pendingRevenue.toFixed(2)}`;
+    }
+    
+    async markBookingAsPaid(bookingId) {
+        if (!confirm('Mark this booking as paid? This will generate tickets for the customer.')) return;
+        
+        try {
+            const API_BASE_URL = window.CONFIG?.API_BASE_URL?.replace('/api', '') || 'http://localhost:3001';
+            const token = localStorage.getItem('adminToken');
+            
+            const response = await fetch(`${API_BASE_URL}/api/admin/bookings/${bookingId}/confirm`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                this.showNotification('Booking marked as paid!', 'success');
+                await this.loadBookings();
+            } else {
+                throw new Error('Failed to confirm booking');
+            }
+        } catch (error) {
+            console.error('Error confirming booking:', error);
+            this.showNotification('Failed to confirm booking', 'error');
+        }
+    }
+    
+    async cancelBooking(bookingId) {
+        if (!confirm('Cancel this booking? This action cannot be undone.')) return;
+        
+        try {
+            const API_BASE_URL = window.CONFIG?.API_BASE_URL?.replace('/api', '') || 'http://localhost:3001';
+            const token = localStorage.getItem('adminToken');
+            
+            const response = await fetch(`${API_BASE_URL}/api/admin/bookings/${bookingId}/cancel`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            
+            if (response.ok) {
+                this.showNotification('Booking cancelled', 'success');
+                await this.loadBookings();
+            } else {
+                throw new Error('Failed to cancel booking');
+            }
+        } catch (error) {
+            console.error('Error cancelling booking:', error);
+            this.showNotification('Failed to cancel booking', 'error');
+        }
+    }
+    
+    viewBooking(bookingId) {
+        const booking = (this.bookings || []).find(b => b.id === bookingId);
+        if (!booking) return;
+        
+        const isExpired = new Date(booking.payment_deadline) < new Date();
+        
+        alert(`Booking Details:
+        
+Reference: ${booking.payment_reference}
+Event: ${booking.event_title}
+Customer: ${booking.first_name} ${booking.last_name}
+Email: ${booking.email}
+Phone: ${booking.phone}
+ISM Student: ${booking.is_ism_student ? 'Yes' : 'No'}
+Quantity: ${booking.quantity}
+Unit Price: €${parseFloat(booking.unit_price).toFixed(2)}
+Discount: €${parseFloat(booking.discount).toFixed(2)}
+Total Amount: €${parseFloat(booking.total_amount).toFixed(2)}
+Status: ${booking.payment_status.toUpperCase()}${isExpired ? ' (EXPIRED)' : ''}
+Payment Deadline: ${new Date(booking.payment_deadline).toLocaleString()}
+Created: ${new Date(booking.created_at).toLocaleString()}`);
+    }
+    
+    filterBookings(status) {
+        this.renderBookings(status);
+    }
+    
+    async refreshBookings() {
+        this.showNotification('Refreshing bookings...', 'info');
+        await this.loadBookings();
+    }
+    
+    // ===== BANK SETTINGS MANAGEMENT =====
+    
+    async loadBankSettings() {
+        try {
+            const API_BASE_URL = window.CONFIG?.API_BASE_URL?.replace('/api', '') || 'http://localhost:3001';
+            
+            const response = await fetch(`${API_BASE_URL}/api/settings`);
+            
+            if (response.ok) {
+                const settings = await response.json();
+                console.log('✅ Loaded bank settings:', settings);
+                
+                // Populate form fields
+                document.getElementById('bankRecipientName').value = settings.bank_recipient_name || '';
+                document.getElementById('bankIban').value = settings.bank_iban || '';
+                document.getElementById('baseTicketPrice').value = settings.base_ticket_price || '20.00';
+                document.getElementById('ismStudentDiscount').value = settings.ism_student_discount || '1.00';
+                document.getElementById('supportEmail').value = settings.support_email || '';
+                document.getElementById('paymentDeadlineHours').value = settings.payment_deadline_hours || '24';
+            } else {
+                throw new Error('Failed to load bank settings');
+            }
+        } catch (error) {
+            console.error('Error loading bank settings:', error);
+            this.showNotification('Failed to load bank settings', 'error');
+        }
+    }
+    
+    async saveBankSettings(event) {
+        event.preventDefault();
+        
+        try {
+            const API_BASE_URL = window.CONFIG?.API_BASE_URL?.replace('/api', '') || 'http://localhost:3001';
+            const token = localStorage.getItem('adminToken');
+            
+            const settings = {
+                bank_recipient_name: document.getElementById('bankRecipientName').value,
+                bank_iban: document.getElementById('bankIban').value,
+                base_ticket_price: document.getElementById('baseTicketPrice').value,
+                ism_student_discount: document.getElementById('ismStudentDiscount').value,
+                support_email: document.getElementById('supportEmail').value,
+                payment_deadline_hours: document.getElementById('paymentDeadlineHours').value
+            };
+            
+            // Update each setting individually
+            for (const [key, value] of Object.entries(settings)) {
+                const response = await fetch(`${API_BASE_URL}/api/admin/settings/${key}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ value })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Failed to update ${key}`);
+                }
+            }
+            
+            this.showNotification('Bank settings saved successfully!', 'success');
+        } catch (error) {
+            console.error('Error saving bank settings:', error);
+            this.showNotification('Failed to save bank settings', 'error');
         }
     }
 }
