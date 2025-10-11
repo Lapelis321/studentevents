@@ -59,38 +59,45 @@ class Checkout {
                     </div>
 
                     <form class="checkout-form" id="checkoutForm" novalidate>
-                        <div class="form-group">
-                            <label for="firstName" class="form-label">First Name *</label>
-                            <input type="text" id="firstName" class="form-input" required>
-                            <span class="form-error" id="firstName-error"></span>
-                        </div>
+                        <!-- Primary Contact Information -->
+                        <div class="form-section">
+                            <h3 class="form-section-title">
+                                <i class="fas fa-user"></i>
+                                Primary Contact Information
+                            </h3>
+                            <div class="form-group">
+                                <label for="firstName" class="form-label">First Name *</label>
+                                <input type="text" id="firstName" class="form-input" required>
+                                <span class="form-error" id="firstName-error"></span>
+                            </div>
 
-                        <div class="form-group">
-                            <label for="lastName" class="form-label">Last Name *</label>
-                            <input type="text" id="lastName" class="form-input" required>
-                            <span class="form-error" id="lastName-error"></span>
-                        </div>
+                            <div class="form-group">
+                                <label for="lastName" class="form-label">Last Name *</label>
+                                <input type="text" id="lastName" class="form-input" required>
+                                <span class="form-error" id="lastName-error"></span>
+                            </div>
 
-                        <div class="form-group">
-                            <label for="email" class="form-label">Email Address *</label>
-                            <input type="email" id="email" class="form-input" required>
-                            <span class="form-error" id="email-error"></span>
-                            <span class="form-hint">Your ticket will be sent to this email</span>
-                        </div>
+                            <div class="form-group">
+                                <label for="email" class="form-label">Email Address *</label>
+                                <input type="email" id="email" class="form-input" required>
+                                <span class="form-error" id="email-error"></span>
+                                <span class="form-hint">Your ticket will be sent to this email</span>
+                            </div>
 
-                        <div class="form-group">
-                            <label for="phone" class="form-label">Phone Number *</label>
-                            <input type="tel" id="phone" class="form-input" required>
-                            <span class="form-error" id="phone-error"></span>
-                        </div>
+                            <div class="form-group">
+                                <label for="phone" class="form-label">Phone Number *</label>
+                                <input type="tel" id="phone" class="form-input" required>
+                                <span class="form-error" id="phone-error"></span>
+                            </div>
 
-                        <div class="form-group">
-                            <div class="checkbox-wrapper">
-                                <input type="checkbox" id="ismStudent" class="form-checkbox">
-                                <label for="ismStudent" class="checkbox-label">
-                                    <span class="checkbox-text">I am an ISM University of Management and Economics student</span>
-                                    <span class="checkbox-hint">Non-ISM students pay an additional fee</span>
-                                </label>
+                            <div class="form-group">
+                                <div class="checkbox-wrapper">
+                                    <input type="checkbox" id="ismStudent" class="form-checkbox">
+                                    <label for="ismStudent" class="checkbox-label">
+                                        <span class="checkbox-text">I am an ISM University of Management and Economics student</span>
+                                        <span class="checkbox-hint">ISM students receive a discount</span>
+                                    </label>
+                                </div>
                             </div>
                         </div>
 
@@ -106,6 +113,9 @@ class Checkout {
                                 </button>
                             </div>
                         </div>
+
+                        <!-- Additional Attendees (rendered dynamically) -->
+                        <div id="additionalAttendeesContainer"></div>
 
                         <div class="terms-section">
                             <div class="checkbox-wrapper">
@@ -169,11 +179,11 @@ class Checkout {
         const basePrice = parseFloat(this.event.price);
         const quantity = this.ticketQuantity;
         const isISMStudent = document.getElementById('ismStudent')?.checked || false;
-        const extraFee = isISMStudent ? 0 : 1; // €1 extra for non-ISM
+        const discount = isISMStudent ? 1 : 0; // €1 discount for ISM students
         
         const subtotal = basePrice * quantity;
-        const fees = extraFee * quantity;
-        const total = subtotal + fees;
+        const discountAmount = discount * quantity;
+        const total = subtotal - discountAmount;
 
         return `
             <div class="price-row">
@@ -188,10 +198,10 @@ class Checkout {
                 <span>Subtotal</span>
                 <span>€${subtotal.toFixed(2)}</span>
             </div>
-            ${fees > 0 ? `
-            <div class="price-row fee-row">
-                <span>Non-ISM Student Fee</span>
-                <span>€${fees.toFixed(2)}</span>
+            ${discountAmount > 0 ? `
+            <div class="price-row discount-row">
+                <span>ISM Student Discount</span>
+                <span style="color: #059669;">-€${discountAmount.toFixed(2)}</span>
             </div>
             ` : ''}
             <div class="price-row total-row">
@@ -230,6 +240,7 @@ class Checkout {
         if (this.ticketQuantity < 10) {
             this.ticketQuantity++;
             this.renderCheckout();
+            this.renderAdditionalAttendees();
         }
     }
 
@@ -237,7 +248,54 @@ class Checkout {
         if (this.ticketQuantity > 1) {
             this.ticketQuantity--;
             this.renderCheckout();
+            this.renderAdditionalAttendees();
         }
+    }
+
+    renderAdditionalAttendees() {
+        const container = document.getElementById('additionalAttendeesContainer');
+        if (!container) return;
+
+        const additionalCount = this.ticketQuantity - 1; // -1 for primary contact
+        
+        if (additionalCount === 0) {
+            container.innerHTML = '';
+            return;
+        }
+
+        container.innerHTML = `
+            <div class="form-section">
+                <h3 class="form-section-title">
+                    <i class="fas fa-users"></i>
+                    Additional Attendee Information (${additionalCount} ${additionalCount === 1 ? 'person' : 'people'})
+                </h3>
+                <p class="form-hint" style="margin-bottom: 20px;">Please provide information for each additional attendee.</p>
+                ${Array.from({length: additionalCount}, (_, i) => `
+                    <div class="attendee-card">
+                        <h4 class="attendee-title">Attendee ${i + 2}</h4>
+                        <div class="form-group">
+                            <label for="attendee${i}_firstName" class="form-label">First Name *</label>
+                            <input type="text" id="attendee${i}_firstName" class="form-input" required>
+                            <span class="form-error" id="attendee${i}_firstName-error"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="attendee${i}_lastName" class="form-label">Last Name *</label>
+                            <input type="text" id="attendee${i}_lastName" class="form-input" required>
+                            <span class="form-error" id="attendee${i}_lastName-error"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="attendee${i}_email" class="form-label">Email Address (optional)</label>
+                            <input type="email" id="attendee${i}_email" class="form-input">
+                            <span class="form-hint">Optional - for ticket delivery</span>
+                        </div>
+                        <div class="form-group">
+                            <label for="attendee${i}_phone" class="form-label">Phone Number (optional)</label>
+                            <input type="tel" id="attendee${i}_phone" class="form-input">
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
     }
 
     async handleSubmit() {
@@ -252,14 +310,38 @@ class Checkout {
         this.showProcessingState();
 
         try {
-            const bookingData = {
-                eventId: this.event.id,
+            // Collect primary contact data
+            const primaryContact = {
                 firstName: document.getElementById('firstName').value.trim(),
                 lastName: document.getElementById('lastName').value.trim(),
                 email: document.getElementById('email').value.trim(),
                 phone: document.getElementById('phone').value.trim(),
-                isISMStudent: document.getElementById('ismStudent').checked,
-                quantity: this.ticketQuantity
+                isISMStudent: document.getElementById('ismStudent').checked
+            };
+
+            // Collect additional attendees data
+            const additionalAttendees = [];
+            const additionalCount = this.ticketQuantity - 1;
+            for (let i = 0; i < additionalCount; i++) {
+                const firstName = document.getElementById(`attendee${i}_firstName`)?.value.trim() || '';
+                const lastName = document.getElementById(`attendee${i}_lastName`)?.value.trim() || '';
+                const email = document.getElementById(`attendee${i}_email`)?.value.trim() || '';
+                const phone = document.getElementById(`attendee${i}_phone`)?.value.trim() || '';
+                
+                if (firstName && lastName) {
+                    additionalAttendees.push({ firstName, lastName, email, phone });
+                }
+            }
+
+            const bookingData = {
+                eventId: this.event.id,
+                firstName: primaryContact.firstName,
+                lastName: primaryContact.lastName,
+                email: primaryContact.email,
+                phone: primaryContact.phone,
+                isISMStudent: primaryContact.isISMStudent,
+                quantity: this.ticketQuantity,
+                additionalAttendees: additionalAttendees
             };
 
             const response = await fetch(`${CONFIG.API_BASE_URL}/bookings`, {
@@ -296,21 +378,21 @@ class Checkout {
         // Clear previous errors
         document.querySelectorAll('.form-error').forEach(el => el.textContent = '');
 
-        // Validate first name
+        // Validate primary contact first name
         const firstName = document.getElementById('firstName').value.trim();
         if (!firstName) {
             this.showFieldError('firstName', 'First name is required');
             isValid = false;
         }
 
-        // Validate last name
+        // Validate primary contact last name
         const lastName = document.getElementById('lastName').value.trim();
         if (!lastName) {
             this.showFieldError('lastName', 'Last name is required');
             isValid = false;
         }
 
-        // Validate email
+        // Validate primary contact email
         const email = document.getElementById('email').value.trim();
         if (!email) {
             this.showFieldError('email', 'Email is required');
@@ -320,11 +402,35 @@ class Checkout {
             isValid = false;
         }
 
-        // Validate phone
+        // Validate primary contact phone
         const phone = document.getElementById('phone').value.trim();
         if (!phone) {
             this.showFieldError('phone', 'Phone number is required');
             isValid = false;
+        }
+
+        // Validate additional attendees
+        const additionalCount = this.ticketQuantity - 1;
+        for (let i = 0; i < additionalCount; i++) {
+            const attFirstName = document.getElementById(`attendee${i}_firstName`)?.value.trim() || '';
+            const attLastName = document.getElementById(`attendee${i}_lastName`)?.value.trim() || '';
+            
+            if (!attFirstName) {
+                this.showFieldError(`attendee${i}_firstName`, 'First name is required');
+                isValid = false;
+            }
+            
+            if (!attLastName) {
+                this.showFieldError(`attendee${i}_lastName`, 'Last name is required');
+                isValid = false;
+            }
+
+            // Validate attendee email if provided
+            const attEmail = document.getElementById(`attendee${i}_email`)?.value.trim() || '';
+            if (attEmail && !this.isValidEmail(attEmail)) {
+                this.showFieldError(`attendee${i}_email`, 'Please enter a valid email address');
+                isValid = false;
+            }
         }
 
         // Validate terms
@@ -332,6 +438,14 @@ class Checkout {
         if (!termsChecked) {
             this.showFieldError('terms', 'You must agree to the terms');
             isValid = false;
+        }
+
+        if (!isValid) {
+            // Scroll to first error
+            const firstError = document.querySelector('.form-error:not(:empty)');
+            if (firstError) {
+                firstError.closest('.form-group')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
         }
 
         return isValid;

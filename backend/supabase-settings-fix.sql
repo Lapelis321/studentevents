@@ -24,7 +24,7 @@ INSERT INTO settings (key, value, label, description, category, updated_by) VALU
 ON CONFLICT (key) DO NOTHING;
 
 INSERT INTO settings (key, value, label, description, category, updated_by) VALUES
-('ism_student_discount', '1.00', 'Non-ISM Student Fee (€)', 'Extra charge for non-ISM students (0 means no extra fee)', 'pricing', 'system')
+('ism_student_discount', '1.00', 'ISM Student Discount (€)', 'Discount amount for ISM students (0 means no discount)', 'pricing', 'system')
 ON CONFLICT (key) DO NOTHING;
 
 INSERT INTO settings (key, value, label, description, category, updated_by) VALUES

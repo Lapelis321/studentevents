@@ -116,12 +116,9 @@ class PaymentInstructions {
             <div class="important-info-card">
                 <h3><i class="fas fa-clock"></i> Important Information</h3>
                 <ul class="info-list">
-                    <li><strong>Payment Deadline:</strong> ${deadline}</li>
                     <li><strong>Reference Required:</strong> Use the exact reference number above in your transfer</li>
-                    <li><strong>Ticket Delivery:</strong> You'll receive your ticket via email within 24 hours after payment confirmation</li>
-                    <li><strong>No Payment?</strong> Your booking will be automatically cancelled after the deadline</li>
-                    <li><strong>No Ticket?</strong> If you don't receive your ticket within 24h after transfer, contact support</li>
-                    <li><strong>Event Entry:</strong> A valid ticket is required for event entry</li>
+                    <li><strong>Ticket Delivery:</strong> You'll receive your confirmed ticket via email within 24 hours after payment confirmation. If not, <a href="#contact" style="color: var(--primary-500); text-decoration: underline;">contact support</a></li>
+                    <li class="highlight-warning"><strong>Event Entry:</strong> A valid ticket is required for event entry. <span style="color: #dc2626; font-weight: 600;">If you did NOT pay for tickets, you will not be let in!</span></li>
                 </ul>
             </div>
 

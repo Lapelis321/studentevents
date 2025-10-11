@@ -519,9 +519,9 @@ app.post('/api/bookings', async (req, res) => {
 
     // Calculate pricing
     const basePrice = parseFloat(event.price);
-    const discount = isISMStudent ? 0 : parseFloat(settings.ism_student_discount || '1.00');
+    const discount = isISMStudent ? parseFloat(settings.ism_student_discount || '1.00') : 0;
     const unitPrice = basePrice;
-    const totalAmount = (basePrice + discount) * quantity;
+    const totalAmount = (basePrice - discount) * quantity;
 
     // Generate unique payment reference
     const timestamp = Date.now().toString(36).toUpperCase();

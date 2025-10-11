@@ -212,6 +212,22 @@
     font-size: 18px;
 }
 
+.info-list li.highlight-warning {
+    background-color: #fef2f2;
+    border: 2px solid #fecaca;
+    border-radius: 8px;
+    padding: 16px 16px 16px 40px;
+    margin: 10px 0;
+    font-weight: 500;
+}
+
+.info-list li.highlight-warning:before {
+    content: "⚠";
+    color: #dc2626;
+    font-size: 20px;
+    left: 12px;
+}
+
 .actions-section {
     display: flex;
     gap: 15px;
