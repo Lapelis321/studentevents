@@ -334,7 +334,7 @@ app.post('/api/events', verifyAdminToken, async (req, res) => {
 // PUT /api/events/:id - Update event (admin only)
 app.put('/api/events/:id', verifyAdminToken, async (req, res) => {
   try {
-    const eventId = parseInt(req.params.id);
+    const eventId = req.params.id; // Keep as string for UUID support
     const { title, date, location, price, description, additionalInfo, totalTickets, availableTickets, minAge, dressCode, currency, is_active } = req.body;
     
     if (pool) {
@@ -388,7 +388,7 @@ app.put('/api/events/:id', verifyAdminToken, async (req, res) => {
 // DELETE /api/events/:id - Delete event (admin only)
 app.delete('/api/events/:id', verifyAdminToken, async (req, res) => {
   try {
-    const eventId = parseInt(req.params.id);
+    const eventId = req.params.id; // Keep as string for UUID support
     
     if (pool) {
       // Delete from database
