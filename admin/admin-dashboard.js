@@ -350,8 +350,8 @@ class AdminDashboard {
 
         tbody.innerHTML = filteredEvents.map(event => {
             const formattedDate = this.formatDate(event.date);
-            const formattedPrice = `€${event.price.toFixed(2)}`;
-            const ticketsSold = `${event.soldTickets}/${event.totalTickets}`;
+            const formattedPrice = `€${typeof event.price === 'number' ? event.price.toFixed(2) : parseFloat(event.price || 0).toFixed(2)}`;
+            const ticketsSold = `${event.soldTickets || 0}/${event.totalTickets || 0}`;
             const statusBadge = this.createStatusBadge(event.status);
 
             return `
@@ -684,11 +684,11 @@ class AdminDashboard {
                 </div>
                 <div class="detail-row">
                     <div class="detail-label">Price:</div>
-                    <div class="detail-value">€${event.price.toFixed(2)}</div>
+                    <div class="detail-value">€${typeof event.price === 'number' ? event.price.toFixed(2) : parseFloat(event.price || 0).toFixed(2)}</div>
                 </div>
                 <div class="detail-row">
                     <div class="detail-label">Tickets:</div>
-                    <div class="detail-value">${event.soldTickets} / ${event.totalTickets} sold</div>
+                    <div class="detail-value">${event.soldTickets || 0} / ${event.totalTickets || 0} sold</div>
                 </div>
                 <div class="detail-row">
                     <div class="detail-label">Status:</div>
