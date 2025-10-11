@@ -1,6 +1,11 @@
 # Ignore backend files (deployed separately to Railway)
 backend/
+backend/**
 node_modules/
+
+# Ignore package files from backend
+backend/package.json
+backend/package-lock.json
 
 # Ignore documentation
 *.md
