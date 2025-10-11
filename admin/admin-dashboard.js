@@ -1972,7 +1972,7 @@ class AdminDashboard {
                 this.allBookings = [...this.bookings]; // Keep original copy for filtering
                 console.log('✅ Loaded bookings:', this.bookings.length);
                 this.populateEventFilter();
-                this.renderBookings();
+                this.restoreFilterStates(); // Restore saved filters
                 this.updateBookingsStats();
             } else {
                 throw new Error('Failed to load bookings');
@@ -1981,6 +1981,43 @@ class AdminDashboard {
             console.error('Error loading bookings:', error);
             this.showNotification('Failed to load bookings', 'error');
         }
+    }
+    
+    restoreFilterStates() {
+        // Restore event filter
+        const savedEventFilter = localStorage.getItem('bookingEventFilter') || 'all';
+        const eventFilterEl = document.getElementById('bookingEventFilter');
+        if (eventFilterEl) {
+            eventFilterEl.value = savedEventFilter;
+        }
+        
+        // Restore status filter
+        const savedStatusFilter = localStorage.getItem('bookingStatusFilter') || 'pending';
+        const statusFilterEl = document.getElementById('bookingStatusFilter');
+        if (statusFilterEl) {
+            statusFilterEl.value = savedStatusFilter;
+        }
+        
+        // Apply filters
+        this.applyFilters();
+    }
+    
+    applyFilters() {
+        const eventFilter = document.getElementById('bookingEventFilter')?.value || 'all';
+        const statusFilter = document.getElementById('bookingStatusFilter')?.value || 'pending';
+        
+        // Filter by event first
+        let filtered = eventFilter === 'all' 
+            ? [...this.allBookings] 
+            : this.allBookings.filter(b => b.event_id === eventFilter);
+        
+        // Then filter by status
+        if (statusFilter !== 'all') {
+            filtered = filtered.filter(b => b.payment_status === statusFilter);
+        }
+        
+        this.bookings = filtered;
+        this.renderBookings(statusFilter);
     }
     
     populateEventFilter() {
@@ -2003,15 +2040,11 @@ class AdminDashboard {
     }
     
     filterBookingsByEvent(eventId) {
-        const statusFilter = document.getElementById('bookingStatusFilter')?.value || 'pending';
+        // Save filter state
+        localStorage.setItem('bookingEventFilter', eventId);
         
-        if (eventId === 'all') {
-            this.bookings = [...this.allBookings];
-        } else {
-            this.bookings = this.allBookings.filter(b => b.event_id === eventId);
-        }
-        
-        this.renderBookings(statusFilter);
+        // Apply filters
+        this.applyFilters();
         this.updateBookingsStats();
     }
     
@@ -2220,7 +2253,12 @@ Created: ${new Date(booking.created_at).toLocaleString()}`);
     }
     
     filterBookings(status) {
-        this.renderBookings(status);
+        // Save filter state
+        localStorage.setItem('bookingStatusFilter', status);
+        
+        // Apply filters
+        this.applyFilters();
+        this.updateBookingsStats();
     }
     
     async refreshBookings() {
