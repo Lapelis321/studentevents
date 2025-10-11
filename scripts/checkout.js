@@ -179,11 +179,9 @@ class Checkout {
         const basePrice = parseFloat(this.event.price);
         const quantity = this.ticketQuantity;
         const isISMStudent = document.getElementById('ismStudent')?.checked || false;
-        const discount = isISMStudent ? 1 : 0; // €1 discount for ISM students
         
         const subtotal = basePrice * quantity;
-        const discountAmount = discount * quantity;
-        const total = subtotal - discountAmount;
+        const total = subtotal;
 
         return `
             <div class="price-row">
@@ -198,12 +196,6 @@ class Checkout {
                 <span>Subtotal</span>
                 <span>€${subtotal.toFixed(2)}</span>
             </div>
-            ${discountAmount > 0 ? `
-            <div class="price-row discount-row">
-                <span>ISM Student Discount</span>
-                <span style="color: #059669;">-€${discountAmount.toFixed(2)}</span>
-            </div>
-            ` : ''}
             <div class="price-row total-row">
                 <span>Total</span>
                 <span class="total-amount">€${total.toFixed(2)}</span>

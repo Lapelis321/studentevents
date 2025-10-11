@@ -269,16 +269,20 @@ class AdminDashboard {
         switch (this.currentTab) {
             case 'events':
                 this.renderEventsTab();
+                this.stopBookingsPolling();
                 break;
             case 'bookings':
                 this.loadBookings();
+                this.startBookingsPolling();
                 break;
             case 'workers':
                 this.renderWorkersTab();
+                this.stopBookingsPolling();
                 break;
             case 'settings':
                 this.renderSettingsTab();
                 this.loadBankSettings();
+                this.stopBookingsPolling();
                 break;
         }
     }
@@ -1965,7 +1969,9 @@ class AdminDashboard {
             
             if (response.ok) {
                 this.bookings = await response.json();
+                this.allBookings = [...this.bookings]; // Keep original copy for filtering
                 console.log('✅ Loaded bookings:', this.bookings.length);
+                this.populateEventFilter();
                 this.renderBookings();
                 this.updateBookingsStats();
             } else {
@@ -1975,6 +1981,38 @@ class AdminDashboard {
             console.error('Error loading bookings:', error);
             this.showNotification('Failed to load bookings', 'error');
         }
+    }
+    
+    populateEventFilter() {
+        const eventFilter = document.getElementById('bookingEventFilter');
+        if (!eventFilter) return;
+        
+        // Get unique events from bookings
+        const events = new Map();
+        (this.allBookings || []).forEach(b => {
+            if (b.event_title && b.event_id) {
+                events.set(b.event_id, b.event_title);
+            }
+        });
+        
+        // Populate dropdown
+        eventFilter.innerHTML = '<option value="all">All Events</option>' +
+            Array.from(events.entries())
+                .map(([id, title]) => `<option value="${id}">${title}</option>`)
+                .join('');
+    }
+    
+    filterBookingsByEvent(eventId) {
+        const statusFilter = document.getElementById('bookingStatusFilter')?.value || 'pending';
+        
+        if (eventId === 'all') {
+            this.bookings = [...this.allBookings];
+        } else {
+            this.bookings = this.allBookings.filter(b => b.event_id === eventId);
+        }
+        
+        this.renderBookings(statusFilter);
+        this.updateBookingsStats();
     }
     
     renderBookings(filter = 'pending') {
@@ -2036,6 +2074,9 @@ class AdminDashboard {
                             <button class="action-btn" onclick="adminDashboard.viewBooking('${booking.id}')" title="View Details">
                                 <i class="fas fa-eye"></i>
                             </button>
+                            <button class="action-btn action-btn-danger" onclick="adminDashboard.deleteBooking('${booking.id}')" title="Delete Permanently">
+                                <i class="fas fa-trash"></i>
+                            </button>
                         </div>
                     </td>
                 </tr>
@@ -2045,17 +2086,19 @@ class AdminDashboard {
     
     getBookingStatusBadge(status, isExpired) {
         if (status === 'pending' && isExpired) {
-            return '<span style="display: inline-block; padding: 4px 8px; background: #feb2b2; color: #c53030; border-radius: 4px; font-size: 0.85em; font-weight: 600;">EXPIRED</span>';
+            return '<span class="status-badge expired"><i class="fas fa-clock"></i> EXPIRED</span>';
         }
         
-        const badges = {
-            pending: '<span style="display: inline-block; padding: 4px 8px; background: #fef3c7; color: #d97706; border-radius: 4px; font-size: 0.85em; font-weight: 600;">PENDING</span>',
-            paid: '<span style="display: inline-block; padding: 4px 8px; background: #d1fae5; color: #059669; border-radius: 4px; font-size: 0.85em; font-weight: 600;">PAID</span>',
-            cancelled: '<span style="display: inline-block; padding: 4px 8px; background: #e5e7eb; color: #6b7280; border-radius: 4px; font-size: 0.85em; font-weight: 600;">CANCELLED</span>',
-            refunded: '<span style="display: inline-block; padding: 4px 8px; background: #dbeafe; color: #3b82f6; border-radius: 4px; font-size: 0.85em; font-weight: 600;">REFUNDED</span>'
+        const badgeConfigs = {
+            pending: { class: 'pending', icon: 'clock', text: 'PENDING' },
+            paid: { class: 'active', icon: 'check-circle', text: 'PAID' },
+            cancelled: { class: 'cancelled', icon: 'times-circle', text: 'CANCELLED' },
+            refunded: { class: 'soldout', icon: 'undo', text: 'REFUNDED' }
         };
         
-        return badges[status] || status;
+        const config = badgeConfigs[status] || { class: 'pending', icon: 'question', text: status.toUpperCase() };
+        
+        return `<span class="status-badge ${config.class}"><i class="fas fa-${config.icon}"></i> ${config.text}</span>`;
     }
     
     updateBookingsStats() {
@@ -2127,6 +2170,32 @@ class AdminDashboard {
         }
     }
     
+    async deleteBooking(bookingId) {
+        if (!confirm('⚠️ Permanently delete this booking? This action CANNOT be undone and will remove all booking data from the database.')) return;
+        
+        try {
+            const API_BASE_URL = window.CONFIG?.API_BASE_URL?.replace('/api', '') || 'http://localhost:3001';
+            const token = localStorage.getItem('adminToken');
+            
+            const response = await fetch(`${API_BASE_URL}/api/admin/bookings/${bookingId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            
+            if (response.ok) {
+                this.showNotification('Booking permanently deleted', 'success');
+                await this.loadBookings();
+            } else {
+                throw new Error('Failed to delete booking');
+            }
+        } catch (error) {
+            console.error('Error deleting booking:', error);
+            this.showNotification('Failed to delete booking', 'error');
+        }
+    }
+    
     viewBooking(bookingId) {
         const booking = (this.bookings || []).find(b => b.id === bookingId);
         if (!booking) return;
@@ -2157,6 +2226,74 @@ Created: ${new Date(booking.created_at).toLocaleString()}`);
     async refreshBookings() {
         this.showNotification('Refreshing bookings...', 'info');
         await this.loadBookings();
+    }
+    
+    startBookingsPolling() {
+        if (this.bookingsInterval) return; // Already polling
+        
+        console.log('🔄 Starting bookings auto-refresh (every 10 seconds)');
+        this.bookingsInterval = setInterval(async () => {
+            if (this.currentTab === 'bookings') {
+                console.log('🔄 Auto-refreshing bookings...');
+                await this.loadBookings();
+            }
+        }, 10000); // Refresh every 10 seconds
+    }
+    
+    stopBookingsPolling() {
+        if (this.bookingsInterval) {
+            console.log('🛑 Stopping bookings auto-refresh');
+            clearInterval(this.bookingsInterval);
+            this.bookingsInterval = null;
+        }
+    }
+    
+    async exportBookingsToExcel() {
+        try {
+            const bookings = this.bookings || [];
+            
+            if (bookings.length === 0) {
+                this.showNotification('No bookings to export', 'warning');
+                return;
+            }
+            
+            // Transform data for Excel
+            const excelData = bookings.map(b => ({
+                'Reference': b.payment_reference,
+                'Event': b.event_title,
+                'Event Date': b.event_date ? new Date(b.event_date).toLocaleDateString() : 'N/A',
+                'First Name': b.first_name,
+                'Last Name': b.last_name,
+                'Email': b.email,
+                'Phone': b.phone,
+                'ISM Student': b.is_ism_student ? 'Yes' : 'No',
+                'Quantity': b.quantity,
+                'Unit Price': `€${parseFloat(b.unit_price || 0).toFixed(2)}`,
+                'Discount': `€${parseFloat(b.discount || 0).toFixed(2)}`,
+                'Total Amount': `€${parseFloat(b.total_amount).toFixed(2)}`,
+                'Status': b.payment_status.toUpperCase(),
+                'Payment Deadline': new Date(b.payment_deadline).toLocaleString(),
+                'Created': new Date(b.created_at).toLocaleString()
+            }));
+            
+            // Use SheetJS to generate Excel file
+            const ws = XLSX.utils.json_to_sheet(excelData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Bookings');
+            
+            // Auto-size columns
+            const maxWidth = excelData.reduce((w, r) => Math.max(w, ...Object.values(r).map(v => String(v).length)), 10);
+            ws['!cols'] = Object.keys(excelData[0]).map(() => ({ wch: Math.min(maxWidth, 50) }));
+            
+            // Generate filename with current date
+            const filename = `bookings-${new Date().toISOString().split('T')[0]}.xlsx`;
+            XLSX.writeFile(wb, filename);
+            
+            this.showNotification(`Exported ${bookings.length} bookings to ${filename}`, 'success');
+        } catch (error) {
+            console.error('Error exporting bookings:', error);
+            this.showNotification('Failed to export bookings', 'error');
+        }
     }
     
     // ===== BANK SETTINGS MANAGEMENT =====
