@@ -203,11 +203,15 @@ class Homepage {
         const formattedDate = this.formatEventDate(event.date);
         const formattedPrice = EventTicketingApp.formatPrice(event.price, event.currency);
         
-        // Determine event state
-        const isCompletedVisible = event.status === 'completed-shown';
-        const isCancelled = event.status === 'cancelled';
-        const isSoldOut = (event.availableTickets === 0 || event.availableTickets === '0' || event.status === 'sold-out') && !isCompletedVisible;
-        const isActive = event.status === 'active' && !isSoldOut;
+        // Determine event state - normalize status to lowercase
+        const status = (event.status || 'active').toLowerCase();
+        const availableTickets = parseInt(event.available_tickets || event.availableTickets || 0);
+        
+        // Check event status
+        const isCompleted = status === 'completed' || status === 'completed-shown';
+        const isCancelled = status === 'cancelled' || status === 'canceled';
+        const isSoldOut = (availableTickets === 0 || status === 'sold-out' || status === 'soldout') && !isCompleted;
+        const isActive = status === 'active' && !isSoldOut && !isCompleted && !isCancelled;
         
         // Determine badge to show
         let badge = '';
@@ -215,7 +219,7 @@ class Homepage {
         let ctaText = 'View Details';
         let ctaIcon = 'fa-arrow-right';
         
-        if (isCompletedVisible) {
+        if (isCompleted) {
             badge = '<div class="completed-badge"><i class="fas fa-check-circle"></i> COMPLETED</div>';
             cardClass = 'completed';
             ctaText = 'Event Completed';
