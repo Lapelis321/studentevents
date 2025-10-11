@@ -1,0 +1,23 @@
+# Ignore backend files (deployed separately to Railway)
+backend/
+node_modules/
+
+# Ignore documentation
+*.md
+!README.md
+
+# Ignore git files
+.git/
+.gitignore
+
+# Ignore editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Ignore OS files
+.DS_Store
+Thumbs.db
+
