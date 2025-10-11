@@ -27,6 +27,7 @@ app.use(cors({
     'https://afterstate.events',
     'https://www.afterstate.events',
     'https://afterstateevents.netlify.app',
+    'https://afterstateevents.vercel.app',
     FRONTEND_URL
   ].filter(Boolean),
   credentials: true
