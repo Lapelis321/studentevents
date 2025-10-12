@@ -221,7 +221,7 @@ class EventDetails {
                             <i class="fas fa-users"></i>
                             <div class="event-meta-content">
                                 <div class="event-meta-label">Minimum Age</div>
-                                <div class="event-meta-value">${this.event.minAge}+ years</div>
+                                <div class="event-meta-value">${(this.event.min_age || this.event.minAge) ? (this.event.min_age || this.event.minAge) + '+ years' : 'All ages'}</div>
                             </div>
                         </div>
                         
@@ -229,7 +229,7 @@ class EventDetails {
                             <i class="fas fa-tshirt"></i>
                             <div class="event-meta-content">
                                 <div class="event-meta-label">Dress Code</div>
-                                <div class="event-meta-value">${this.event.dressCode}</div>
+                                <div class="event-meta-value">${this.event.dress_code || this.event.dressCode || 'Casual'}</div>
                             </div>
                         </div>
                     </div>
