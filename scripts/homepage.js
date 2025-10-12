@@ -50,6 +50,7 @@ class Homepage {
             if (response.ok) {
                 this.events = await response.json();
                 console.log('✅ Loaded events from API:', this.events.length, 'events');
+                console.log('🔍 Raw API response data:', this.events);
                 this.renderEvents();
             } else {
                 console.error('❌ API returned error:', response.status);
@@ -212,6 +213,18 @@ class Homepage {
         // Extract fields with fallback for both snake_case and camelCase
         const minAge = event.min_age || event.minAge;
         const dressCode = (event.dress_code === 'No specific dress code') ? 'Casual' : (event.dress_code || event.dressCode || 'Casual');
+        
+        // Debug logging for event data
+        console.log('🔍 Event data debug:', {
+            id: event.id,
+            title: event.title,
+            min_age: event.min_age,
+            minAge: event.minAge,
+            dress_code: event.dress_code,
+            dressCode: event.dressCode,
+            finalMinAge: minAge,
+            finalDressCode: dressCode
+        });
         
         // Check event status
         const isCompleted = status === 'completed' || status === 'completed-shown';

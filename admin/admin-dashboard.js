@@ -137,10 +137,13 @@ class AdminDashboard {
         // Try to load from API first (database is source of truth)
         try {
             console.log('🔄 Loading events from API (database)...');
-            const response = await fetch(`${API_BASE_URL}/api/events`);
+            // Add cache-busting parameter to force fresh data
+            const cacheBuster = `?t=${Date.now()}`;
+            const response = await fetch(`${API_BASE_URL}/api/events${cacheBuster}`);
             if (response.ok) {
                 const apiEvents = await response.json();
                 console.log(`📦 ✅ Loaded ${apiEvents.length} events from API`);
+                console.log('🔍 API Events data:', apiEvents);
                 this.events = apiEvents;
                 // Save to localStorage for offline use
                 this.saveEventsToStorage(apiEvents);
@@ -176,6 +179,29 @@ class AdminDashboard {
         } else {
             console.log('⚠️ No saved workers, starting with empty array');
             this.workers = [];
+        }
+    }
+
+    async forceRefresh() {
+        console.log('🔄 Force refreshing events from database...');
+        try {
+            // Clear localStorage cache
+            localStorage.removeItem('adminEvents');
+            localStorage.removeItem('adminDataVersion');
+            
+            // Reload from API
+            await this.loadMockData();
+            
+            // Re-render the events table
+            this.renderEventsTable();
+            
+            // Show success message
+            this.showNotification('Events refreshed from database!', 'success');
+            
+            console.log('✅ Force refresh completed');
+        } catch (error) {
+            console.error('❌ Force refresh failed:', error);
+            this.showNotification('Failed to refresh events', 'error');
         }
     }
 
@@ -928,6 +954,7 @@ class AdminDashboard {
             
             console.log('🚀 Sending to API:', eventData);
             console.log('🔍 Debug - minAge:', minAge, 'dressCode:', finalDressCode);
+            console.log('🔍 Full event data being sent:', { name, date, location, price, totalTickets, status, minAge, dressCode: finalDressCode });
             
             // Call backend API to update event
             const response = await fetch(`${API_BASE_URL}/api/events/${this.editingEventId}`, {
