@@ -211,7 +211,7 @@ class Homepage {
         
         // Extract fields with fallback for both snake_case and camelCase
         const minAge = event.min_age || event.minAge;
-        const dressCode = event.dress_code || event.dressCode;
+        const dressCode = (event.dress_code === 'No specific dress code') ? 'Casual' : (event.dress_code || event.dressCode || 'Casual');
         
         // Check event status
         const isCompleted = status === 'completed' || status === 'completed-shown';

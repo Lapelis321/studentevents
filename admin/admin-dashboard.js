@@ -863,7 +863,10 @@ class AdminDashboard {
             const dressCode = document.getElementById('editEventDressCode').value;
             const ticketsAvailableDate = document.getElementById('editEventTicketsAvailableDate').value;
             
-            console.log('📝 Form values:', { name, date, location, price, totalTickets, status, minAge, dressCode });
+            // Ensure dressCode is never empty - use "Casual" as fallback
+            const finalDressCode = dressCode.trim() || 'Casual';
+            
+            console.log('📝 Form values:', { name, date, location, price, totalTickets, status, minAge, dressCode: finalDressCode });
             
             // Convert date to ISO format for backend
             let isoDate = date;
@@ -890,7 +893,7 @@ class AdminDashboard {
                 price: price,
                 currency: 'EUR',
                 minAge: minAge ? parseInt(minAge) : null,
-                dressCode: dressCode || 'No specific dress code',
+                dressCode: finalDressCode,
                 description: description || '',
                 additionalInfo: image || '',
                 totalTickets: totalTickets,

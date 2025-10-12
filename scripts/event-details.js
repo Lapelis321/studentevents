@@ -229,7 +229,7 @@ class EventDetails {
                             <i class="fas fa-tshirt"></i>
                             <div class="event-meta-content">
                                 <div class="event-meta-label">Dress Code</div>
-                                <div class="event-meta-value">${this.event.dress_code || this.event.dressCode || 'Casual'}</div>
+                                <div class="event-meta-value">${(this.event.dress_code === 'No specific dress code') ? 'Casual' : (this.event.dress_code || this.event.dressCode || 'Casual')}</div>
                             </div>
                         </div>
                     </div>
