@@ -64,8 +64,8 @@
                         status: status,
                         description: event.description || '',
                         image: event.image || 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800',
-                        minAge: event.minAge,
-                        dressCode: event.dressCode
+                        minAge: event.min_age,
+                        dressCode: event.dress_code
                     };
                 });
                 
