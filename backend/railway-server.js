@@ -1378,6 +1378,387 @@ app.post('/api/tickets/mark-used/:ticketNumber', verifyWorkerToken, async (req, 
   }
 });
 
+// ===== WORKER MANAGEMENT ENDPOINTS =====
+
+// POST /api/admin/workers - Create worker (admin only)
+app.post('/api/admin/workers', verifyAdminToken, async (req, res) => {
+  try {
+    const { fullName, email, password, role, eventId } = req.body;
+
+    if (!fullName || !email || !password || !role || !eventId) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    if (!['worker', 'supervisor'].includes(role)) {
+      return res.status(400).json({ error: 'Invalid role. Must be worker or supervisor' });
+    }
+
+    if (!pool) {
+      return res.status(503).json({ error: 'Database not available' });
+    }
+
+    // Check if email already exists
+    const existingWorker = await pool.query('SELECT id FROM workers WHERE email = $1', [email]);
+    if (existingWorker.rows.length > 0) {
+      return res.status(409).json({ error: 'Worker with this email already exists' });
+    }
+
+    // Hash password
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    // Create worker
+    const result = await pool.query(
+      `INSERT INTO workers (full_name, email, password_hash, role, event_id) 
+       VALUES ($1, $2, $3, $4, $5) RETURNING id, full_name, email, role, event_id, created_at`,
+      [fullName, email, passwordHash, role, eventId]
+    );
+
+    console.log(`✅ Worker created: ${email} (${role})`);
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Error creating worker:', error);
+    res.status(500).json({ error: 'Failed to create worker' });
+  }
+});
+
+// GET /api/admin/workers - List all workers (admin only)
+app.get('/api/admin/workers', verifyAdminToken, async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(503).json({ error: 'Database not available' });
+    }
+
+    const result = await pool.query(`
+      SELECT 
+        w.id, w.full_name, w.email, w.role, w.event_id, w.created_at,
+        e.title as event_title
+      FROM workers w
+      LEFT JOIN events e ON w.event_id = e.id
+      ORDER BY w.created_at DESC
+    `);
+
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error fetching workers:', error);
+    res.status(500).json({ error: 'Failed to fetch workers' });
+  }
+});
+
+// PUT /api/admin/workers/:id - Update worker (admin only)
+app.put('/api/admin/workers/:id', verifyAdminToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { fullName, email, password, role, eventId } = req.body;
+
+    if (!pool) {
+      return res.status(503).json({ error: 'Database not available' });
+    }
+
+    // Check if worker exists
+    const existingWorker = await pool.query('SELECT id FROM workers WHERE id = $1', [id]);
+    if (existingWorker.rows.length === 0) {
+      return res.status(404).json({ error: 'Worker not found' });
+    }
+
+    // Check if email is taken by another worker
+    if (email) {
+      const emailCheck = await pool.query('SELECT id FROM workers WHERE email = $1 AND id != $2', [email, id]);
+      if (emailCheck.rows.length > 0) {
+        return res.status(409).json({ error: 'Email already in use by another worker' });
+      }
+    }
+
+    // Build update query dynamically
+    const updates = [];
+    const values = [];
+    let paramCount = 1;
+
+    if (fullName) {
+      updates.push(`full_name = $${paramCount++}`);
+      values.push(fullName);
+    }
+    if (email) {
+      updates.push(`email = $${paramCount++}`);
+      values.push(email);
+    }
+    if (password) {
+      const passwordHash = await bcrypt.hash(password, 10);
+      updates.push(`password_hash = $${paramCount++}`);
+      values.push(passwordHash);
+    }
+    if (role) {
+      if (!['worker', 'supervisor'].includes(role)) {
+        return res.status(400).json({ error: 'Invalid role' });
+      }
+      updates.push(`role = $${paramCount++}`);
+      values.push(role);
+    }
+    if (eventId) {
+      updates.push(`event_id = $${paramCount++}`);
+      values.push(eventId);
+    }
+
+    if (updates.length === 0) {
+      return res.status(400).json({ error: 'No fields to update' });
+    }
+
+    values.push(id);
+    const query = `
+      UPDATE workers 
+      SET ${updates.join(', ')}, updated_at = NOW()
+      WHERE id = $${paramCount}
+      RETURNING id, full_name, email, role, event_id, updated_at
+    `;
+
+    const result = await pool.query(query, values);
+    console.log(`✅ Worker updated: ${id}`);
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error updating worker:', error);
+    res.status(500).json({ error: 'Failed to update worker' });
+  }
+});
+
+// DELETE /api/admin/workers/:id - Delete worker (admin only)
+app.delete('/api/admin/workers/:id', verifyAdminToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!pool) {
+      return res.status(503).json({ error: 'Database not available' });
+    }
+
+    const result = await pool.query('DELETE FROM workers WHERE id = $1 RETURNING *', [id]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Worker not found' });
+    }
+
+    console.log(`✅ Worker deleted: ${result.rows[0].email}`);
+    res.json({ success: true, message: 'Worker deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting worker:', error);
+    res.status(500).json({ error: 'Failed to delete worker' });
+  }
+});
+
+// POST /api/workers/login - Worker authentication
+app.post('/api/workers/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password required' });
+    }
+
+    if (!pool) {
+      return res.status(503).json({ error: 'Database not available' });
+    }
+
+    // Get worker with event details
+    const result = await pool.query(`
+      SELECT w.*, e.title as event_title, e.date as event_date
+      FROM workers w
+      LEFT JOIN events e ON w.event_id = e.id
+      WHERE w.email = $1
+    `, [email]);
+
+    if (result.rows.length === 0) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    const worker = result.rows[0];
+
+    // Verify password
+    const validPassword = await bcrypt.compare(password, worker.password_hash);
+    if (!validPassword) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { 
+        workerId: worker.id, 
+        email: worker.email, 
+        role: worker.role,
+        eventId: worker.event_id
+      },
+      process.env.JWT_SECRET || 'your-secret-key',
+      { expiresIn: '8h' }
+    );
+
+    console.log(`✅ Worker logged in: ${email} (${worker.role})`);
+    res.json({
+      token,
+      worker: {
+        id: worker.id,
+        fullName: worker.full_name,
+        email: worker.email,
+        role: worker.role,
+        eventId: worker.event_id,
+        eventTitle: worker.event_title,
+        eventDate: worker.event_date
+      }
+    });
+  } catch (error) {
+    console.error('Error during worker login:', error);
+    res.status(500).json({ error: 'Login failed' });
+  }
+});
+
+// POST /api/workers/validate-ticket - Validate ticket (worker/supervisor only)
+app.post('/api/workers/validate-ticket', verifyWorkerToken, async (req, res) => {
+  try {
+    const { ticketNumber } = req.body;
+    const workerId = req.worker.workerId;
+    const workerEventId = req.worker.eventId;
+
+    if (!ticketNumber) {
+      return res.status(400).json({ error: 'Ticket number required' });
+    }
+
+    if (!pool) {
+      return res.status(503).json({ error: 'Database not available' });
+    }
+
+    // Find booking by payment reference (ticket number)
+    const bookingResult = await pool.query(`
+      SELECT 
+        b.*,
+        e.title as event_title,
+        e.id as event_id
+      FROM bookings b
+      JOIN events e ON b.event_id = e.id
+      WHERE b.payment_reference = $1
+    `, [ticketNumber]);
+
+    if (bookingResult.rows.length === 0) {
+      return res.json({
+        valid: false,
+        status: 'invalid',
+        message: 'Ticket not found',
+        ticketNumber
+      });
+    }
+
+    const booking = bookingResult.rows[0];
+
+    // Check if ticket is for worker's assigned event
+    if (booking.event_id !== workerEventId) {
+      return res.json({
+        valid: false,
+        status: 'wrong_event',
+        message: 'Ticket is for a different event',
+        ticketNumber,
+        attendeeName: `${booking.first_name} ${booking.last_name}`
+      });
+    }
+
+    // Check if payment is confirmed
+    if (booking.payment_status !== 'paid') {
+      return res.json({
+        valid: false,
+        status: 'not_paid',
+        message: 'Payment not confirmed',
+        ticketNumber,
+        attendeeName: `${booking.first_name} ${booking.last_name}`,
+        paymentStatus: booking.payment_status
+      });
+    }
+
+    // Check if already validated
+    const validatedTickets = booking.tickets_validated || [];
+    const alreadyValidated = validatedTickets.find(t => t.ticket_number === ticketNumber);
+    
+    if (alreadyValidated) {
+      return res.json({
+        valid: false,
+        status: 'already_used',
+        message: 'Ticket already validated',
+        ticketNumber,
+        attendeeName: `${booking.first_name} ${booking.last_name}`,
+        validatedAt: alreadyValidated.validated_at,
+        validatedBy: alreadyValidated.validated_by_worker_id
+      });
+    }
+
+    // Mark ticket as validated
+    validatedTickets.push({
+      ticket_number: ticketNumber,
+      validated_at: new Date().toISOString(),
+      validated_by_worker_id: workerId
+    });
+
+    await pool.query(
+      'UPDATE bookings SET tickets_validated = $1 WHERE id = $2',
+      [JSON.stringify(validatedTickets), booking.id]
+    );
+
+    console.log(`✅ Ticket validated: ${ticketNumber} by worker ${workerId}`);
+    res.json({
+      valid: true,
+      status: 'valid',
+      message: 'Ticket is valid',
+      ticketNumber,
+      attendeeName: `${booking.first_name} ${booking.last_name}`,
+      eventTitle: booking.event_title,
+      quantity: booking.quantity,
+      validatedAt: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error validating ticket:', error);
+    res.status(500).json({ error: 'Failed to validate ticket' });
+  }
+});
+
+// GET /api/workers/participants/:eventId - Get participants list (supervisor only)
+app.get('/api/workers/participants/:eventId', verifyWorkerToken, async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    const workerRole = req.worker.role;
+    const workerEventId = req.worker.eventId;
+
+    // Only supervisors can view participant lists
+    if (workerRole !== 'supervisor') {
+      return res.status(403).json({ error: 'Only supervisors can view participant lists' });
+    }
+
+    // Verify supervisor is assigned to this event
+    if (eventId !== workerEventId) {
+      return res.status(403).json({ error: 'You can only view participants for your assigned event' });
+    }
+
+    if (!pool) {
+      return res.status(503).json({ error: 'Database not available' });
+    }
+
+    const result = await pool.query(`
+      SELECT 
+        b.id,
+        b.first_name,
+        b.last_name,
+        b.email,
+        b.phone,
+        b.is_ism_student,
+        b.quantity,
+        b.total_amount,
+        b.payment_status,
+        b.payment_reference,
+        b.tickets_validated,
+        b.created_at,
+        b.additional_attendees
+      FROM bookings b
+      WHERE b.event_id = $1
+      ORDER BY b.created_at DESC
+    `, [eventId]);
+
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error fetching participants:', error);
+    res.status(500).json({ error: 'Failed to fetch participants' });
+  }
+});
+
 app.use((error, req, res, next) => {
   console.error('Server error:', error);
   res.status(500).json({ error: 'Internal server error' });
