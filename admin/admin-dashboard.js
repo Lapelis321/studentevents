@@ -425,6 +425,9 @@ class AdminDashboard {
                     <td>${worker.created_at ? new Date(worker.created_at).toLocaleDateString() : 'N/A'}</td>
                     <td>
                         <div class="table-row-actions">
+                            <button class="action-btn view" onclick="adminDashboard.viewWorker('${worker.id}')" title="View Worker Details">
+                                <i class="fas fa-eye"></i>
+                            </button>
                             <button class="action-btn edit" onclick="adminDashboard.editWorker('${worker.id}')" title="Edit Worker">
                                 <i class="fas fa-edit"></i>
                             </button>
@@ -1140,8 +1143,29 @@ class AdminDashboard {
         // Reset the form
         document.getElementById('createWorkerForm').reset();
         
+        // Populate event dropdown
+        this.populateWorkerEventDropdown('createWorkerEvent');
+        
         // Show the modal
         document.getElementById('createWorkerModal').classList.add('active');
+    }
+    
+    populateWorkerEventDropdown(selectId) {
+        const eventSelect = document.getElementById(selectId);
+        if (!eventSelect) return;
+        
+        // Keep the "No event assigned" option
+        eventSelect.innerHTML = '<option value="">No event assigned</option>';
+        
+        // Add all events
+        if (this.events && this.events.length > 0) {
+            this.events.forEach(event => {
+                const option = document.createElement('option');
+                option.value = event.id;
+                option.textContent = event.name || event.title;
+                eventSelect.appendChild(option);
+            });
+        }
     }
 
     closeCreateWorkerModal() {
@@ -1155,6 +1179,7 @@ class AdminDashboard {
             const email = document.getElementById('createWorkerEmail').value;
             const password = document.getElementById('createWorkerPassword').value;
             const role = document.getElementById('createWorkerRole')?.value || 'worker';
+            const eventId = document.getElementById('createWorkerEvent')?.value || null;
             
             if (!name || !email || !password) {
                 this.showNotification('Name, email and password are required', 'error');
@@ -1176,7 +1201,7 @@ class AdminDashboard {
                             'Content-Type': 'application/json',
                             'Authorization': `Bearer ${token}`
                         },
-                        body: JSON.stringify({ name, email, password, role })
+                        body: JSON.stringify({ name, email, password, role, event_id: eventId })
                     });
                     
                     if (response.ok) {
@@ -1337,10 +1362,18 @@ class AdminDashboard {
         this.editingWorkerId = workerId;
         
         // Populate the form
-        document.getElementById('editWorkerName').value = worker.name || '';
+        document.getElementById('editWorkerName').value = worker.name || worker.full_name || '';
         document.getElementById('editWorkerEmail').value = worker.email || '';
         document.getElementById('editWorkerRole').value = worker.role || 'worker';
         document.getElementById('editWorkerStatus').value = worker.status || 'active';
+        
+        // Populate event dropdown
+        this.populateWorkerEventDropdown('editWorkerEvent');
+        
+        // Set selected event
+        if (worker.event_id) {
+            document.getElementById('editWorkerEvent').value = worker.event_id;
+        }
         
         // Show the modal
         document.getElementById('editWorkerModal').classList.add('active');
@@ -1365,6 +1398,7 @@ class AdminDashboard {
         const email = document.getElementById('editWorkerEmail').value;
         const role = document.getElementById('editWorkerRole').value;
         const status = document.getElementById('editWorkerStatus').value;
+        const eventId = document.getElementById('editWorkerEvent')?.value || null;
         
         // Update via API
         const token = localStorage.getItem('adminToken');
@@ -1378,7 +1412,7 @@ class AdminDashboard {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`
                     },
-                    body: JSON.stringify({ name, email, role, status })
+                    body: JSON.stringify({ name, email, role, status, event_id: eventId })
                 });
                 
                 if (response.ok) {
@@ -1427,6 +1461,102 @@ class AdminDashboard {
         
         // Shuffle the password
         return password.split('').sort(() => Math.random() - 0.5).join('');
+    }
+
+    viewWorker(workerId) {
+        const worker = this.workers.find(w => w.id === workerId);
+        if (!worker) {
+            console.error('Worker not found:', workerId);
+            return;
+        }
+        
+        // Populate the view modal content
+        const viewContent = document.getElementById('viewWorkerContent');
+        if (!viewContent) return;
+        
+        const roleBadge = worker.role === 'supervisor' 
+            ? '<span class="role-badge supervisor"><i class="fas fa-user-shield"></i> SUPERVISOR</span>'
+            : '<span class="role-badge worker"><i class="fas fa-user"></i> WORKER</span>';
+        
+        viewContent.innerHTML = `
+            <div class="worker-details">
+                <div class="detail-row">
+                    <label><i class="fas fa-user"></i> Full Name:</label>
+                    <strong>${worker.full_name || worker.name || 'N/A'}</strong>
+                </div>
+                <div class="detail-row">
+                    <label><i class="fas fa-envelope"></i> Email:</label>
+                    <strong>${worker.email}</strong>
+                </div>
+                <div class="detail-row">
+                    <label><i class="fas fa-key"></i> Password:</label>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span id="workerPassword" style="letter-spacing: 2px;">••••••••</span>
+                        <button class="btn btn-secondary btn-small" onclick="adminDashboard.togglePasswordVisibility('${worker.id}', '${worker.password || 'N/A'}')">
+                            <i class="fas fa-eye" id="passwordIcon"></i> Show
+                        </button>
+                    </div>
+                </div>
+                <div class="detail-row">
+                    <label><i class="fas fa-user-tag"></i> Role:</label>
+                    <div>${roleBadge}</div>
+                </div>
+                <div class="detail-row">
+                    <label><i class="fas fa-calendar-check"></i> Assigned Event:</label>
+                    <strong>${worker.event_title || 'No event assigned'}</strong>
+                </div>
+                <div class="detail-row">
+                    <label><i class="fas fa-clock"></i> Created:</label>
+                    <strong>${worker.created_at ? new Date(worker.created_at).toLocaleString() : 'N/A'}</strong>
+                </div>
+            </div>
+            <style>
+                .worker-details { padding: 20px; }
+                .detail-row { 
+                    display: grid; 
+                    grid-template-columns: 150px 1fr; 
+                    gap: 15px; 
+                    padding: 12px 0; 
+                    border-bottom: 1px solid #e5e7eb;
+                }
+                .detail-row:last-child { border-bottom: none; }
+                .detail-row label { 
+                    color: #6b7280; 
+                    font-weight: 500;
+                }
+                .detail-row label i { 
+                    margin-right: 8px; 
+                    color: var(--primary-500);
+                }
+                .btn-small { 
+                    padding: 4px 12px; 
+                    font-size: 12px;
+                }
+            </style>
+        `;
+        
+        // Show the modal
+        document.getElementById('viewWorkerModal').classList.add('active');
+    }
+    
+    togglePasswordVisibility(workerId, password) {
+        const passwordSpan = document.getElementById('workerPassword');
+        const passwordIcon = document.getElementById('passwordIcon');
+        const button = passwordIcon.closest('button');
+        
+        if (passwordSpan.textContent === '••••••••') {
+            passwordSpan.textContent = password;
+            passwordIcon.className = 'fas fa-eye-slash';
+            button.innerHTML = '<i class="fas fa-eye-slash" id="passwordIcon"></i> Hide';
+        } else {
+            passwordSpan.textContent = '••••••••';
+            passwordIcon.className = 'fas fa-eye';
+            button.innerHTML = '<i class="fas fa-eye" id="passwordIcon"></i> Show';
+        }
+    }
+    
+    closeViewWorkerModal() {
+        document.getElementById('viewWorkerModal').classList.remove('active');
     }
 
     async deleteWorker(workerId) {
@@ -1489,9 +1619,33 @@ class AdminDashboard {
         // In a real app, you would load these from an API or localStorage
     }
 
-    saveOrganizationSettings() {
+    async saveOrganizationSettings() {
         const formData = new FormData(document.getElementById('organizationForm'));
         const settings = Object.fromEntries(formData);
+        
+        // Save via API if available
+        const token = localStorage.getItem('adminToken');
+        if (token) {
+            try {
+                const API_BASE_URL = window.CONFIG?.API_BASE_URL?.replace('/api', '') || 'http://localhost:3001';
+                
+                // Update org_name setting
+                if (settings.orgName) {
+                    await fetch(`${API_BASE_URL}/api/admin/settings/org_name`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({ value: settings.orgName })
+                    });
+                }
+                
+                console.log('✅ Organization settings saved to API');
+            } catch (error) {
+                console.error('❌ Error saving organization settings:', error);
+            }
+        }
         
         // Save to localStorage for persistence
         localStorage.setItem('adminSettings', JSON.stringify({
@@ -1505,8 +1659,13 @@ class AdminDashboard {
         // Apply organization name changes throughout the site
         this.applyOrganizationName(settings.orgName);
         
+        // Clear branding cache so changes are reflected
+        if (window.OrgBranding && window.OrgBranding.clearCache) {
+            window.OrgBranding.clearCache();
+        }
+        
         console.log('Saving organization settings:', settings);
-        this.showNotification('Organization settings saved successfully', 'success');
+        this.showNotification('Settings saved! Refresh the page to see changes across all pages.', 'success');
     }
 
     savePolicySettings() {
@@ -1904,28 +2063,20 @@ class AdminDashboard {
     
     async savePolicy() {
         try {
-            // Build sections array from form fields
-            const sections = [
-                { id: 'terms-of-service', title: 'Terms of Service', icon: 'fa-gavel', content: document.getElementById('termsOfService').value, order: 1, visible: true, isDefault: true },
-                { id: 'privacy-policy', title: 'Privacy Policy', icon: 'fa-shield-alt', content: document.getElementById('privacyPolicy').value, order: 2, visible: true, isDefault: true },
-                { id: 'event-guidelines', title: 'Event Guidelines', icon: 'fa-calendar-check', content: document.getElementById('eventGuidelines').value, order: 3, visible: true, isDefault: true },
-                { id: 'ticket-policy', title: 'Ticket Policy', icon: 'fa-ticket-alt', content: document.getElementById('ticketPolicy').value, order: 4, visible: true, isDefault: true },
-                { id: 'refund-policy', title: 'Refund Policy', icon: 'fa-undo', content: document.getElementById('refundPolicy').value, order: 5, visible: true, isDefault: true },
-                { id: 'code-of-conduct', title: 'Code of Conduct', icon: 'fa-handshake', content: document.getElementById('codeOfConduct').value, order: 6, visible: true, isDefault: true }
-            ];
-            
-            const payload = {
-                metadata: {
-                    autoIncrementVersion: true,
-                    autoUpdateDate: true
-                },
-                sections: sections
-            };
-            
             const API_BASE_URL = window.CONFIG?.API_BASE_URL?.replace('/api', '') || 'http://localhost:3001';
             const token = localStorage.getItem('adminToken');
             
-            const response = await fetch(`${API_BASE_URL}/api/policy`, {
+            // Build payload for the new backend endpoint
+            const payload = {
+                terms_of_service: document.getElementById('termsOfService')?.value || '',
+                privacy_policy: document.getElementById('privacyPolicy')?.value || '',
+                event_guidelines: document.getElementById('eventGuidelines')?.value || '',
+                ticket_policy: document.getElementById('ticketPolicy')?.value || '',
+                refund_policy: document.getElementById('refundPolicy')?.value || '',
+                code_of_conduct: document.getElementById('codeOfConduct')?.value || ''
+            };
+            
+            const response = await fetch(`${API_BASE_URL}/api/admin/policy`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -1935,19 +2086,18 @@ class AdminDashboard {
             });
             
             if (response.ok) {
-                const updated = await response.json();
-                console.log('✅ Policy updated:', updated);
-                
-                document.getElementById('currentPolicyVersion').textContent = updated.metadata.version;
-                document.getElementById('policyLastUpdated').textContent = new Date(updated.metadata.lastUpdated).toLocaleDateString();
-                
+                console.log('✅ Policy updated successfully');
                 this.showNotification('Policy & Rules updated successfully!', 'success');
+                
+                // Reload policy to refresh the form
+                await this.loadPolicy();
             } else {
-                throw new Error('Failed to update policy');
+                const error = await response.json().catch(() => ({ error: 'Unknown error' }));
+                throw new Error(error.error || 'Failed to update policy');
             }
         } catch (error) {
             console.error('Error saving policy:', error);
-            this.showNotification('Failed to update policy', 'error');
+            this.showNotification(`Failed to update policy: ${error.message}`, 'error');
         }
     }
 
@@ -2002,6 +2152,7 @@ class AdminDashboard {
     applyFilters() {
         const eventFilter = document.getElementById('bookingEventFilter')?.value || 'all';
         const statusFilter = document.getElementById('bookingStatusFilter')?.value || 'pending';
+        const searchTerm = this.bookingSearchTerm || '';
         
         // Filter by event first
         let filtered = eventFilter === 'all' 
@@ -2011,6 +2162,21 @@ class AdminDashboard {
         // Then filter by status
         if (statusFilter !== 'all') {
             filtered = filtered.filter(b => b.payment_status === statusFilter);
+        }
+        
+        // Then filter by search term (name, email, or reference)
+        if (searchTerm) {
+            filtered = filtered.filter(b => {
+                const firstName = (b.first_name || '').toLowerCase();
+                const lastName = (b.last_name || '').toLowerCase();
+                const email = (b.email || '').toLowerCase();
+                const reference = (b.payment_reference || '').toLowerCase();
+                
+                return firstName.includes(searchTerm) || 
+                       lastName.includes(searchTerm) || 
+                       email.includes(searchTerm) || 
+                       reference.includes(searchTerm);
+            });
         }
         
         this.bookings = filtered;
@@ -2254,6 +2420,15 @@ Created: ${new Date(booking.created_at).toLocaleString()}`);
         localStorage.setItem('bookingStatusFilter', status);
         
         // Apply filters
+        this.applyFilters();
+        this.updateBookingsStats();
+    }
+    
+    searchBookings(searchTerm) {
+        // Store search term
+        this.bookingSearchTerm = searchTerm.toLowerCase().trim();
+        
+        // Apply filters (which includes search)
         this.applyFilters();
         this.updateBookingsStats();
     }

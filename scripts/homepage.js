@@ -207,6 +207,10 @@ class Homepage {
         const status = (event.status || 'active').toLowerCase();
         const availableTickets = parseInt(event.available_tickets || event.availableTickets || 0);
         
+        // Extract fields with fallback for both snake_case and camelCase
+        const minAge = event.min_age || event.minAge;
+        const dressCode = event.dress_code || event.dressCode;
+        
         // Check event status
         const isCompleted = status === 'completed' || status === 'completed-shown';
         const isCancelled = status === 'cancelled' || status === 'canceled';
@@ -261,11 +265,11 @@ class Homepage {
                         </div>
                         <div class="event-card-meta-item">
                             <i class="fas fa-users"></i>
-                            <span>Min age: ${event.minAge}+</span>
+                            <span>Min age: ${minAge ? minAge + '+' : 'All ages'}</span>
                         </div>
                         <div class="event-card-meta-item">
                             <i class="fas fa-tshirt"></i>
-                            <span>${event.dressCode}</span>
+                            <span>${dressCode || 'Casual'}</span>
                         </div>
                     </div>
                     <p class="event-card-description">${event.description}</p>

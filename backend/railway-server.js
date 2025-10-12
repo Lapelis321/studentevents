@@ -450,6 +450,93 @@ app.get('/api/settings', async (req, res) => {
   }
 });
 
+// GET /api/policy - Get policy content (public)
+app.get('/api/policy', async (req, res) => {
+  try {
+    if (pool) {
+      const result = await pool.query(`
+        SELECT key, value FROM settings 
+        WHERE key LIKE 'policy_%' 
+        ORDER BY key
+      `);
+      
+      const policy = {
+        terms_of_service: '',
+        privacy_policy: '',
+        event_guidelines: '',
+        ticket_policy: '',
+        refund_policy: '',
+        code_of_conduct: ''
+      };
+      
+      result.rows.forEach(row => {
+        const policyKey = row.key.replace('policy_', '');
+        policy[policyKey] = row.value || '';
+      });
+      
+      res.json(policy);
+    } else {
+      // Fallback policy
+      res.json({
+        terms_of_service: 'Default terms of service content...',
+        privacy_policy: 'Default privacy policy content...',
+        event_guidelines: 'Default event guidelines content...',
+        ticket_policy: 'Default ticket policy content...',
+        refund_policy: 'Default refund policy content...',
+        code_of_conduct: 'Default code of conduct content...'
+      });
+    }
+  } catch (error) {
+    console.error('Error fetching policy:', error);
+    res.status(500).json({ error: 'Failed to fetch policy' });
+  }
+});
+
+// PUT /api/admin/policy - Update policy content (admin only)
+app.put('/api/admin/policy', verifyAdminToken, async (req, res) => {
+  try {
+    const { 
+      terms_of_service, 
+      privacy_policy, 
+      event_guidelines, 
+      ticket_policy, 
+      refund_policy, 
+      code_of_conduct 
+    } = req.body;
+
+    if (!pool) {
+      return res.status(503).json({ error: 'Database not available' });
+    }
+
+    // Update each policy field
+    const updates = [
+      { key: 'policy_terms_of_service', value: terms_of_service },
+      { key: 'policy_privacy_policy', value: privacy_policy },
+      { key: 'policy_event_guidelines', value: event_guidelines },
+      { key: 'policy_ticket_policy', value: ticket_policy },
+      { key: 'policy_refund_policy', value: refund_policy },
+      { key: 'policy_code_of_conduct', value: code_of_conduct }
+    ];
+
+    for (const update of updates) {
+      if (update.value !== undefined) {
+        await pool.query(`
+          INSERT INTO settings (key, value, category, label)
+          VALUES ($1, $2, 'policy', $1)
+          ON CONFLICT (key) 
+          DO UPDATE SET value = $2, updated_at = NOW()
+        `, [update.key, update.value]);
+      }
+    }
+
+    console.log('✅ Policy content updated');
+    res.json({ message: 'Policy updated successfully' });
+  } catch (error) {
+    console.error('Error updating policy:', error);
+    res.status(500).json({ error: 'Failed to update policy' });
+  }
+});
+
 // PUT /api/admin/settings/:key - Update setting (admin only)
 app.put('/api/admin/settings/:key', verifyAdminToken, async (req, res) => {
   try {
@@ -715,7 +802,14 @@ app.post('/api/admin/bookings/:id/confirm', verifyAdminToken, async (req, res) =
     }
 
     // Send email with tickets (if SendGrid is configured)
-    if (sgMail && process.env.SENDGRID_API_KEY) {
+    let emailSent = false;
+    let emailError = null;
+    
+    if (!sgMail || !process.env.SENDGRID_API_KEY) {
+      console.warn('⚠️ SendGrid not configured - Email will NOT be sent');
+      console.warn('   Set SENDGRID_API_KEY and SENDGRID_FROM_EMAIL environment variables');
+      emailError = 'SendGrid not configured';
+    } else {
       const emailBody = `
         <h2>Your Ticket for ${booking.event_title}</h2>
         <p>Dear ${booking.first_name} ${booking.last_name},</p>
@@ -753,17 +847,24 @@ app.post('/api/admin/bookings/:id/confirm', verifyAdminToken, async (req, res) =
       };
 
       try {
+        console.log(`📧 Attempting to send ticket email to ${booking.email}...`);
         await sgMail.send(msg);
-        console.log(`✉️ Ticket email sent to ${booking.email}`);
-      } catch (emailError) {
-        console.error('Error sending ticket email:', emailError);
-        // Don't fail the request if email fails
+        console.log(`✅ ✉️ Ticket email sent successfully to ${booking.email}`);
+        emailSent = true;
+      } catch (error) {
+        console.error('❌ Error sending ticket email:', error.message);
+        if (error.response) {
+          console.error('   SendGrid Response:', error.response.body);
+        }
+        emailError = error.message;
       }
     }
 
     res.json({ 
-      message: 'Booking confirmed and tickets sent',
-      tickets: ticketsWithQR
+      message: 'Booking confirmed' + (emailSent ? ' and tickets sent' : ' (email failed)'),
+      tickets: ticketsWithQR,
+      emailSent,
+      emailError
     });
 
   } catch (error) {
@@ -1383,14 +1484,18 @@ app.post('/api/tickets/mark-used/:ticketNumber', verifyWorkerToken, async (req, 
 // POST /api/admin/workers - Create worker (admin only)
 app.post('/api/admin/workers', verifyAdminToken, async (req, res) => {
   try {
-    const { fullName, email, password, role, eventId } = req.body;
+    const { fullName, full_name, name, email, password, role, eventId, event_id } = req.body;
 
-    if (!fullName || !email || !password || !role || !eventId) {
-      return res.status(400).json({ error: 'Missing required fields' });
+    // Support multiple naming conventions
+    const workerName = fullName || full_name || name;
+    const workerEventId = eventId || event_id || null; // Allow null for no event assignment
+
+    if (!workerName || !email || !password || !role) {
+      return res.status(400).json({ error: 'Missing required fields (name, email, password, role)' });
     }
 
-    if (!['worker', 'supervisor'].includes(role)) {
-      return res.status(400).json({ error: 'Invalid role. Must be worker or supervisor' });
+    if (!['worker', 'supervisor', 'manager'].includes(role)) {
+      return res.status(400).json({ error: 'Invalid role. Must be worker, supervisor, or manager' });
     }
 
     if (!pool) {
@@ -1410,10 +1515,10 @@ app.post('/api/admin/workers', verifyAdminToken, async (req, res) => {
     const result = await pool.query(
       `INSERT INTO workers (full_name, email, password_hash, role, event_id) 
        VALUES ($1, $2, $3, $4, $5) RETURNING id, full_name, email, role, event_id, created_at`,
-      [fullName, email, passwordHash, role, eventId]
+      [workerName, email, passwordHash, role, workerEventId]
     );
 
-    console.log(`✅ Worker created: ${email} (${role})`);
+    console.log(`✅ Worker created: ${email} (${role}) - Event: ${workerEventId || 'none'}`);
     res.status(201).json(result.rows[0]);
   } catch (error) {
     console.error('Error creating worker:', error);
@@ -1448,7 +1553,11 @@ app.get('/api/admin/workers', verifyAdminToken, async (req, res) => {
 app.put('/api/admin/workers/:id', verifyAdminToken, async (req, res) => {
   try {
     const { id } = req.params;
-    const { fullName, email, password, role, eventId } = req.body;
+    const { fullName, full_name, name, email, password, role, eventId, event_id, status } = req.body;
+
+    // Support multiple naming conventions
+    const workerName = fullName || full_name || name;
+    const workerEventId = eventId || event_id;
 
     if (!pool) {
       return res.status(503).json({ error: 'Database not available' });
@@ -1473,9 +1582,9 @@ app.put('/api/admin/workers/:id', verifyAdminToken, async (req, res) => {
     const values = [];
     let paramCount = 1;
 
-    if (fullName) {
+    if (workerName) {
       updates.push(`full_name = $${paramCount++}`);
-      values.push(fullName);
+      values.push(workerName);
     }
     if (email) {
       updates.push(`email = $${paramCount++}`);
@@ -1487,15 +1596,15 @@ app.put('/api/admin/workers/:id', verifyAdminToken, async (req, res) => {
       values.push(passwordHash);
     }
     if (role) {
-      if (!['worker', 'supervisor'].includes(role)) {
+      if (!['worker', 'supervisor', 'manager'].includes(role)) {
         return res.status(400).json({ error: 'Invalid role' });
       }
       updates.push(`role = $${paramCount++}`);
       values.push(role);
     }
-    if (eventId) {
+    if (workerEventId !== undefined) {
       updates.push(`event_id = $${paramCount++}`);
-      values.push(eventId);
+      values.push(workerEventId || null); // Allow setting to null (no event)
     }
 
     if (updates.length === 0) {
@@ -1771,6 +1880,10 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`📚 API Base URL: http://localhost:${PORT}/api`);
   console.log(`🔗 Frontend URL: ${FRONTEND_URL}`);
   console.log(`🗄️ Database: ${process.env.DATABASE_URL ? 'PostgreSQL via Supabase' : 'In-memory mock storage'}`);
+  console.log(`📧 SendGrid Email: ${process.env.SENDGRID_API_KEY && process.env.SENDGRID_FROM_EMAIL ? '✅ Configured' : '⚠️ NOT CONFIGURED - Emails will not be sent'}`);
+  if (process.env.SENDGRID_FROM_EMAIL) {
+    console.log(`   From: ${process.env.SENDGRID_FROM_EMAIL}`);
+  }
   console.log(`✅ Admin credentials: admin@studentevents.com / admin123`);
   console.log(`✅ Worker credentials: john.worker@studentevents.com / worker123`);
 });

@@ -117,7 +117,7 @@ class PaymentInstructions {
                 <h3><i class="fas fa-clock"></i> Important Information</h3>
                 <ul class="info-list">
                     <li><strong>Reference Required:</strong> Use the exact reference number above in your transfer</li>
-                    <li><strong>Ticket Delivery:</strong> You'll receive your confirmed ticket via email within 24 hours after payment confirmation. If not, <a href="#contact" style="color: var(--primary-500); text-decoration: underline;">contact support</a></li>
+                    <li><strong>Ticket Delivery:</strong> You'll receive your confirmed ticket via email within 24 hours after payment confirmation. If not, <a href="mailto:${bankDetails.supportEmail || 'support@studentevents.com'}" style="color: var(--primary-500); text-decoration: underline;">contact support</a></li>
                     <li class="highlight-warning"><strong>Event Entry:</strong> A valid ticket is required for event entry. <span style="color: #dc2626; font-weight: 600;">If you did NOT pay for tickets, you will not be let in!</span></li>
                 </ul>
             </div>
@@ -125,7 +125,7 @@ class PaymentInstructions {
             <div class="actions-section">
                 <button class="btn btn-primary btn-large" onclick="paymentInstructions.downloadTicketPDF()">
                     <i class="fas fa-ticket-alt"></i>
-                    Download Pending Ticket PDF
+                    Download Ticket PDF
                 </button>
                 <button class="btn btn-secondary btn-large" onclick="paymentInstructions.downloadInstructions()">
                     <i class="fas fa-download"></i>
@@ -217,9 +217,9 @@ Created: ${new Date().toLocaleString()}
             const pageWidth = doc.internal.pageSize.width;
             const pageHeight = doc.internal.pageSize.height;
             
-            // Add red border for pending payment
-            doc.setDrawColor(220, 38, 38);
-            doc.setLineWidth(2);
+            // Add subtle border
+            doc.setDrawColor(200, 200, 200);
+            doc.setLineWidth(0.5);
             doc.rect(5, 5, pageWidth - 10, pageHeight - 10);
             
             // Header
@@ -230,20 +230,20 @@ Created: ${new Date().toLocaleString()}
             doc.setFontSize(16);
             doc.text('E-TICKET', pageWidth / 2, 35, { align: 'center' });
             
-            // HIGHLIGHTED NOTE - PENDING PAYMENT
-            doc.setFillColor(254, 226, 226); // Light red background
-            doc.roundedRect(15, 45, pageWidth - 30, 25, 3, 3, 'F');
-            doc.setDrawColor(220, 38, 38);
-            doc.setLineWidth(1);
-            doc.roundedRect(15, 45, pageWidth - 30, 25, 3, 3, 'S');
+            // PAYMENT NOTE - Subject to Payment Confirmation
+            doc.setFillColor(255, 243, 205); // Light yellow background
+            doc.roundedRect(15, 45, pageWidth - 30, 18, 3, 3, 'F');
+            doc.setDrawColor(245, 158, 11);
+            doc.setLineWidth(0.5);
+            doc.roundedRect(15, 45, pageWidth - 30, 18, 3, 3, 'S');
             
-            doc.setFontSize(12);
-            doc.setTextColor(185, 28, 28); // Dark red text
+            doc.setFontSize(10);
+            doc.setTextColor(146, 64, 14); // Dark amber text
             doc.setFont(undefined, 'bold');
-            doc.text('⚠ PAYMENT PENDING - NOT VALID UNTIL PAID', pageWidth / 2, 55, { align: 'center' });
+            doc.text('Subject to Payment Confirmation', pageWidth / 2, 53, { align: 'center' });
             doc.setFont(undefined, 'normal');
-            doc.setFontSize(9);
-            doc.text('This ticket will become valid after payment confirmation by admin', pageWidth / 2, 63, { align: 'center' });
+            doc.setFontSize(8);
+            doc.text('Valid upon admin confirmation of bank transfer', pageWidth / 2, 59, { align: 'center' });
             
             // Reset text color
             doc.setTextColor(0, 0, 0);

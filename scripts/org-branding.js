@@ -213,7 +213,11 @@ function getTextNodes(node) {
 window.OrgBranding = {
     fetch: fetchBrandingSettings,
     apply: applyBranding,
-    cache: () => brandingCache
+    cache: () => brandingCache,
+    clearCache: () => {
+        brandingCache = null;
+        console.log('🧹 Branding cache cleared');
+    }
 };
 
 // Auto-apply branding when DOM is ready
