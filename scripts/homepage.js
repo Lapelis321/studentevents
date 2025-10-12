@@ -329,7 +329,8 @@ class Homepage {
             month: 'short', 
             day: 'numeric',
             hour: '2-digit',
-            minute: '2-digit'
+            minute: '2-digit',
+            hour12: false
         };
 
         const formattedDate = date.toLocaleDateString('en-US', options);
