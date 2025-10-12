@@ -493,10 +493,16 @@ class AdminDashboard {
             }
             form.reset();
             
-            // Set default date to tomorrow
+            // Set default date to tomorrow (local time)
             const tomorrow = new Date();
             tomorrow.setDate(tomorrow.getDate() + 1);
-            const defaultDate = tomorrow.toISOString().slice(0, 16);
+            // Format as YYYY-MM-DDTHH:MM for datetime-local input
+            const year = tomorrow.getFullYear();
+            const month = String(tomorrow.getMonth() + 1).padStart(2, '0');
+            const day = String(tomorrow.getDate()).padStart(2, '0');
+            const hours = String(tomorrow.getHours()).padStart(2, '0');
+            const minutes = String(tomorrow.getMinutes()).padStart(2, '0');
+            const defaultDate = `${year}-${month}-${day}T${hours}:${minutes}`;
             
             const dateInput = document.getElementById('createEventDate');
             if (dateInput) {
@@ -572,7 +578,7 @@ class AdminDashboard {
             
             const eventData = {
                 title: nameInput.value,
-                date: dateInput.value + ':00Z',  // Ensure proper date format
+                date: new Date(dateInput.value).toISOString(),  // Convert datetime-local to proper ISO
                 location: locationInput.value,
                 description: document.getElementById('createEventDescription')?.value || '',
                 additionalInfo: document.getElementById('createEventImage')?.value || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800',
@@ -736,9 +742,9 @@ class AdminDashboard {
         // Fix date timezone issue - convert UTC to local datetime-local format
         let eventDate = event.date;
         if (eventDate) {
-            // If date has timezone info, convert to local time
+            // Convert ISO date to local datetime-local format
             const dateObj = new Date(eventDate);
-            // Format as YYYY-MM-DDTHH:MM for datetime-local input
+            // Get local date components (no timezone conversion)
             const year = dateObj.getFullYear();
             const month = String(dateObj.getMonth() + 1).padStart(2, '0');
             const day = String(dateObj.getDate()).padStart(2, '0');
@@ -862,7 +868,7 @@ class AdminDashboard {
             // Convert date to ISO format for backend
             let isoDate = date;
             if (date) {
-                // Convert datetime-local to ISO string
+                // Convert datetime-local to ISO string (preserves local time)
                 const dateObj = new Date(date);
                 isoDate = dateObj.toISOString();
             }

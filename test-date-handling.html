@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Date Handling Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        button { padding: 10px 15px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+        input[type="datetime-local"] { padding: 8px; margin: 5px; border: 1px solid #ddd; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Date Handling Test</h1>
+    
+    <div class="test-section info">
+        <h3>📋 Test Plan</h3>
+        <p>This test verifies that date handling works correctly in both create and edit modes.</p>
+        <ol>
+            <li>Test datetime-local input behavior</li>
+            <li>Test date conversion to ISO format</li>
+            <li>Test date display in edit mode</li>
+            <li>Test timezone handling</li>
+        </ol>
+    </div>
+
+    <div class="test-section">
+        <h3>1. Date Input Test</h3>
+        <label for="testDate">Test Date Input:</label><br>
+        <input type="datetime-local" id="testDate" value="2025-12-25T18:30">
+        <button onclick="testDateInput()">Test Date Input</button>
+        <div id="dateInputResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>2. Date Conversion Test</h3>
+        <button onclick="testDateConversion()">Test Date Conversion</button>
+        <div id="dateConversionResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>3. Timezone Test</h3>
+        <button onclick="testTimezone()">Test Timezone Handling</button>
+        <div id="timezoneResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>4. Real Event Test</h3>
+        <button onclick="testRealEvent()">Test with Real Event Data</button>
+        <div id="realEventResult"></div>
+    </div>
+
+    <script>
+        function testDateInput() {
+            const resultDiv = document.getElementById('dateInputResult');
+            const dateInput = document.getElementById('testDate');
+            
+            const inputValue = dateInput.value;
+            const dateObj = new Date(inputValue);
+            const isoString = dateObj.toISOString();
+            
+            resultDiv.innerHTML = `
+                <div class="success">
+                    <h4>Date Input Test Results:</h4>
+                    <p><strong>Input Value:</strong> ${inputValue}</p>
+                    <p><strong>Date Object:</strong> ${dateObj.toString()}</p>
+                    <p><strong>ISO String:</strong> ${isoString}</p>
+                    <p><strong>Local Time:</strong> ${dateObj.toLocaleString()}</p>
+                </div>
+            `;
+        }
+        
+        function testDateConversion() {
+            const resultDiv = document.getElementById('dateConversionResult');
+            
+            // Test various date formats
+            const testDates = [
+                '2025-12-25T18:30',
+                '2025-01-01T00:00',
+                '2025-06-15T12:45'
+            ];
+            
+            let results = '<div class="success"><h4>Date Conversion Test Results:</h4>';
+            
+            testDates.forEach(testDate => {
+                const dateObj = new Date(testDate);
+                const isoString = dateObj.toISOString();
+                const localString = dateObj.toLocaleString();
+                
+                results += `
+                    <div style="margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 3px;">
+                        <strong>Input:</strong> ${testDate}<br>
+                        <strong>ISO:</strong> ${isoString}<br>
+                        <strong>Local:</strong> ${localString}
+                    </div>
+                `;
+            });
+            
+            results += '</div>';
+            resultDiv.innerHTML = results;
+        }
+        
+        function testTimezone() {
+            const resultDiv = document.getElementById('timezoneResult');
+            
+            const now = new Date();
+            const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            const offset = now.getTimezoneOffset();
+            
+            resultDiv.innerHTML = `
+                <div class="success">
+                    <h4>Timezone Test Results:</h4>
+                    <p><strong>Current Time:</strong> ${now.toString()}</p>
+                    <p><strong>Timezone:</strong> ${timezone}</p>
+                    <p><strong>UTC Offset:</strong> ${offset} minutes</p>
+                    <p><strong>Local ISO:</strong> ${now.toISOString()}</p>
+                    <p><strong>Local String:</strong> ${now.toLocaleString()}</p>
+                </div>
+            `;
+        }
+        
+        function testRealEvent() {
+            const resultDiv = document.getElementById('realEventResult');
+            
+            // Simulate real event data from API
+            const mockEvent = {
+                id: 'test-123',
+                title: 'Test Event',
+                date: '2025-12-25T18:30:00.000Z', // ISO format from API
+                location: 'Test Location'
+            };
+            
+            // Test the conversion logic used in editEvent()
+            let eventDate = mockEvent.date;
+            if (eventDate) {
+                const dateObj = new Date(eventDate);
+                const year = dateObj.getFullYear();
+                const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+                const day = String(dateObj.getDate()).padStart(2, '0');
+                const hours = String(dateObj.getHours()).padStart(2, '0');
+                const minutes = String(dateObj.getMinutes()).padStart(2, '0');
+                eventDate = `${year}-${month}-${day}T${hours}:${minutes}`;
+            }
+            
+            resultDiv.innerHTML = `
+                <div class="success">
+                    <h4>Real Event Test Results:</h4>
+                    <p><strong>Original API Date:</strong> ${mockEvent.date}</p>
+                    <p><strong>Converted for datetime-local:</strong> ${eventDate}</p>
+                    <p><strong>Date Object:</strong> ${new Date(mockEvent.date).toString()}</p>
+                    <p><strong>Local Display:</strong> ${new Date(mockEvent.date).toLocaleString()}</p>
+                </div>
+            `;
+        }
+        
+        // Auto-run tests on page load
+        window.onload = function() {
+            testDateInput();
+            testDateConversion();
+            testTimezone();
+            testRealEvent();
+        };
+    </script>
+</body>
+</html>
