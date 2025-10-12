@@ -877,9 +877,9 @@ class AdminDashboard {
             // Convert date to ISO format for backend
             let isoDate = date;
             if (date) {
-                // Convert datetime-local to ISO string (preserves local time)
-                const dateObj = new Date(date);
-                isoDate = dateObj.toISOString();
+                // Convert datetime-local to ISO string (preserves local time without timezone conversion)
+                // datetime-local format: "2025-09-21T01:00" should become "2025-09-21T01:00:00.000Z"
+                isoDate = date + ':00.000Z';
             }
             
             // Get authentication token
@@ -910,6 +910,7 @@ class AdminDashboard {
             };
             
             console.log('🚀 Sending to API:', eventData);
+            console.log('🔍 Debug - minAge:', minAge, 'dressCode:', finalDressCode);
             
             // Call backend API to update event
             const response = await fetch(`${API_BASE_URL}/api/events/${this.editingEventId}`, {
