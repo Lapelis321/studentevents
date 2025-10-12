@@ -211,37 +211,37 @@ class WorkerScan {
                 };
             }
             
-            const API_BASE_URL = window.CONFIG?.API_BASE_URL?.replace('/api', '') || 'https://studentevents-production.up.railway.app';
+            const API_BASE_URL = window.API_BASE_URL || 'https://studentevents-production.up.railway.app';
             
             console.log('🔍 Validating ticket via API:', ticketId);
             
-            const response = await fetch(`${API_BASE_URL}/api/tickets/validate`, {
+            const response = await fetch(`${API_BASE_URL}/api/workers/validate-ticket`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${workerToken}`
                 },
-                body: JSON.stringify({ ticketId })
+                body: JSON.stringify({ ticketNumber: ticketId })
             });
             
             const data = await response.json();
             console.log('API Response:', data);
             
-            if (data.success) {
+            if (data.valid && data.status === 'valid') {
                 // Mark as scanned to prevent duplicates
                 this.scannedTickets.add(ticketId);
                 
                 return {
                     status: 'valid',
                     ticketId: ticketId,
-                    name: data.ticket.holderName || 'Unknown',
-                    event: data.ticket.eventTitle || 'Unknown Event',
-                    message: 'Ticket verified successfully',
+                    name: data.attendeeName || 'Unknown',
+                    event: data.eventTitle || 'Unknown Event',
+                    message: data.message || 'Ticket verified successfully',
                     timestamp: new Date()
                 };
             } else {
                 return {
-                    status: 'invalid',
+                    status: data.status === 'already_used' ? 'duplicate' : 'invalid',
                     ticketId: ticketId,
                     message: data.message || 'Ticket validation failed',
                     timestamp: new Date()

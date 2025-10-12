@@ -167,12 +167,12 @@
             
             console.log('Email entered:', email);
             
-            const API_BASE_URL = window.CONFIG?.API_BASE_URL || 'http://localhost:3001/api';
+            const API_BASE_URL = window.API_BASE_URL || 'https://studentevents-production.up.railway.app';
             
             try {
-                console.log('📡 Calling API login...');
+                console.log('📡 Calling worker login API...');
                 
-                const response = await fetch(`${API_BASE_URL}/worker/login`, {
+                const response = await fetch(`${API_BASE_URL}/api/workers/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password })
@@ -181,21 +181,20 @@
                 const data = await response.json();
                 console.log('API Response:', data);
                 
-                if (data.success && data.user.role === 'worker') {
+                if (response.ok && data.token && data.worker) {
                     console.log('✅ Worker login successful!');
                     
-                    // CRITICAL: Save JWT token
+                    // Save JWT token and worker data
                     localStorage.setItem('workerToken', data.token);
-                    localStorage.setItem('workerUser', JSON.stringify(data.user));
-                    sessionStorage.setItem('workerAccess', 'true');
+                    localStorage.setItem('workerData', JSON.stringify(data.worker));
                     
-                    console.log('✅ Token saved:', data.token.substring(0, 20) + '...');
+                    console.log('✅ Token saved');
                     
-                    alert(`Login successful! Welcome ${data.user.name}`);
+                    alert(`Login successful! Welcome ${data.worker.fullName}`);
                     window.location.href = '/worker/index.html';
                 } else {
-                    console.log('❌ Login failed: Not a worker account');
-                    alert('Invalid credentials or not a worker account!');
+                    console.log('❌ Login failed:', data.error);
+                    alert(data.error || 'Invalid credentials!');
                 }
                 
             } catch (error) {
