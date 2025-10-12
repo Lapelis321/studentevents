@@ -335,9 +335,9 @@ class Homepage {
         const formattedDate = date.toLocaleDateString('en-US', options);
 
         if (diffDays === 0) {
-            return `Today, ${date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`;
+            return `Today, ${date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}`;
         } else if (diffDays === 1) {
-            return `Tomorrow, ${date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`;
+            return `Tomorrow, ${date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}`;
         } else if (diffDays < 7) {
             return formattedDate;
         } else {

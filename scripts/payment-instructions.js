@@ -190,7 +190,7 @@ IMPORTANT:
 - Questions? support@studentevents.com
 
 Booking Reference: ${booking.payment_reference}
-Created: ${new Date().toLocaleString()}
+Created: ${new Date().toLocaleString('en-US', { hour12: false })}
         `;
 
         const blob = new Blob([text], { type: 'text/plain' });

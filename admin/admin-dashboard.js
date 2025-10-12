@@ -1597,7 +1597,7 @@ class AdminDashboard {
                 </div>
                 <div class="detail-row">
                     <label><i class="fas fa-clock"></i> Created:</label>
-                    <strong>${worker.created_at ? new Date(worker.created_at).toLocaleString() : 'N/A'}</strong>
+                    <strong>${worker.created_at ? new Date(worker.created_at).toLocaleString('en-US', { hour12: false }) : 'N/A'}</strong>
                 </div>
             </div>
             <style>
@@ -2343,10 +2343,10 @@ class AdminDashboard {
                     <td>${statusBadge}</td>
                     <td>
                         <small style="color: ${isExpired ? '#e53e3e' : '#666'};">
-                            ${new Date(booking.payment_deadline).toLocaleString()}
+                            ${new Date(booking.payment_deadline).toLocaleString('en-US', { hour12: false })}
                         </small>
                     </td>
-                    <td><small>${new Date(booking.created_at).toLocaleString()}</small></td>
+                    <td><small>${new Date(booking.created_at).toLocaleString('en-US', { hour12: false })}</small></td>
                     <td>
                         <div class="table-row-actions">
                             ${booking.payment_status === 'pending' ? `
@@ -2501,8 +2501,8 @@ Unit Price: €${parseFloat(booking.unit_price).toFixed(2)}
 Discount: €${parseFloat(booking.discount).toFixed(2)}
 Total Amount: €${parseFloat(booking.total_amount).toFixed(2)}
 Status: ${booking.payment_status.toUpperCase()}${isExpired ? ' (EXPIRED)' : ''}
-Payment Deadline: ${new Date(booking.payment_deadline).toLocaleString()}
-Created: ${new Date(booking.created_at).toLocaleString()}`);
+Payment Deadline: ${new Date(booking.payment_deadline).toLocaleString('en-US', { hour12: false })}
+Created: ${new Date(booking.created_at).toLocaleString('en-US', { hour12: false })}`);
     }
     
     filterBookings(status) {
@@ -2572,8 +2572,8 @@ Created: ${new Date(booking.created_at).toLocaleString()}`);
                 'Discount': `€${parseFloat(b.discount || 0).toFixed(2)}`,
                 'Total Amount': `€${parseFloat(b.total_amount).toFixed(2)}`,
                 'Status': b.payment_status.toUpperCase(),
-                'Payment Deadline': new Date(b.payment_deadline).toLocaleString(),
-                'Created': new Date(b.created_at).toLocaleString()
+                'Payment Deadline': new Date(b.payment_deadline).toLocaleString('en-US', { hour12: false }),
+                'Created': new Date(b.created_at).toLocaleString('en-US', { hour12: false })
             }));
             
             // Use SheetJS to generate Excel file
