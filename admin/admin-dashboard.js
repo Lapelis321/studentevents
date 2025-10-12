@@ -972,6 +972,8 @@ class AdminDashboard {
             console.log('🚀 Sending to API:', eventData);
             console.log('🔍 Debug - minAge:', minAge, 'dressCode:', finalDressCode);
             console.log('🔍 Full event data being sent:', { name, date, location, price, totalTickets, status, minAge, dressCode: finalDressCode });
+            console.log('🔍 Form field values - minAge input:', document.getElementById('editEventMinAge').value);
+            console.log('🔍 Form field values - dressCode input:', document.getElementById('editEventDressCode').value);
             
             // Call backend API to update event
             const response = await fetch(`${API_BASE_URL}/events/${this.editingEventId}`, {

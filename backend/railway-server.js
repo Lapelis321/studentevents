@@ -339,6 +339,8 @@ app.put('/api/events/:id', verifyAdminToken, async (req, res) => {
     
     console.log('🔍 PUT /api/events/:id - Received data:', { eventId, minAge, dressCode, title, date });
     console.log('🔍 Date received:', date, 'Type:', typeof date);
+    console.log('🔍 minAge received:', minAge, 'Type:', typeof minAge);
+    console.log('🔍 dressCode received:', dressCode, 'Type:', typeof dressCode);
     
     if (pool) {
       // Update in database
@@ -355,6 +357,9 @@ app.put('/api/events/:id', verifyAdminToken, async (req, res) => {
       }
       
       console.log(`✅ Event updated in database: ${title}`);
+      console.log('🔍 Updated event data:', result.rows[0]);
+      console.log('🔍 Updated min_age:', result.rows[0].min_age);
+      console.log('🔍 Updated dress_code:', result.rows[0].dress_code);
       res.json(result.rows[0]);
     } else {
       // Update in-memory storage
