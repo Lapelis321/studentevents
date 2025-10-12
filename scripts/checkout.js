@@ -91,13 +91,22 @@ class Checkout {
                             </div>
 
                             <div class="form-group">
-                                <div class="checkbox-wrapper">
-                                    <input type="checkbox" id="ismStudent" class="form-checkbox">
-                                    <label for="ismStudent" class="checkbox-label">
-                                        <span class="checkbox-text">I am an ISM University of Management and Economics student</span>
-                                        <span class="checkbox-hint">ISM students receive a discount</span>
-                                    </label>
+                                <label class="form-label">Attendee Type <span class="required">*</span></label>
+                                <div class="radio-group">
+                                    <div class="radio-wrapper">
+                                        <input type="radio" id="ismStudent" name="attendeeType" value="ism" class="form-radio" required>
+                                        <label for="ismStudent" class="radio-label">
+                                            <span class="radio-text">ISM Student</span>
+                                        </label>
+                                    </div>
+                                    <div class="radio-wrapper">
+                                        <input type="radio" id="guestAttendee" name="attendeeType" value="guest" class="form-radio" required>
+                                        <label for="guestAttendee" class="radio-label">
+                                            <span class="radio-text">Guest (+1)</span>
+                                        </label>
+                                    </div>
                                 </div>
+                                <small class="form-hint">Select your attendee type</small>
                             </div>
                         </div>
 
@@ -178,7 +187,8 @@ class Checkout {
     renderPriceBreakdown() {
         const basePrice = parseFloat(this.event.price);
         const quantity = this.ticketQuantity;
-        const isISMStudent = document.getElementById('ismStudent')?.checked || false;
+        const attendeeTypeRadio = document.querySelector('input[name="attendeeType"]:checked');
+        const isISMStudent = attendeeTypeRadio?.value === 'ism' || false;
         
         const subtotal = basePrice * quantity;
         const total = subtotal;
@@ -212,13 +222,13 @@ class Checkout {
             });
         }
 
-        // Update price when ISM checkbox changes
-        const ismCheckbox = document.getElementById('ismStudent');
-        if (ismCheckbox) {
-            ismCheckbox.addEventListener('change', () => {
+        // Update price when attendee type radio changes
+        const attendeeTypeRadios = document.querySelectorAll('input[name="attendeeType"]');
+        attendeeTypeRadios.forEach(radio => {
+            radio.addEventListener('change', () => {
                 this.updatePriceBreakdown();
             });
-        }
+        });
     }
 
     updatePriceBreakdown() {
@@ -284,6 +294,23 @@ class Checkout {
                             <label for="attendee${i}_phone" class="form-label">Phone Number (optional)</label>
                             <input type="tel" id="attendee${i}_phone" class="form-input">
                         </div>
+                        <div class="form-group">
+                            <label class="form-label">Attendee Type <span class="required">*</span></label>
+                            <div class="radio-group">
+                                <div class="radio-wrapper">
+                                    <input type="radio" id="attendee${i}_typeISM" name="attendee${i}_type" value="ism" class="form-radio" required>
+                                    <label for="attendee${i}_typeISM" class="radio-label">
+                                        <span class="radio-text">ISM Student</span>
+                                    </label>
+                                </div>
+                                <div class="radio-wrapper">
+                                    <input type="radio" id="attendee${i}_typeGuest" name="attendee${i}_type" value="guest" class="form-radio" required>
+                                    <label for="attendee${i}_typeGuest" class="radio-label">
+                                        <span class="radio-text">Guest (+1)</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 `).join('')}
             </div>
@@ -308,7 +335,7 @@ class Checkout {
                 lastName: document.getElementById('lastName').value.trim(),
                 email: document.getElementById('email').value.trim(),
                 phone: document.getElementById('phone').value.trim(),
-                isISMStudent: document.getElementById('ismStudent').checked
+                type: document.querySelector('input[name="attendeeType"]:checked')?.value || 'guest'
             };
 
             // Collect additional attendees data
@@ -319,9 +346,10 @@ class Checkout {
                 const lastName = document.getElementById(`attendee${i}_lastName`)?.value.trim() || '';
                 const email = document.getElementById(`attendee${i}_email`)?.value.trim() || '';
                 const phone = document.getElementById(`attendee${i}_phone`)?.value.trim() || '';
+                const type = document.querySelector(`input[name="attendee${i}_type"]:checked`)?.value || 'guest';
                 
                 if (firstName && lastName) {
-                    additionalAttendees.push({ firstName, lastName, email, phone });
+                    additionalAttendees.push({ firstName, lastName, email, phone, type });
                 }
             }
 

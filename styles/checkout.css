@@ -249,6 +249,37 @@
     margin-top: var(--space-1);
 }
 
+/* ===== RADIO BUTTONS ===== */
+
+.radio-group {
+    display: flex;
+    gap: var(--space-4);
+    margin-top: var(--space-2);
+}
+
+.radio-wrapper {
+    display: flex;
+    align-items: center;
+}
+
+.form-radio {
+    width: 20px;
+    height: 20px;
+    margin-right: var(--space-2);
+    cursor: pointer;
+}
+
+.radio-label {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+}
+
+.radio-text {
+    font-size: var(--font-size-base);
+    color: var(--text-primary);
+}
+
 /* ===== TERMS AND CONDITIONS ===== */
 
 .terms-section {
