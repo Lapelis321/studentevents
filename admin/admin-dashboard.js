@@ -752,7 +752,13 @@ class AdminDashboard {
             const minutes = String(dateObj.getMinutes()).padStart(2, '0');
             eventDate = `${year}-${month}-${day}T${hours}:${minutes}`;
         }
-        document.getElementById('editEventDate').value = eventDate;
+        
+        // Set the input value and force 24-hour format
+        const dateInput = document.getElementById('editEventDate');
+        dateInput.value = eventDate;
+        
+        // Force 24-hour format by setting step attribute
+        dateInput.setAttribute('step', '60');
         document.getElementById('editEventLocation').value = event.location;
         document.getElementById('editEventDescription').value = event.description || '';
         document.getElementById('editEventImage').value = event.image || '';
