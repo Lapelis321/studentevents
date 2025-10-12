@@ -290,6 +290,23 @@
     }
 }
 
+.coming-soon-badge {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    padding: 8px 16px;
+    border-radius: var(--radius-full);
+    font-weight: var(--font-semibold);
+    font-size: var(--font-size-sm);
+    box-shadow: var(--shadow-lg);
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
 .event-card.completed {
     border-color: #10b981;
     background: linear-gradient(to bottom, rgba(16, 185, 129, 0.05), transparent);

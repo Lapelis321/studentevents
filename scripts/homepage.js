@@ -210,8 +210,9 @@ class Homepage {
         // Check event status
         const isCompleted = status === 'completed' || status === 'completed-shown';
         const isCancelled = status === 'cancelled' || status === 'canceled';
+        const isComingSoon = status === 'coming-soon';
         const isSoldOut = (availableTickets === 0 || status === 'sold-out' || status === 'soldout') && !isCompleted;
-        const isActive = status === 'active' && !isSoldOut && !isCompleted && !isCancelled;
+        const isActive = status === 'active' && !isSoldOut && !isCompleted && !isCancelled && !isComingSoon;
         
         // Determine badge to show
         let badge = '';
@@ -229,6 +230,11 @@ class Homepage {
             cardClass = 'cancelled';
             ctaText = 'Event Cancelled';
             ctaIcon = 'fa-times-circle';
+        } else if (isComingSoon) {
+            badge = '<div class="coming-soon-badge"><i class="fas fa-clock"></i> COMING SOON</div>';
+            cardClass = 'coming-soon';
+            ctaText = 'Tickets Available Soon';
+            ctaIcon = 'fa-clock';
         } else if (isSoldOut) {
             badge = '<div class="sold-out-badge"><i class="fas fa-ban"></i> SOLD OUT</div>';
             cardClass = 'sold-out';

@@ -163,7 +163,8 @@ class EventDetails {
         const isCompleted = this.event.status === 'completed' || this.event.status === 'completed-shown';
         const isSoldOut = this.event.availableTickets === 0 || this.event.availableTickets === '0' || this.event.status === 'sold-out';
         const isCancelled = this.event.status === 'cancelled';
-        const isButtonDisabled = isCompleted || isSoldOut || isCancelled;
+        const isComingSoon = this.event.status === 'coming-soon';
+        const isButtonDisabled = isCompleted || isSoldOut || isCancelled || isComingSoon;
 
         // Determine button text and icon
         let buttonText = 'Buy Ticket';
@@ -175,6 +176,9 @@ class EventDetails {
         } else if (isCancelled) {
             buttonText = 'Event Cancelled';
             buttonIcon = 'fa-times-circle';
+        } else if (isComingSoon) {
+            buttonText = 'Tickets Available Soon';
+            buttonIcon = 'fa-clock';
         } else if (isSoldOut) {
             buttonText = 'Sold Out';
             buttonIcon = 'fa-ban';
