@@ -257,20 +257,7 @@ class EventDetails {
                         ${buttonText}
                     </button>
 
-                    <div class="booking-info">
-                        <div class="booking-info-item">
-                            <i class="fas fa-shield-alt"></i>
-                            <span>Secure payment processing</span>
-                        </div>
-                        <div class="booking-info-item">
-                            <i class="fas fa-mobile-alt"></i>
-                            <span>Mobile tickets available</span>
-                        </div>
-                        <div class="booking-info-item">
-                            <i class="fas fa-undo"></i>
-                            <span>Free cancellation up to 24h before</span>
-                        </div>
-                    </div>
+                    <!-- Bank transfer payment info removed as per requirements -->
                 </div>
             </div>
         `;

@@ -2343,19 +2343,25 @@ Created: ${new Date(booking.created_at).toLocaleString()}`);
                 const settings = await response.json();
                 console.log('✅ Loaded bank settings:', settings);
                 
-                // Populate form fields
-                document.getElementById('bankRecipientName').value = settings.bank_recipient_name || '';
-                document.getElementById('bankIban').value = settings.bank_iban || '';
-                document.getElementById('baseTicketPrice').value = settings.base_ticket_price || '20.00';
-                document.getElementById('ismStudentDiscount').value = settings.ism_student_discount || '1.00';
-                document.getElementById('supportEmail').value = settings.support_email || '';
-                document.getElementById('paymentDeadlineHours').value = settings.payment_deadline_hours || '24';
+                // Populate form fields - only existing fields
+                const recipientInput = document.getElementById('bankRecipientName');
+                const ibanInput = document.getElementById('bankIban');
+                const emailInput = document.getElementById('supportEmail');
+                const phoneInput = document.getElementById('supportPhone');
+                const hoursInput = document.getElementById('supportWorkingHours');
+                
+                if (recipientInput) recipientInput.value = settings.bank_recipient_name || '';
+                if (ibanInput) ibanInput.value = settings.bank_iban || '';
+                if (emailInput) emailInput.value = settings.support_email || '';
+                if (phoneInput) phoneInput.value = settings.support_phone || '';
+                if (hoursInput) hoursInput.value = settings.support_working_hours || 'Mon-Fri 9:00-17:00';
             } else {
                 throw new Error('Failed to load bank settings');
             }
         } catch (error) {
-            console.error('Error loading bank settings:', error);
-            this.showNotification('Failed to load bank settings', 'error');
+            console.error('[ERROR] Failed to load bank settings:', error);
+            // Don't show alert, just log error
+            console.log('[INFO] Settings form fields may need to be populated manually');
         }
     }
     
@@ -2366,13 +2372,13 @@ Created: ${new Date(booking.created_at).toLocaleString()}`);
             const API_BASE_URL = window.CONFIG?.API_BASE_URL?.replace('/api', '') || 'http://localhost:3001';
             const token = localStorage.getItem('adminToken');
             
+            // Only get values from existing fields
             const settings = {
-                bank_recipient_name: document.getElementById('bankRecipientName').value,
-                bank_iban: document.getElementById('bankIban').value,
-                base_ticket_price: document.getElementById('baseTicketPrice').value,
-                ism_student_discount: document.getElementById('ismStudentDiscount').value,
-                support_email: document.getElementById('supportEmail').value,
-                payment_deadline_hours: document.getElementById('paymentDeadlineHours').value
+                bank_recipient_name: document.getElementById('bankRecipientName')?.value || '',
+                bank_iban: document.getElementById('bankIban')?.value || '',
+                support_email: document.getElementById('supportEmail')?.value || '',
+                support_phone: document.getElementById('supportPhone')?.value || '',
+                support_working_hours: document.getElementById('supportWorkingHours')?.value || ''
             };
             
             // Update each setting individually
