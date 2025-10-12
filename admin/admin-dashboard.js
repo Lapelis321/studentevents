@@ -139,7 +139,7 @@ class AdminDashboard {
             console.log('🔄 Loading events from API (database)...');
             // Add cache-busting parameter to force fresh data
             const cacheBuster = `?t=${Date.now()}`;
-            const response = await fetch(`${API_BASE_URL}/api/events${cacheBuster}`);
+            const response = await fetch(`${API_BASE_URL}/events${cacheBuster}`);
             if (response.ok) {
                 const apiEvents = await response.json();
                 console.log(`📦 ✅ Loaded ${apiEvents.length} events from API`);
@@ -641,7 +641,7 @@ class AdminDashboard {
             if (token) {
                 try {
                     console.log('📡 Calling backend API to create event...');
-                    const response = await fetch(`${API_BASE_URL}/api/events`, {
+                    const response = await fetch(`${API_BASE_URL}/events`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -972,7 +972,7 @@ class AdminDashboard {
             console.log('🔍 Full event data being sent:', { name, date, location, price, totalTickets, status, minAge, dressCode: finalDressCode });
             
             // Call backend API to update event
-            const response = await fetch(`${API_BASE_URL}/api/events/${this.editingEventId}`, {
+            const response = await fetch(`${API_BASE_URL}/events/${this.editingEventId}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -1056,7 +1056,7 @@ class AdminDashboard {
             const API_BASE_URL = window.CONFIG?.API_BASE_URL?.replace('/api', '') || 'https://studentevents-production.up.railway.app';
             
             // Call API to delete event
-            const response = await fetch(`${API_BASE_URL}/api/events/${eventId}`, {
+            const response = await fetch(`${API_BASE_URL}/events/${eventId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -1354,7 +1354,7 @@ class AdminDashboard {
             if (token) {
                 try {
                     console.log('📡 Creating worker via API...');
-                    const response = await fetch(`${API_BASE_URL}/api/workers`, {
+                    const response = await fetch(`${API_BASE_URL}/workers`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -1484,7 +1484,7 @@ class AdminDashboard {
             try {
                 console.log(`🔐 Updating worker credentials via API...`);
                 const API_BASE_URL = window.CONFIG?.API_BASE_URL?.replace('/api', '') || 'http://localhost:3001';
-                const response = await fetch(`${API_BASE_URL}/api/workers/${workerId}`, {
+                const response = await fetch(`${API_BASE_URL}/workers/${workerId}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
@@ -1565,7 +1565,7 @@ class AdminDashboard {
             try {
                 console.log(`💾 Updating worker via API...`);
                 const API_BASE_URL = window.CONFIG?.API_BASE_URL?.replace('/api', '') || 'http://localhost:3001';
-                const response = await fetch(`${API_BASE_URL}/api/workers/${this.editingWorkerId}`, {
+                const response = await fetch(`${API_BASE_URL}/workers/${this.editingWorkerId}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
@@ -1729,7 +1729,7 @@ class AdminDashboard {
             try {
                 console.log(`🗑️ Deleting worker ${workerId} via API...`);
                 const API_BASE_URL = window.CONFIG?.API_BASE_URL?.replace('/api', '') || 'http://localhost:3001';
-                const response = await fetch(`${API_BASE_URL}/api/workers/${workerId}`, {
+                const response = await fetch(`${API_BASE_URL}/workers/${workerId}`, {
                     method: 'DELETE',
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
@@ -1790,7 +1790,7 @@ class AdminDashboard {
                 
                 // Update org_name setting
                 if (settings.orgName) {
-                    await fetch(`${API_BASE_URL}/api/admin/settings/org_name`, {
+                    await fetch(`${API_BASE_URL}/admin/settings/org_name`, {
                         method: 'PUT',
                         headers: {
                             'Content-Type': 'application/json',
@@ -1891,7 +1891,7 @@ class AdminDashboard {
                 console.log(`🗑️ Deleting ${this.events.length} events from backend...`);
                 for (const event of this.events) {
                     try {
-                        await fetch(`${API_BASE_URL}/api/events/${event.id}`, {
+                        await fetch(`${API_BASE_URL}/events/${event.id}`, {
                             method: 'DELETE',
                             headers: {
                                 'Authorization': `Bearer ${token}`
@@ -1909,7 +1909,7 @@ class AdminDashboard {
                 console.log(`🗑️ Deleting ${this.workers.length} workers from backend...`);
                 for (const worker of this.workers) {
                     try {
-                        await fetch(`${API_BASE_URL}/api/workers/${worker.id}`, {
+                        await fetch(`${API_BASE_URL}/workers/${worker.id}`, {
                             method: 'DELETE',
                             headers: {
                                 'Authorization': `Bearer ${token}`
@@ -2174,7 +2174,7 @@ class AdminDashboard {
     async loadPolicy() {
         try {
             const API_BASE_URL = window.CONFIG?.API_BASE_URL?.replace('/api', '') || 'http://localhost:3001';
-            const response = await fetch(`${API_BASE_URL}/api/policy`);
+            const response = await fetch(`${API_BASE_URL}/policy`);
             
             if (response.ok) {
                 const policy = await response.json();
@@ -2235,7 +2235,7 @@ class AdminDashboard {
                 code_of_conduct: document.getElementById('codeOfConduct')?.value || ''
             };
             
-            const response = await fetch(`${API_BASE_URL}/api/admin/policy`, {
+            const response = await fetch(`${API_BASE_URL}/admin/policy`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -2267,7 +2267,7 @@ class AdminDashboard {
             const API_BASE_URL = window.CONFIG?.API_BASE_URL?.replace('/api', '') || 'http://localhost:3001';
             const token = localStorage.getItem('adminToken');
             
-            const response = await fetch(`${API_BASE_URL}/api/admin/bookings`, {
+            const response = await fetch(`${API_BASE_URL}/admin/bookings`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -2479,7 +2479,7 @@ class AdminDashboard {
             const API_BASE_URL = window.CONFIG?.API_BASE_URL?.replace('/api', '') || 'http://localhost:3001';
             const token = localStorage.getItem('adminToken');
             
-            const response = await fetch(`${API_BASE_URL}/api/admin/bookings/${bookingId}/confirm`, {
+            const response = await fetch(`${API_BASE_URL}/admin/bookings/${bookingId}/confirm`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -2506,7 +2506,7 @@ class AdminDashboard {
             const API_BASE_URL = window.CONFIG?.API_BASE_URL?.replace('/api', '') || 'http://localhost:3001';
             const token = localStorage.getItem('adminToken');
             
-            const response = await fetch(`${API_BASE_URL}/api/admin/bookings/${bookingId}/cancel`, {
+            const response = await fetch(`${API_BASE_URL}/admin/bookings/${bookingId}/cancel`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -2532,7 +2532,7 @@ class AdminDashboard {
             const API_BASE_URL = window.CONFIG?.API_BASE_URL?.replace('/api', '') || 'http://localhost:3001';
             const token = localStorage.getItem('adminToken');
             
-            const response = await fetch(`${API_BASE_URL}/api/admin/bookings/${bookingId}`, {
+            const response = await fetch(`${API_BASE_URL}/admin/bookings/${bookingId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -2671,7 +2671,7 @@ Created: ${new Date(booking.created_at).toLocaleString('en-US', { hour12: false 
         try {
             const API_BASE_URL = window.CONFIG?.API_BASE_URL?.replace('/api', '') || 'http://localhost:3001';
             
-            const response = await fetch(`${API_BASE_URL}/api/settings`);
+            const response = await fetch(`${API_BASE_URL}/settings`);
             
             if (response.ok) {
                 const settings = await response.json();
@@ -2717,7 +2717,7 @@ Created: ${new Date(booking.created_at).toLocaleString('en-US', { hour12: false 
             
             // Update each setting individually
             for (const [key, value] of Object.entries(settings)) {
-                const response = await fetch(`${API_BASE_URL}/api/admin/settings/${key}`, {
+                const response = await fetch(`${API_BASE_URL}/admin/settings/${key}`, {
                     method: 'PUT',
                     headers: {
                         'Authorization': `Bearer ${token}`,
