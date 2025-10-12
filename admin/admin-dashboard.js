@@ -934,10 +934,13 @@ class AdminDashboard {
             // Convert date to ISO format for backend
             let isoDate = date;
             if (date) {
-                // Convert datetime-local to ISO string (preserves local time without timezone conversion)
-                // datetime-local format: "2025-09-21T01:00" should become "2025-09-21T01:00:00.000Z"
-                isoDate = date + ':00.000Z';
-                console.log('🔍 Date conversion - Input:', date, 'Output:', isoDate);
+                // Convert datetime-local to ISO string (treat as local time, not UTC)
+                // datetime-local format: "2025-09-20T21:00" should become "2025-09-20T21:00:00.000Z"
+                // Use the same method as create event for consistency
+                const dateObj = new Date(date);
+                isoDate = dateObj.toISOString();
+                console.log('🔍 Date conversion - Input:', date, 'Parsed date:', dateObj, 'Output:', isoDate);
+                console.log('🔍 Date components - Year:', dateObj.getFullYear(), 'Month:', dateObj.getMonth() + 1, 'Day:', dateObj.getDate(), 'Hours:', dateObj.getHours(), 'Minutes:', dateObj.getMinutes());
             }
             
             // Get authentication token

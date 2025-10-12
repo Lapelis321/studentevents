@@ -337,7 +337,8 @@ app.put('/api/events/:id', verifyAdminToken, async (req, res) => {
     const eventId = req.params.id; // Keep as string for UUID support
     const { title, date, location, price, description, additionalInfo, totalTickets, availableTickets, minAge, dressCode, currency, is_active, status, ticketsAvailableDate } = req.body;
     
-    console.log('🔍 PUT /api/events/:id - Received data:', { eventId, minAge, dressCode, title });
+    console.log('🔍 PUT /api/events/:id - Received data:', { eventId, minAge, dressCode, title, date });
+    console.log('🔍 Date received:', date, 'Type:', typeof date);
     
     if (pool) {
       // Update in database
