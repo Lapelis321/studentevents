@@ -787,6 +787,8 @@ class AdminDashboard {
         if (eventDate) {
             // Convert ISO date to local datetime-local format
             const dateObj = new Date(eventDate);
+            console.log('🔍 Original date:', eventDate, 'Parsed date object:', dateObj);
+            
             // Get local date components (no timezone conversion)
             const year = dateObj.getFullYear();
             const month = String(dateObj.getMonth() + 1).padStart(2, '0');
@@ -794,6 +796,8 @@ class AdminDashboard {
             const hours = String(dateObj.getHours()).padStart(2, '0');
             const minutes = String(dateObj.getMinutes()).padStart(2, '0');
             eventDate = `${year}-${month}-${day}T${hours}:${minutes}`;
+            
+            console.log('🔍 Converted date for input:', eventDate);
         }
         
         // Set the input value and force 24-hour format
@@ -807,8 +811,18 @@ class AdminDashboard {
         document.getElementById('editEventImage').value = event.image || '';
         document.getElementById('editEventPrice').value = event.price || 0;
         document.getElementById('editEventTotalTickets').value = event.totalTickets || 100;
-        document.getElementById('editEventMinAge').value = event.minAge || '';
-        document.getElementById('editEventDressCode').value = event.dressCode || '';
+        document.getElementById('editEventMinAge').value = event.minAge || event.min_age || '';
+        document.getElementById('editEventDressCode').value = event.dressCode || event.dress_code || '';
+        
+        console.log('🔍 Event data for editing:', {
+            id: event.id,
+            name: event.name,
+            date: event.date,
+            minAge: event.minAge,
+            min_age: event.min_age,
+            dressCode: event.dressCode,
+            dress_code: event.dress_code
+        });
         document.getElementById('editEventStatus').value = event.status;
         document.getElementById('editEventTicketsAvailableDate').value = event.ticketsAvailableDate || '';
 
@@ -923,6 +937,7 @@ class AdminDashboard {
                 // Convert datetime-local to ISO string (preserves local time without timezone conversion)
                 // datetime-local format: "2025-09-21T01:00" should become "2025-09-21T01:00:00.000Z"
                 isoDate = date + ':00.000Z';
+                console.log('🔍 Date conversion - Input:', date, 'Output:', isoDate);
             }
             
             // Get authentication token
