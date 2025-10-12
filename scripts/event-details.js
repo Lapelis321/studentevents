@@ -375,7 +375,8 @@ class EventDetails {
             day: 'numeric',
             hour: '2-digit',
             minute: '2-digit',
-            hour12: false
+            hour12: false,
+            timeZone: 'UTC' // Display UTC time to avoid timezone conversion
         };
         return date.toLocaleDateString('en-US', options);
     }

@@ -343,15 +343,16 @@ class Homepage {
             day: 'numeric',
             hour: '2-digit',
             minute: '2-digit',
-            hour12: false
+            hour12: false,
+            timeZone: 'UTC' // Display UTC time to avoid timezone conversion
         };
 
         const formattedDate = date.toLocaleDateString('en-US', options);
 
         if (diffDays === 0) {
-            return `Today, ${date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}`;
+            return `Today, ${date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'UTC' })}`;
         } else if (diffDays === 1) {
-            return `Tomorrow, ${date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}`;
+            return `Tomorrow, ${date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'UTC' })}`;
         } else if (diffDays < 7) {
             return formattedDate;
         } else {
