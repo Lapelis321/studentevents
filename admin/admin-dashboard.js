@@ -134,27 +134,42 @@ class AdminDashboard {
     }
 
     async loadMockData() {
-        // ALWAYS try to load from localStorage first - this takes absolute priority
-        const savedEvents = this.loadEventsFromStorage();
-        const savedWorkers = this.loadWorkersFromStorage();
-        
-        console.log('🔍 Checking localStorage for saved events...');
-        console.log('Saved events found:', savedEvents);
-        
-        // Load events - localStorage takes absolute priority
-        if (savedEvents && savedEvents.length > 0) {
-            console.log(`📦 ✅ Using ${savedEvents.length} events from localStorage (PRIORITY)`);
-            this.events = savedEvents;
-            // Do NOT call API or use fallback if localStorage has data
+        // Try to load from API first (database is source of truth)
+        try {
+            console.log('🔄 Loading events from API (database)...');
+            const response = await fetch(`${API_BASE_URL}/api/events`);
+            if (response.ok) {
+                const apiEvents = await response.json();
+                console.log(`📦 ✅ Loaded ${apiEvents.length} events from API`);
+                this.events = apiEvents;
+                // Save to localStorage for offline use
+                this.saveEventsToStorage(apiEvents);
             } else {
-            console.log('⚠️ No saved events in localStorage, starting with empty array');
-            // Start with empty array - admin can add events through the interface
-            this.events = [];
-            // DO NOT save empty/fallback data to localStorage
-            // This allows created events to be the first ones saved
+                throw new Error(`API returned ${response.status}`);
+            }
+        } catch (error) {
+            console.warn('⚠️ Failed to load from API, trying localStorage:', error.message);
+            // Fallback to localStorage if API fails
+            const savedEvents = this.loadEventsFromStorage();
+            
+            console.log('🔍 Checking localStorage for saved events...');
+            console.log('Saved events found:', savedEvents);
+            
+            // Load events - localStorage as fallback
+            if (savedEvents && savedEvents.length > 0) {
+                console.log(`📦 ✅ Using ${savedEvents.length} events from localStorage (FALLBACK)`);
+                this.events = savedEvents;
+            } else {
+                console.log('⚠️ No saved events in localStorage, starting with empty array');
+                // Start with empty array - admin can add events through the interface
+                this.events = [];
+                // DO NOT save empty/fallback data to localStorage
+                // This allows created events to be the first ones saved
+            }
         }
 
         // Load workers from localStorage (priority) or start empty
+        const savedWorkers = this.loadWorkersFromStorage();
         if (savedWorkers && savedWorkers.length > 0) {
             console.log(`📦 ✅ Using ${savedWorkers.length} workers from localStorage (PRIORITY)`);
             this.workers = savedWorkers;
@@ -164,13 +179,14 @@ class AdminDashboard {
         }
     }
 
-    saveEventsToStorage() {
+    saveEventsToStorage(events = null) {
         try {
-            const eventsJson = JSON.stringify(this.events);
+            const eventsToSave = events || this.events;
+            const eventsJson = JSON.stringify(eventsToSave);
             localStorage.setItem('adminEvents', eventsJson);
             localStorage.setItem('adminDataVersion', '1.0');
-            console.log(`💾 Saved ${this.events.length} events to localStorage`);
-            console.log('Events data:', this.events);
+            console.log(`💾 Saved ${eventsToSave.length} events to localStorage`);
+            console.log('Events data:', eventsToSave);
             
             // Verify it was saved
             const verification = localStorage.getItem('adminEvents');
@@ -422,7 +438,7 @@ class AdminDashboard {
                     <td>${worker.email}</td>
                     <td>${roleBadge}</td>
                     <td>${worker.event_title || 'No event assigned'}</td>
-                    <td>${worker.created_at ? new Date(worker.created_at).toLocaleDateString() : 'N/A'}</td>
+                    <td>${worker.created_at ? new Date(worker.created_at).toLocaleDateString('en-US', { hour12: false }) : 'N/A'}</td>
                     <td>
                         <div class="table-row-actions">
                             <button class="action-btn view" onclick="adminDashboard.viewWorker('${worker.id}')" title="View Worker Details">
@@ -475,7 +491,8 @@ class AdminDashboard {
             month: 'short', 
             day: 'numeric',
             hour: '2-digit',
-            minute: '2-digit'
+            minute: '2-digit',
+            hour12: false // Force 24-hour format
         };
         return date.toLocaleDateString('en-US', options);
     }
@@ -2138,7 +2155,7 @@ class AdminDashboard {
                     
                     document.getElementById('currentPolicyVersion').textContent = policy.metadata.version || '1.0';
                     document.getElementById('policyLastUpdated').textContent = policy.metadata.lastUpdated 
-                        ? new Date(policy.metadata.lastUpdated).toLocaleDateString() 
+                        ? new Date(policy.metadata.lastUpdated).toLocaleDateString('en-US', { hour12: false }) 
                         : '--';
                 } else {
                     // Old structure - direct properties
@@ -2150,7 +2167,7 @@ class AdminDashboard {
                     document.getElementById('codeOfConduct').value = policy.codeOfConduct || '';
                     document.getElementById('currentPolicyVersion').textContent = policy.version || '1.0';
                     document.getElementById('policyLastUpdated').textContent = policy.lastUpdated 
-                        ? new Date(policy.lastUpdated).toLocaleDateString() 
+                        ? new Date(policy.lastUpdated).toLocaleDateString('en-US', { hour12: false }) 
                         : '--';
                 }
             } else {
@@ -2341,7 +2358,7 @@ class AdminDashboard {
                     <td><code style="font-size: 0.85em;">${booking.payment_reference}</code></td>
                     <td>
                         <strong>${booking.event_title || 'N/A'}</strong><br>
-                        <small style="color: #666;">${booking.event_date ? new Date(booking.event_date).toLocaleDateString() : ''}</small>
+                        <small style="color: #666;">${booking.event_date ? new Date(booking.event_date).toLocaleDateString('en-US', { hour12: false }) : ''}</small>
                     </td>
                     <td>${booking.first_name} ${booking.last_name}</td>
                     <td>
@@ -2571,7 +2588,7 @@ Created: ${new Date(booking.created_at).toLocaleString('en-US', { hour12: false 
             const excelData = bookings.map(b => ({
                 'Reference': b.payment_reference,
                 'Event': b.event_title,
-                'Event Date': b.event_date ? new Date(b.event_date).toLocaleDateString() : 'N/A',
+                'Event Date': b.event_date ? new Date(b.event_date).toLocaleDateString('en-US', { hour12: false }) : 'N/A',
                 'First Name': b.first_name,
                 'Last Name': b.last_name,
                 'Email': b.email,
