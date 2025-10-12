@@ -2095,19 +2095,19 @@ class AdminDashboard {
                     </td>
                     <td><small>${new Date(booking.created_at).toLocaleString()}</small></td>
                     <td>
-                        <div class="action-buttons">
+                        <div class="table-row-actions">
                             ${booking.payment_status === 'pending' ? `
-                                <button class="action-btn action-btn-primary" onclick="adminDashboard.markBookingAsPaid('${booking.id}')" title="Mark as Paid">
+                                <button class="action-btn edit" onclick="adminDashboard.markBookingAsPaid('${booking.id}')" title="Approve Payment">
                                     <i class="fas fa-check"></i>
                                 </button>
-                                <button class="action-btn action-btn-danger" onclick="adminDashboard.cancelBooking('${booking.id}')" title="Cancel">
+                                <button class="action-btn delete" onclick="adminDashboard.cancelBooking('${booking.id}')" title="Cancel Booking">
                                     <i class="fas fa-times"></i>
                                 </button>
                             ` : ''}
-                            <button class="action-btn" onclick="adminDashboard.viewBooking('${booking.id}')" title="View Details">
+                            <button class="action-btn view" onclick="adminDashboard.viewBooking('${booking.id}')" title="View Details">
                                 <i class="fas fa-eye"></i>
                             </button>
-                            <button class="action-btn action-btn-danger" onclick="adminDashboard.deleteBooking('${booking.id}')" title="Delete Permanently">
+                            <button class="action-btn delete" onclick="adminDashboard.deleteBooking('${booking.id}')" title="Delete Permanently">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </div>
