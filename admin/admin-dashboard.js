@@ -742,6 +742,7 @@ class AdminDashboard {
         document.getElementById('editEventMinAge').value = event.minAge || '';
         document.getElementById('editEventDressCode').value = event.dressCode || '';
         document.getElementById('editEventStatus').value = event.status;
+        document.getElementById('editEventTicketsAvailableDate').value = event.ticketsAvailableDate || '';
 
         // Populate price tiers (optional - only if container exists)
         const priceTiersContainer = document.getElementById('editPriceTiers');

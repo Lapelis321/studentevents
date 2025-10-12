@@ -335,15 +335,16 @@ app.post('/api/events', verifyAdminToken, async (req, res) => {
 app.put('/api/events/:id', verifyAdminToken, async (req, res) => {
   try {
     const eventId = req.params.id; // Keep as string for UUID support
-    const { title, date, location, price, description, additionalInfo, totalTickets, availableTickets, minAge, dressCode, currency, is_active } = req.body;
+    const { title, date, location, price, description, additionalInfo, totalTickets, availableTickets, minAge, dressCode, currency, is_active, status, ticketsAvailableDate } = req.body;
     
     if (pool) {
       // Update in database
       const result = await pool.query(
         `UPDATE events SET title = $1, date = $2, location = $3, price = $4, currency = $5, min_age = $6, 
-         dress_code = $7, description = $8, additional_info = $9, total_tickets = $10, available_tickets = $11, is_active = $12 
-         WHERE id = $13 RETURNING *`,
-        [title, date, location, price, currency, minAge, dressCode, description, additionalInfo, totalTickets, availableTickets, is_active, eventId]
+         dress_code = $7, description = $8, additional_info = $9, total_tickets = $10, available_tickets = $11, is_active = $12, 
+         status = $13, tickets_available_date = $14
+         WHERE id = $15 RETURNING *`,
+        [title, date, location, price, currency, minAge, dressCode, description, additionalInfo, totalTickets, availableTickets, is_active, status, ticketsAvailableDate, eventId]
       );
       
       if (result.rows.length === 0) {

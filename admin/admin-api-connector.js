@@ -180,6 +180,7 @@
             const minAge = document.getElementById('editEventMinAge')?.value;
             const dressCode = document.getElementById('editEventDressCode')?.value;
             const status = formData.get('editEventStatus');
+            const ticketsAvailableDate = document.getElementById('editEventTicketsAvailableDate')?.value;
             
             // If status is "sold-out", set availableTickets to 0
             const availableTickets = status === 'sold-out' ? 0 : totalTickets - (event.soldTickets || 0);
@@ -198,7 +199,8 @@
                 availableTickets: availableTickets,
                 totalTickets: totalTickets,
                 is_active: status === 'upcoming' || status === 'active',
-                status: status
+                status: status,
+                ticketsAvailableDate: ticketsAvailableDate || null
             };
             
             try {
