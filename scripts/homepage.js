@@ -39,7 +39,9 @@ class Homepage {
         this.showLoadingState();
 
         try {
-            const apiUrl = `${CONFIG.API_BASE_URL}/events`;
+            // Add cache-busting parameter to ensure fresh data
+            const cacheBuster = `?t=${Date.now()}`;
+            const apiUrl = `${CONFIG.API_BASE_URL}/events${cacheBuster}`;
             console.log('🔍 Fetching events from:', apiUrl);
             
             const response = await fetch(apiUrl);
@@ -351,4 +353,5 @@ class Homepage {
 // Initialize homepage when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     window.homepage = new Homepage();
+    window.Homepage = window.homepage; // Expose globally for admin dashboard
 });

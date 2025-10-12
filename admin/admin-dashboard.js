@@ -732,7 +732,21 @@ class AdminDashboard {
 
         // Populate the edit form
         document.getElementById('editEventName').value = event.name;
-        document.getElementById('editEventDate').value = event.date.slice(0, 16); // Convert to datetime-local format
+        
+        // Fix date timezone issue - convert UTC to local datetime-local format
+        let eventDate = event.date;
+        if (eventDate) {
+            // If date has timezone info, convert to local time
+            const dateObj = new Date(eventDate);
+            // Format as YYYY-MM-DDTHH:MM for datetime-local input
+            const year = dateObj.getFullYear();
+            const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+            const day = String(dateObj.getDate()).padStart(2, '0');
+            const hours = String(dateObj.getHours()).padStart(2, '0');
+            const minutes = String(dateObj.getMinutes()).padStart(2, '0');
+            eventDate = `${year}-${month}-${day}T${hours}:${minutes}`;
+        }
+        document.getElementById('editEventDate').value = eventDate;
         document.getElementById('editEventLocation').value = event.location;
         document.getElementById('editEventDescription').value = event.description || '';
         document.getElementById('editEventImage').value = event.image || '';
@@ -839,28 +853,98 @@ class AdminDashboard {
             const price = parseFloat(document.getElementById('editEventPrice').value) || event.price || 0;
             const totalTickets = parseInt(document.getElementById('editEventTotalTickets').value) || event.totalTickets || 100;
             const status = document.getElementById('editEventStatus').value;
+            const minAge = document.getElementById('editEventMinAge').value;
+            const dressCode = document.getElementById('editEventDressCode').value;
+            const ticketsAvailableDate = document.getElementById('editEventTicketsAvailableDate').value;
             
-            console.log('📝 Form values:', { name, date, location, price, totalTickets, status });
+            console.log('📝 Form values:', { name, date, location, price, totalTickets, status, minAge, dressCode });
             
-            // Update local object FIRST (offline-first approach)
-            event.name = name;
-            event.date = date;
-            event.location = location;
-            event.description = description;
-            event.image = image;
-            event.price = price;
-            event.totalTickets = totalTickets;
-            event.status = status;
+            // Convert date to ISO format for backend
+            let isoDate = date;
+            if (date) {
+                // Convert datetime-local to ISO string
+                const dateObj = new Date(date);
+                isoDate = dateObj.toISOString();
+            }
+            
+            // Get authentication token
+            const token = localStorage.getItem('adminToken');
+            if (!token) {
+                throw new Error('Not authenticated. Please login again.');
+            }
+            
+            // Get API base URL
+            const API_BASE_URL = window.CONFIG?.API_BASE_URL?.replace('/api', '') || 'https://studentevents-production.up.railway.app';
+            
+            // Prepare event data for API
+            const eventData = {
+                title: name,
+                date: isoDate,
+                location: location,
+                price: price,
+                currency: 'EUR',
+                minAge: minAge ? parseInt(minAge) : null,
+                dressCode: dressCode || 'No specific dress code',
+                description: description || '',
+                additionalInfo: image || '',
+                totalTickets: totalTickets,
+                availableTickets: totalTickets - (event.soldTickets || 0),
+                is_active: status === 'active' || status === 'upcoming',
+                status: status,
+                ticketsAvailableDate: ticketsAvailableDate || null
+            };
+            
+            console.log('🚀 Sending to API:', eventData);
+            
+            // Call backend API to update event
+            const response = await fetch(`${API_BASE_URL}/api/events/${this.editingEventId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(eventData)
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(`API Error: ${errorData.error || response.statusText}`);
+            }
+            
+            const updatedEvent = await response.json();
+            console.log('✅ Event updated via API:', updatedEvent);
+            
+            // Update local object with API response
+            Object.assign(event, {
+                name: updatedEvent.title,
+                title: updatedEvent.title,
+                date: updatedEvent.date,
+                location: updatedEvent.location,
+                description: updatedEvent.description,
+                image: updatedEvent.additional_info,
+                price: updatedEvent.price,
+                totalTickets: updatedEvent.total_tickets,
+                status: updatedEvent.status,
+                minAge: updatedEvent.min_age,
+                dressCode: updatedEvent.dress_code,
+                ticketsAvailableDate: updatedEvent.tickets_available_date
+            });
             
             console.log('✅ Local event updated:', event);
             
-            // Save to localStorage IMMEDIATELY
+            // Save to localStorage
             this.saveEventsToStorage();
             console.log('✅ Saved to localStorage');
             
             // Close modal and refresh UI
             this.closeEditEventModal();
             this.renderEventsTab();
+            
+            // Force homepage to refresh by clearing its cache
+            if (window.Homepage && window.Homepage.loadEvents) {
+                console.log('🔄 Triggering homepage refresh...');
+                window.Homepage.loadEvents();
+            }
             
             this.showNotification(`Event "${event.name}" updated successfully!`, 'success');
             console.log('✅ Event edit completed');
