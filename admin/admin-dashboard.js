@@ -518,7 +518,8 @@ class AdminDashboard {
             day: 'numeric',
             hour: '2-digit',
             minute: '2-digit',
-            hour12: false // Force 24-hour format
+            hour12: false, // Force 24-hour format
+            timeZone: 'UTC' // Display UTC time to avoid timezone conversion
         };
         return date.toLocaleDateString('en-US', options);
     }
@@ -789,15 +790,15 @@ class AdminDashboard {
             const dateObj = new Date(eventDate);
             console.log('🔍 Original date:', eventDate, 'Parsed date object:', dateObj);
             
-            // Get local date components (no timezone conversion)
-            const year = dateObj.getFullYear();
-            const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-            const day = String(dateObj.getDate()).padStart(2, '0');
-            const hours = String(dateObj.getHours()).padStart(2, '0');
-            const minutes = String(dateObj.getMinutes()).padStart(2, '0');
+            // Get UTC date components to avoid timezone conversion issues
+            const year = dateObj.getUTCFullYear();
+            const month = String(dateObj.getUTCMonth() + 1).padStart(2, '0');
+            const day = String(dateObj.getUTCDate()).padStart(2, '0');
+            const hours = String(dateObj.getUTCHours()).padStart(2, '0');
+            const minutes = String(dateObj.getUTCMinutes()).padStart(2, '0');
             eventDate = `${year}-${month}-${day}T${hours}:${minutes}`;
             
-            console.log('🔍 Converted date for input:', eventDate);
+            console.log('🔍 Converted date for input (UTC):', eventDate);
         }
         
         // Set the input value and force 24-hour format
@@ -934,13 +935,11 @@ class AdminDashboard {
             // Convert date to ISO format for backend
             let isoDate = date;
             if (date) {
-                // Convert datetime-local to ISO string (treat as local time, not UTC)
+                // Convert datetime-local to ISO string (treat as UTC time)
                 // datetime-local format: "2025-09-20T21:00" should become "2025-09-20T21:00:00.000Z"
-                // Use the same method as create event for consistency
-                const dateObj = new Date(date);
-                isoDate = dateObj.toISOString();
-                console.log('🔍 Date conversion - Input:', date, 'Parsed date:', dateObj, 'Output:', isoDate);
-                console.log('🔍 Date components - Year:', dateObj.getFullYear(), 'Month:', dateObj.getMonth() + 1, 'Day:', dateObj.getDate(), 'Hours:', dateObj.getHours(), 'Minutes:', dateObj.getMinutes());
+                // Treat the input as UTC to avoid timezone conversion issues
+                isoDate = date + ':00.000Z';
+                console.log('🔍 Date conversion - Input:', date, 'Output (UTC):', isoDate);
             }
             
             // Get authentication token
