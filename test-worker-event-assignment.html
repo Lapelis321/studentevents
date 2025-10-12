@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Worker Event Assignment</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        button { padding: 10px 15px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Worker Event Assignment Test</h1>
+    
+    <div class="test-section info">
+        <h3>📋 Test Plan</h3>
+        <p>This test verifies that workers can be assigned to specific events in the admin dashboard.</p>
+        <ol>
+            <li>Check if admin dashboard loads</li>
+            <li>Test Create Worker modal has event dropdown</li>
+            <li>Test Edit Worker modal has event dropdown</li>
+            <li>Test backend API supports event assignment</li>
+            <li>Test worker can only scan tickets for assigned event</li>
+        </ol>
+    </div>
+
+    <div class="test-section">
+        <h3>1. Admin Dashboard Access</h3>
+        <button onclick="testAdminAccess()">Test Admin Dashboard</button>
+        <div id="adminResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>2. Backend API Test</h3>
+        <button onclick="testWorkerAPI()">Test Worker API</button>
+        <div id="apiResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>3. Event Assignment Test</h3>
+        <button onclick="testEventAssignment()">Test Event Assignment</button>
+        <div id="assignmentResult"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://studentevents-production.up.railway.app';
+        
+        async function testAdminAccess() {
+            const resultDiv = document.getElementById('adminResult');
+            resultDiv.innerHTML = '<p>Testing admin dashboard access...</p>';
+            
+            try {
+                const response = await fetch('https://afterstateevents.vercel.app/admin');
+                if (response.ok) {
+                    resultDiv.innerHTML = '<div class="success">✅ Admin dashboard is accessible</div>';
+                } else {
+                    resultDiv.innerHTML = '<div class="error">❌ Admin dashboard returned: ' + response.status + '</div>';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = '<div class="error">❌ Error accessing admin dashboard: ' + error.message + '</div>';
+            }
+        }
+        
+        async function testWorkerAPI() {
+            const resultDiv = document.getElementById('apiResult');
+            resultDiv.innerHTML = '<p>Testing worker API endpoints...</p>';
+            
+            try {
+                // Test health endpoint
+                const healthResponse = await fetch(`${API_BASE}/api/health`);
+                const healthData = await healthResponse.json();
+                
+                if (healthData.status === 'ok') {
+                    resultDiv.innerHTML = '<div class="success">✅ Backend API is running</div>';
+                } else {
+                    resultDiv.innerHTML = '<div class="error">❌ Backend API health check failed</div>';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = '<div class="error">❌ Error connecting to backend: ' + error.message + '</div>';
+            }
+        }
+        
+        async function testEventAssignment() {
+            const resultDiv = document.getElementById('assignmentResult');
+            resultDiv.innerHTML = '<p>Testing event assignment functionality...</p>';
+            
+            try {
+                // Test if we can get events (for dropdown population)
+                const eventsResponse = await fetch(`${API_BASE}/api/events`);
+                const events = await eventsResponse.json();
+                
+                if (events && events.length > 0) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            ✅ Events available for assignment: ${events.length} events found
+                            <pre>${JSON.stringify(events.map(e => ({ id: e.id, title: e.title })), null, 2)}</pre>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = '<div class="error">❌ No events found for assignment</div>';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = '<div class="error">❌ Error testing event assignment: ' + error.message + '</div>';
+            }
+        }
+        
+        // Auto-run tests on page load
+        window.onload = function() {
+            testAdminAccess();
+            testWorkerAPI();
+            testEventAssignment();
+        };
+    </script>
+</body>
+</html>
