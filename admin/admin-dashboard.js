@@ -412,27 +412,23 @@ class AdminDashboard {
         }
 
         tbody.innerHTML = this.workers.map(worker => {
-            const statusBadge = this.createStatusBadge(worker.status);
+            const roleBadge = worker.role === 'supervisor' 
+                ? '<span class="role-badge supervisor"><i class="fas fa-user-shield"></i> SUPERVISOR</span>'
+                : '<span class="role-badge worker"><i class="fas fa-user"></i> WORKER</span>';
 
             return `
                 <tr>
-                    <td><strong>${worker.name || 'Unknown'}</strong></td>
-                    <td><code>${worker.password}</code></td>
+                    <td><strong>${worker.full_name || worker.name || 'Unknown'}</strong></td>
                     <td>${worker.email}</td>
-                    <td>${worker.role}</td>
-                    <td>${statusBadge}</td>
+                    <td>${roleBadge}</td>
+                    <td>${worker.event_title || 'No event assigned'}</td>
+                    <td>${worker.created_at ? new Date(worker.created_at).toLocaleDateString() : 'N/A'}</td>
                     <td>
                         <div class="table-row-actions">
-                            <button class="action-btn view" data-worker-id="${worker.id}" data-action="view" title="View Details">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                            <button class="action-btn edit" data-worker-id="${worker.id}" data-action="edit-credentials" title="Edit Credentials">
-                                <i class="fas fa-key"></i>
-                            </button>
-                            <button class="action-btn edit" data-worker-id="${worker.id}" data-action="edit" title="Edit Worker">
+                            <button class="action-btn edit" onclick="adminDashboard.editWorker('${worker.id}')" title="Edit Worker">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button class="action-btn delete" data-worker-id="${worker.id}" data-action="delete" title="Delete Worker">
+                            <button class="action-btn delete" onclick="adminDashboard.deleteWorker('${worker.id}')" title="Delete Worker">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </div>

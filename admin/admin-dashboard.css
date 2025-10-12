@@ -1,4 +1,4 @@
-/* ===== ADMIN DASHBOARD STYLES ===== */
+﻿/* ===== ADMIN DASHBOARD STYLES ===== */
 
 /* Form textarea styles */
 .form-textarea {
@@ -1023,4 +1023,27 @@ select.form-input {
 
 .btn-danger:active {
     transform: translateY(0);
+}
+
+/* ===== WORKER ROLE BADGES ===== */
+.role-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.4rem 0.8rem;
+    border-radius: var(--radius-full);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-semibold);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.role-badge.supervisor {
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
+}
+.role-badge.worker {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
 }
