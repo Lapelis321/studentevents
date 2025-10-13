@@ -2377,7 +2377,8 @@ class AdminDashboard {
     
     async loadBookings() {
         try {
-            const API_BASE_URL = window.CONFIG?.API_BASE_URL || window.API_BASE_URL || 'https://studentevents-production.up.railway.app/api';
+            // Force correct API URL - bypass all config issues
+            const API_BASE_URL = 'https://studentevents-production.up.railway.app/api';
             const token = localStorage.getItem('adminToken');
             
             console.log('🔍 loadBookings - API_BASE_URL:', API_BASE_URL);
@@ -2592,7 +2593,8 @@ class AdminDashboard {
         if (!confirm('Mark this booking as paid? This will generate tickets for the customer.')) return;
         
         try {
-            const API_BASE_URL = window.CONFIG?.API_BASE_URL || window.API_BASE_URL || 'https://studentevents-production.up.railway.app/api';
+            // Force correct API URL - bypass all config issues
+            const API_BASE_URL = 'https://studentevents-production.up.railway.app/api';
             const token = localStorage.getItem('adminToken');
             
             const response = await fetch(`${API_BASE_URL}/admin/bookings/${bookingId}/confirm`, {
@@ -2619,7 +2621,8 @@ class AdminDashboard {
         if (!confirm('Cancel this booking? This action cannot be undone.')) return;
         
         try {
-            const API_BASE_URL = window.CONFIG?.API_BASE_URL || window.API_BASE_URL || 'https://studentevents-production.up.railway.app/api';
+            // Force correct API URL - bypass all config issues
+            const API_BASE_URL = 'https://studentevents-production.up.railway.app/api';
             const token = localStorage.getItem('adminToken');
             
             const response = await fetch(`${API_BASE_URL}/admin/bookings/${bookingId}/cancel`, {
@@ -2645,7 +2648,8 @@ class AdminDashboard {
         if (!confirm('⚠️ Permanently delete this booking? This action CANNOT be undone and will remove all booking data from the database.')) return;
         
         try {
-            const API_BASE_URL = window.CONFIG?.API_BASE_URL || window.API_BASE_URL || 'https://studentevents-production.up.railway.app/api';
+            // Force correct API URL - bypass all config issues
+            const API_BASE_URL = 'https://studentevents-production.up.railway.app/api';
             const token = localStorage.getItem('adminToken');
             
             const response = await fetch(`${API_BASE_URL}/admin/bookings/${bookingId}`, {
