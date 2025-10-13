@@ -2177,7 +2177,7 @@ class AdminDashboard {
     
     async loadPolicy() {
         try {
-            const API_BASE_URL = window.CONFIG?.API_BASE_URL?.replace('/api', '') || 'http://localhost:3001';
+            const API_BASE_URL = window.CONFIG?.API_BASE_URL || 'http://localhost:3001/api';
             const response = await fetch(`${API_BASE_URL}/policy`);
             
             if (response.ok) {
@@ -2226,7 +2226,7 @@ class AdminDashboard {
     
     async savePolicy() {
         try {
-            const API_BASE_URL = window.CONFIG?.API_BASE_URL?.replace('/api', '') || 'http://localhost:3001';
+            const API_BASE_URL = window.CONFIG?.API_BASE_URL || 'http://localhost:3001/api';
             const token = localStorage.getItem('adminToken');
             
             // Build payload for the new backend endpoint
