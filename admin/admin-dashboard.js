@@ -2380,6 +2380,9 @@ class AdminDashboard {
             const API_BASE_URL = window.CONFIG?.API_BASE_URL || window.API_BASE_URL || 'https://studentevents-production.up.railway.app/api';
             const token = localStorage.getItem('adminToken');
             
+            console.log('🔍 loadBookings - API_BASE_URL:', API_BASE_URL);
+            console.log('🔍 loadBookings - Full URL:', `${API_BASE_URL}/admin/bookings`);
+            
             const response = await fetch(`${API_BASE_URL}/admin/bookings`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
