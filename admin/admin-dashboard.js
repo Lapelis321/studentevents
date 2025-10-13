@@ -651,7 +651,7 @@ class AdminDashboard {
             };
             
             // Try to save to backend API first
-            const API_BASE_URL = window.CONFIG?.API_BASE_URL?.replace('/api', '') || 'http://localhost:3001';
+            const API_BASE_URL = window.API_BASE_URL || 'https://studentevents-production.up.railway.app/api';
             const token = localStorage.getItem('adminToken');
             
             let createdEvent = null;
@@ -966,7 +966,7 @@ class AdminDashboard {
             }
             
             // Get API base URL
-            const API_BASE_URL = window.CONFIG?.API_BASE_URL?.replace('/api', '') || 'https://studentevents-production.up.railway.app';
+            const API_BASE_URL = window.API_BASE_URL || 'https://studentevents-production.up.railway.app/api';
             
             // Prepare event data for API
             const eventData = {
@@ -1098,7 +1098,7 @@ class AdminDashboard {
             }
             
             // Get API base URL
-            const API_BASE_URL = window.CONFIG?.API_BASE_URL?.replace('/api', '') || 'https://studentevents-production.up.railway.app';
+            const API_BASE_URL = window.API_BASE_URL || 'https://studentevents-production.up.railway.app/api';
             
             // Call API to delete event
             const response = await fetch(`${API_BASE_URL}/events/${eventId}`, {
@@ -1391,7 +1391,7 @@ class AdminDashboard {
             }
             
             // Try to save to backend API
-            const API_BASE_URL = window.CONFIG?.API_BASE_URL?.replace('/api', '') || 'http://localhost:3001';
+            const API_BASE_URL = window.API_BASE_URL || 'https://studentevents-production.up.railway.app/api';
             const token = localStorage.getItem('adminToken');
             
             let createdWorker = null;
@@ -1528,7 +1528,7 @@ class AdminDashboard {
         if (token) {
             try {
                 console.log(`🔐 Updating worker credentials via API...`);
-                const API_BASE_URL = window.CONFIG?.API_BASE_URL?.replace('/api', '') || 'http://localhost:3001';
+                const API_BASE_URL = window.API_BASE_URL || 'https://studentevents-production.up.railway.app/api';
                 const response = await fetch(`${API_BASE_URL}/workers/${workerId}`, {
                     method: 'PUT',
                     headers: {
@@ -1609,7 +1609,7 @@ class AdminDashboard {
         if (token) {
             try {
                 console.log(`💾 Updating worker via API...`);
-                const API_BASE_URL = window.CONFIG?.API_BASE_URL?.replace('/api', '') || 'http://localhost:3001';
+                const API_BASE_URL = window.API_BASE_URL || 'https://studentevents-production.up.railway.app/api';
                 const response = await fetch(`${API_BASE_URL}/workers/${this.editingWorkerId}`, {
                     method: 'PUT',
                     headers: {
@@ -1773,7 +1773,7 @@ class AdminDashboard {
         if (token) {
             try {
                 console.log(`🗑️ Deleting worker ${workerId} via API...`);
-                const API_BASE_URL = window.CONFIG?.API_BASE_URL?.replace('/api', '') || 'http://localhost:3001';
+                const API_BASE_URL = window.API_BASE_URL || 'https://studentevents-production.up.railway.app/api';
                 const response = await fetch(`${API_BASE_URL}/workers/${workerId}`, {
                     method: 'DELETE',
                     headers: { 'Authorization': `Bearer ${token}` }
@@ -1831,7 +1831,7 @@ class AdminDashboard {
         const token = localStorage.getItem('adminToken');
         if (token) {
             try {
-                const API_BASE_URL = window.CONFIG?.API_BASE_URL?.replace('/api', '') || 'http://localhost:3001';
+                const API_BASE_URL = window.API_BASE_URL || 'https://studentevents-production.up.railway.app/api';
                 
                 // Update org_name setting
                 if (settings.orgName) {
@@ -1928,7 +1928,7 @@ class AdminDashboard {
         try {
             console.log('🧹 Resetting all dashboard data...');
             
-            const API_BASE_URL = window.CONFIG?.API_BASE_URL?.replace('/api', '') || 'http://localhost:3001';
+            const API_BASE_URL = window.API_BASE_URL || 'https://studentevents-production.up.railway.app/api';
             const token = localStorage.getItem('adminToken');
             
             // Delete all events from backend
@@ -2218,7 +2218,7 @@ class AdminDashboard {
     
     async loadPolicy() {
         try {
-            const API_BASE_URL = window.CONFIG?.API_BASE_URL || 'http://localhost:3001/api';
+            const API_BASE_URL = window.API_BASE_URL || 'https://studentevents-production.up.railway.app/api';
             const response = await fetch(`${API_BASE_URL}/policy`);
             
             if (response.ok) {
@@ -2293,7 +2293,7 @@ class AdminDashboard {
     
     async savePolicy() {
         try {
-            const API_BASE_URL = window.CONFIG?.API_BASE_URL || 'http://localhost:3001/api';
+            const API_BASE_URL = window.API_BASE_URL || 'https://studentevents-production.up.railway.app/api';
             const token = localStorage.getItem('adminToken');
             
             // Build payload for the new backend endpoint
@@ -2338,7 +2338,7 @@ class AdminDashboard {
         }
         
         try {
-            const API_BASE_URL = window.CONFIG?.API_BASE_URL || 'http://localhost:3001/api';
+            const API_BASE_URL = window.API_BASE_URL || 'https://studentevents-production.up.railway.app/api';
             const token = localStorage.getItem('adminToken');
             
             const response = await fetch(`${API_BASE_URL}/admin/policy/clear`, {
@@ -2377,7 +2377,7 @@ class AdminDashboard {
     
     async loadBookings() {
         try {
-            const API_BASE_URL = window.CONFIG?.API_BASE_URL?.replace('/api', '') || 'http://localhost:3001';
+            const API_BASE_URL = window.API_BASE_URL || 'https://studentevents-production.up.railway.app/api';
             const token = localStorage.getItem('adminToken');
             
             const response = await fetch(`${API_BASE_URL}/admin/bookings`, {
@@ -2589,7 +2589,7 @@ class AdminDashboard {
         if (!confirm('Mark this booking as paid? This will generate tickets for the customer.')) return;
         
         try {
-            const API_BASE_URL = window.CONFIG?.API_BASE_URL?.replace('/api', '') || 'http://localhost:3001';
+            const API_BASE_URL = window.API_BASE_URL || 'https://studentevents-production.up.railway.app/api';
             const token = localStorage.getItem('adminToken');
             
             const response = await fetch(`${API_BASE_URL}/admin/bookings/${bookingId}/confirm`, {
@@ -2616,7 +2616,7 @@ class AdminDashboard {
         if (!confirm('Cancel this booking? This action cannot be undone.')) return;
         
         try {
-            const API_BASE_URL = window.CONFIG?.API_BASE_URL?.replace('/api', '') || 'http://localhost:3001';
+            const API_BASE_URL = window.API_BASE_URL || 'https://studentevents-production.up.railway.app/api';
             const token = localStorage.getItem('adminToken');
             
             const response = await fetch(`${API_BASE_URL}/admin/bookings/${bookingId}/cancel`, {
@@ -2642,7 +2642,7 @@ class AdminDashboard {
         if (!confirm('⚠️ Permanently delete this booking? This action CANNOT be undone and will remove all booking data from the database.')) return;
         
         try {
-            const API_BASE_URL = window.CONFIG?.API_BASE_URL?.replace('/api', '') || 'http://localhost:3001';
+            const API_BASE_URL = window.API_BASE_URL || 'https://studentevents-production.up.railway.app/api';
             const token = localStorage.getItem('adminToken');
             
             const response = await fetch(`${API_BASE_URL}/admin/bookings/${bookingId}`, {
@@ -2782,7 +2782,7 @@ Created: ${new Date(booking.created_at).toLocaleString('en-US', { hour12: false 
     
     async loadBankSettings() {
         try {
-            const API_BASE_URL = window.CONFIG?.API_BASE_URL || 'http://localhost:3001/api';
+            const API_BASE_URL = window.API_BASE_URL || 'https://studentevents-production.up.railway.app/api';
             
             const response = await fetch(`${API_BASE_URL}/settings`);
             
@@ -2816,7 +2816,7 @@ Created: ${new Date(booking.created_at).toLocaleString('en-US', { hour12: false 
         event.preventDefault();
         
         try {
-            const API_BASE_URL = window.CONFIG?.API_BASE_URL || 'http://localhost:3001/api';
+            const API_BASE_URL = window.API_BASE_URL || 'https://studentevents-production.up.railway.app/api';
             const token = localStorage.getItem('adminToken');
             
             // Only get values from existing fields
