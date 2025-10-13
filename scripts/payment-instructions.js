@@ -240,7 +240,7 @@ Created: ${new Date().toLocaleString('en-US', { hour12: false })}
             doc.setFontSize(10);
             doc.setTextColor(146, 64, 14); // Dark amber text
             doc.setFont(undefined, 'bold');
-            doc.text('⚠️ PAYMENT VERIFICATION REQUIRED', pageWidth / 2, 53, { align: 'center' });
+            doc.text('PAYMENT VERIFICATION REQUIRED', pageWidth / 2, 53, { align: 'center' });
             doc.setFont(undefined, 'normal');
             doc.setFontSize(8);
             doc.text('This ticket is only valid if payment has been completed', pageWidth / 2, 59, { align: 'center' });
