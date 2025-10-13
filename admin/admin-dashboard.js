@@ -2205,16 +2205,42 @@ class AdminDashboard {
                         : '--';
                 } else {
                     // Backend returns snake_case properties, map to form fields
-                    document.getElementById('termsOfService').value = policy.terms_of_service || '';
-                    document.getElementById('privacyPolicy').value = policy.privacy_policy || '';
-                    document.getElementById('eventGuidelines').value = policy.event_guidelines || '';
-                    document.getElementById('ticketPolicy').value = policy.ticket_policy || '';
-                    document.getElementById('refundPolicy').value = policy.refund_policy || '';
-                    document.getElementById('codeOfConduct').value = policy.code_of_conduct || '';
-                    document.getElementById('currentPolicyVersion').textContent = policy.version || '1.0';
-                    document.getElementById('policyLastUpdated').textContent = policy.lastUpdated 
-                        ? new Date(policy.lastUpdated).toLocaleDateString('en-US', { hour12: false }) 
-                        : '--';
+                    console.log('🔍 Frontend: Populating policy form fields with:', policy);
+                    
+                    const termsField = document.getElementById('termsOfService');
+                    const privacyField = document.getElementById('privacyPolicy');
+                    const guidelinesField = document.getElementById('eventGuidelines');
+                    const ticketField = document.getElementById('ticketPolicy');
+                    const refundField = document.getElementById('refundPolicy');
+                    const conductField = document.getElementById('codeOfConduct');
+                    
+                    console.log('🔍 Frontend: Form fields found:', {
+                        termsOfService: !!termsField,
+                        privacyPolicy: !!privacyField,
+                        eventGuidelines: !!guidelinesField,
+                        ticketPolicy: !!ticketField,
+                        refundPolicy: !!refundField,
+                        codeOfConduct: !!conductField
+                    });
+                    
+                    if (termsField) termsField.value = policy.terms_of_service || '';
+                    if (privacyField) privacyField.value = policy.privacy_policy || '';
+                    if (guidelinesField) guidelinesField.value = policy.event_guidelines || '';
+                    if (ticketField) ticketField.value = policy.ticket_policy || '';
+                    if (refundField) refundField.value = policy.refund_policy || '';
+                    if (conductField) conductField.value = policy.code_of_conduct || '';
+                    
+                    const versionField = document.getElementById('currentPolicyVersion');
+                    const lastUpdatedField = document.getElementById('policyLastUpdated');
+                    
+                    if (versionField) versionField.textContent = policy.version || '1.0';
+                    if (lastUpdatedField) {
+                        lastUpdatedField.textContent = policy.lastUpdated 
+                            ? new Date(policy.lastUpdated).toLocaleDateString('en-US', { hour12: false }) 
+                            : '--';
+                    }
+                    
+                    console.log('🔍 Frontend: Policy form populated successfully');
                 }
             } else {
                 console.warn('Failed to load policy from API');
