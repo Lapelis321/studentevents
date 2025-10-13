@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Simple</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f4f7f6; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #ddd; }
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tab { padding: 10px 20px; background: #f8f9fa; border: 1px solid #ddd; cursor: pointer; border-radius: 5px; }
+        .tab.active { background: #007bff; color: white; }
+        .content { min-height: 400px; }
+        .booking-item { background: #f8f9fa; padding: 15px; margin: 10px 0; border-radius: 5px; border: 1px solid #ddd; }
+        .status { padding: 4px 8px; border-radius: 3px; font-size: 12px; font-weight: bold; }
+        .status.pending { background: #fff3cd; color: #856404; }
+        .status.paid { background: #d4edda; color: #155724; }
+        .status.cancelled { background: #f8d7da; color: #721c24; }
+        .actions { margin-top: 10px; }
+        .btn { padding: 5px 10px; margin: 2px; border: none; border-radius: 3px; cursor: pointer; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-warning { background: #ffc107; color: black; }
+        .log { background: #f8f9fa; border: 1px solid #ddd; padding: 10px; margin: 10px 0; font-family: monospace; white-space: pre-wrap; max-height: 200px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔧 Simple Admin Dashboard</h1>
+            <button onclick="logout()">Logout</button>
+        </div>
+        
+        <div class="tabs">
+            <div class="tab active" onclick="showTab('bookings')">Bookings</div>
+            <div class="tab" onclick="showTab('test')">API Test</div>
+        </div>
+        
+        <div id="bookingsContent" class="content">
+            <h2>📋 Bookings</h2>
+            <button onclick="loadBookings()">🔄 Refresh Bookings</button>
+            <div id="bookingsList"></div>
+        </div>
+        
+        <div id="testContent" class="content" style="display: none;">
+            <h2>🧪 API Test</h2>
+            <button onclick="testAPI()">Test Booking API</button>
+            <div id="testLog" class="log">Click "Test Booking API" to see results...</div>
+        </div>
+    </div>
+
+    <script>
+        // Simple API configuration - no complex fallbacks
+        const API_BASE_URL = 'https://studentevents-production.up.railway.app/api';
+        
+        function log(message) {
+            const logElement = document.getElementById('testLog');
+            const timestamp = new Date().toLocaleTimeString();
+            logElement.textContent += `[${timestamp}] ${message}\n`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+
+        function showTab(tabName) {
+            // Hide all content
+            document.querySelectorAll('.content').forEach(content => {
+                content.style.display = 'none';
+            });
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected content and activate tab
+            document.getElementById(tabName + 'Content').style.display = 'block';
+            event.target.classList.add('active');
+        }
+
+        async function loadBookings() {
+            log('🔄 Loading bookings...');
+            
+            const token = localStorage.getItem('adminToken');
+            if (!token) {
+                log('❌ No admin token found. Please log in first.');
+                return;
+            }
+            
+            try {
+                const url = `${API_BASE_URL}/admin/bookings`;
+                log(`🔗 Calling: ${url}`);
+                
+                const response = await fetch(url, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                log(`📡 Response: ${response.status} ${response.statusText}`);
+                
+                if (response.ok) {
+                    const bookings = await response.json();
+                    log(`✅ Loaded ${bookings.length} bookings`);
+                    displayBookings(bookings);
+                } else {
+                    const errorText = await response.text();
+                    log(`❌ Error: ${errorText}`);
+                }
+            } catch (error) {
+                log(`❌ Network error: ${error.message}`);
+            }
+        }
+
+        function displayBookings(bookings) {
+            const container = document.getElementById('bookingsList');
+            
+            if (bookings.length === 0) {
+                container.innerHTML = '<p>No bookings found.</p>';
+                return;
+            }
+            
+            container.innerHTML = bookings.map(booking => `
+                <div class="booking-item">
+                    <h4>${booking.first_name} ${booking.last_name}</h4>
+                    <p><strong>Event:</strong> ${booking.event_title || 'Unknown'}</p>
+                    <p><strong>Email:</strong> ${booking.email}</p>
+                    <p><strong>Reference:</strong> ${booking.payment_reference}</p>
+                    <p><strong>Status:</strong> <span class="status ${booking.payment_status}">${booking.payment_status}</span></p>
+                    <div class="actions">
+                        ${booking.payment_status === 'pending' ? 
+                            `<button class="btn btn-success" onclick="confirmBooking('${booking.id}')">Confirm Payment</button>` : 
+                            ''
+                        }
+                        <button class="btn btn-danger" onclick="cancelBooking('${booking.id}')">Cancel</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function confirmBooking(bookingId) {
+            if (!confirm('Mark this booking as paid?')) return;
+            
+            const token = localStorage.getItem('adminToken');
+            try {
+                const response = await fetch(`${API_BASE_URL}/admin/bookings/${bookingId}/confirm`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (response.ok) {
+                    log(`✅ Booking ${bookingId} confirmed`);
+                    loadBookings(); // Refresh list
+                } else {
+                    log(`❌ Failed to confirm booking: ${response.statusText}`);
+                }
+            } catch (error) {
+                log(`❌ Error confirming booking: ${error.message}`);
+            }
+        }
+
+        async function cancelBooking(bookingId) {
+            if (!confirm('Cancel this booking?')) return;
+            
+            const token = localStorage.getItem('adminToken');
+            try {
+                const response = await fetch(`${API_BASE_URL}/admin/bookings/${bookingId}/cancel`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (response.ok) {
+                    log(`✅ Booking ${bookingId} cancelled`);
+                    loadBookings(); // Refresh list
+                } else {
+                    log(`❌ Failed to cancel booking: ${response.statusText}`);
+                }
+            } catch (error) {
+                log(`❌ Error cancelling booking: ${error.message}`);
+            }
+        }
+
+        async function testAPI() {
+            log('🧪 Testing Booking API...');
+            
+            const token = localStorage.getItem('adminToken');
+            if (!token) {
+                log('❌ No admin token found');
+                return;
+            }
+            
+            // Test the exact URL that should work
+            const testUrl = `${API_BASE_URL}/admin/bookings`;
+            log(`🔗 Testing URL: ${testUrl}`);
+            
+            try {
+                const response = await fetch(testUrl, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                log(`📡 Status: ${response.status} ${response.statusText}`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`✅ SUCCESS! Found ${data.length} bookings`);
+                    log(`📊 Sample: ${JSON.stringify(data[0] || 'No data', null, 2)}`);
+                } else {
+                    const errorText = await response.text();
+                    log(`❌ FAILED: ${errorText}`);
+                }
+            } catch (error) {
+                log(`❌ ERROR: ${error.message}`);
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('adminToken');
+            window.location.href = '/admin/login.html';
+        }
+
+        // Auto-load bookings on page load
+        window.addEventListener('load', () => {
+            log('🔧 Simple Admin Dashboard loaded');
+            loadBookings();
+        });
+    </script>
+</body>
+</html>
