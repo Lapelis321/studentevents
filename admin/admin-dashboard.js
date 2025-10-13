@@ -139,21 +139,36 @@ class AdminDashboard {
         // Try to load from API first (database is source of truth)
         try {
             console.log('🔄 Loading events from API (database)...');
+            console.log('🔗 API_BASE_URL:', API_BASE_URL);
             // Add cache-busting parameter to force fresh data
             const cacheBuster = `?t=${Date.now()}`;
-            const response = await fetch(`${API_BASE_URL}/events${cacheBuster}`);
+            const apiUrl = `${API_BASE_URL}/events${cacheBuster}`;
+            console.log('🌐 Fetching from:', apiUrl);
+            
+            const response = await fetch(apiUrl);
+            console.log('📡 API Response status:', response.status, response.statusText);
+            
             if (response.ok) {
                 const apiEvents = await response.json();
                 console.log(`📦 ✅ Loaded ${apiEvents.length} events from API`);
                 console.log('🔍 API Events data:', apiEvents);
+                
+                // Check if we got the updated data
+                apiEvents.forEach(event => {
+                    console.log(`🔍 Event "${event.title}" - total_tickets: ${event.total_tickets}`);
+                });
+                
                 this.events = apiEvents;
                 // Save to localStorage for offline use
                 this.saveEventsToStorage(apiEvents);
             } else {
+                console.error('❌ API Error:', response.status, response.statusText);
                 throw new Error(`API returned ${response.status}`);
             }
         } catch (error) {
             console.warn('⚠️ Failed to load from API, trying localStorage:', error.message);
+            console.error('❌ Full API error:', error);
+            
             // Fallback to localStorage if API fails
             const savedEvents = this.loadEventsFromStorage();
             
@@ -1021,6 +1036,10 @@ class AdminDashboard {
             });
             
             console.log('✅ Local event updated:', event);
+            
+            // Clear localStorage to prevent stale data
+            localStorage.removeItem('adminEvents');
+            console.log('🧹 Cleared localStorage to prevent stale data');
             
             // Save to localStorage
             this.saveEventsToStorage();

@@ -182,9 +182,14 @@ app.get('/api/events', async (req, res) => {
     if (pool) {
       // Use database - return all events, let frontend filter
       const result = await pool.query('SELECT * FROM events ORDER BY date ASC');
+      console.log('🔍 GET /api/events - Returning events from database:', result.rows.length);
+      result.rows.forEach(event => {
+        console.log(`🔍 Event "${event.title}" - total_tickets: ${event.total_tickets}, available_tickets: ${event.available_tickets}`);
+      });
       res.json(result.rows);
     } else {
       // Use in-memory storage - return all events, let frontend filter
+      console.log('🔍 GET /api/events - Returning events from memory:', inMemoryEvents.length);
       res.json(inMemoryEvents);
     }
   } catch (error) {
