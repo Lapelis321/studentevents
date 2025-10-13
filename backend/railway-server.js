@@ -274,10 +274,11 @@ app.put('/api/events/:id', verifyAdminToken, async (req, res) => {
     const eventId = req.params.id; // Keep as string for UUID support
     const { title, date, location, price, description, additionalInfo, totalTickets, availableTickets, minAge, dressCode, currency, is_active, status, ticketsAvailableDate } = req.body;
     
-    console.log('🔍 PUT /api/events/:id - Received data:', { eventId, minAge, dressCode, title, date });
+    console.log('🔍 PUT /api/events/:id - Received data:', { eventId, minAge, dressCode, title, date, totalTickets });
     console.log('🔍 Date received:', date, 'Type:', typeof date);
     console.log('🔍 minAge received:', minAge, 'Type:', typeof minAge);
     console.log('🔍 dressCode received:', dressCode, 'Type:', typeof dressCode);
+    console.log('🔍 totalTickets received:', totalTickets, 'Type:', typeof totalTickets);
     
     if (pool) {
       // Update in database
@@ -297,6 +298,8 @@ app.put('/api/events/:id', verifyAdminToken, async (req, res) => {
       console.log('🔍 Updated event data:', result.rows[0]);
       console.log('🔍 Updated min_age:', result.rows[0].min_age);
       console.log('🔍 Updated dress_code:', result.rows[0].dress_code);
+      console.log('🔍 Updated total_tickets:', result.rows[0].total_tickets);
+      console.log('🔍 Updated available_tickets:', result.rows[0].available_tickets);
       res.json(result.rows[0]);
     } else {
       // Update in-memory storage
