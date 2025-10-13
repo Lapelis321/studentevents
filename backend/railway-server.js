@@ -122,71 +122,8 @@ let inMemoryEvents = [
 // In-memory worker storage (used when no database)
 let inMemoryWorkers = [];
 
-// In-memory policy storage - Enhanced structure
-// let policyData = { // REMOVED - using database-based policy system instead
-  metadata: {
-    version: '1.0',
-    lastUpdated: new Date().toISOString(),
-    autoIncrementVersion: true,
-    autoUpdateDate: true
-  },
-  sections: [
-    {
-      id: 'terms-of-service',
-      title: 'Terms of Service',
-      icon: 'fa-gavel',
-      content: 'By accessing and using StudentEvents, you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by the above, please do not use this service.',
-      order: 1,
-      visible: true,
-      isDefault: true
-    },
-    {
-      id: 'privacy-policy',
-      title: 'Privacy Policy',
-      icon: 'fa-shield-alt',
-      content: 'We collect information you provide directly to us, such as when you create an account, purchase tickets, or contact us for support. We do not sell, trade, or otherwise transfer your personal information to third parties without your consent.',
-      order: 2,
-      visible: true,
-      isDefault: true
-    },
-    {
-      id: 'event-guidelines',
-      title: 'Event Guidelines',
-      icon: 'fa-calendar-check',
-      content: 'Each event may have specific age requirements. Attendees must meet the minimum age requirement and may be asked to provide valid identification at the venue. The following items are generally prohibited: weapons, illegal substances, outside food and beverages, professional recording equipment, and large bags or backpacks.',
-      order: 3,
-      visible: true,
-      isDefault: true
-    },
-    {
-      id: 'ticket-policy',
-      title: 'Ticket Policy',
-      icon: 'fa-ticket-alt',
-      content: 'Tickets are valid only for the specific event, date, and time indicated. Each ticket admits one person unless otherwise specified. Tickets may be transferred to another person, but the original purchaser remains responsible for ensuring the transferee complies with all terms and conditions.',
-      order: 4,
-      visible: true,
-      isDefault: true
-    },
-    {
-      id: 'refund-policy',
-      title: 'Refund Policy',
-      icon: 'fa-undo',
-      content: 'Tickets may be cancelled and refunded up to 24 hours before the event start time. A processing fee may apply. Refunds are processed within 5-7 business days. If an event is cancelled by the organizer, full refunds will be provided automatically.',
-      order: 5,
-      visible: true,
-      isDefault: true
-    },
-    {
-      id: 'code-of-conduct',
-      title: 'Code of Conduct',
-      icon: 'fa-handshake',
-      content: 'All attendees are expected to treat others with respect and courtesy. Harassment, discrimination, or disruptive behavior will not be tolerated. Attendees must follow all safety instructions and venue rules. Violation of the code of conduct may result in removal from the event without refund.',
-      order: 6,
-      visible: true,
-      isDefault: true
-    }
-  ]
-// };
+// In-memory policy storage - REMOVED (using database-based policy system instead)
+// The policyData object has been removed to prevent conflicts with the database-based system
 
 // Middleware to verify admin token
 function verifyAdminToken(req, res, next) {
@@ -1073,7 +1010,7 @@ app.delete('/api/workers/:id', verifyAdminToken, async (req, res) => {
 // app.put('/api/policy', verifyAdminToken, async (req, res) => {
 // This entire endpoint was removed because it conflicts with the database-based policy system above
 // The database-based system uses PUT /api/admin/policy instead
-});
+// });
 
 // POST /api/policy/sections - REMOVED (in-memory system)
 // DELETE /api/policy/sections/:id - REMOVED (in-memory system)
