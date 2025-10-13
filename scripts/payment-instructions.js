@@ -230,20 +230,21 @@ Created: ${new Date().toLocaleString('en-US', { hour12: false })}
             doc.setFontSize(16);
             doc.text('E-TICKET', pageWidth / 2, 35, { align: 'center' });
             
-            // VALID TICKET - Confirmed and Ready
-            doc.setFillColor(240, 253, 244); // Light green background
-            doc.roundedRect(15, 45, pageWidth - 30, 18, 3, 3, 'F');
-            doc.setDrawColor(34, 197, 94);
+            // PAYMENT VERIFICATION NOTE
+            doc.setFillColor(254, 243, 199); // Light amber background
+            doc.roundedRect(15, 45, pageWidth - 30, 25, 3, 3, 'F');
+            doc.setDrawColor(245, 158, 11);
             doc.setLineWidth(0.5);
-            doc.roundedRect(15, 45, pageWidth - 30, 18, 3, 3, 'S');
+            doc.roundedRect(15, 45, pageWidth - 30, 25, 3, 3, 'S');
             
             doc.setFontSize(10);
-            doc.setTextColor(22, 163, 74); // Dark green text
+            doc.setTextColor(146, 64, 14); // Dark amber text
             doc.setFont(undefined, 'bold');
-            doc.text('✓ VALID TICKET', pageWidth / 2, 53, { align: 'center' });
+            doc.text('⚠️ PAYMENT VERIFICATION REQUIRED', pageWidth / 2, 53, { align: 'center' });
             doc.setFont(undefined, 'normal');
             doc.setFontSize(8);
-            doc.text('Ready for event entry', pageWidth / 2, 59, { align: 'center' });
+            doc.text('This ticket is only valid if payment has been completed', pageWidth / 2, 59, { align: 'center' });
+            doc.text('and confirmed by our team. Unpaid tickets will be rejected.', pageWidth / 2, 65, { align: 'center' });
             
             // Reset text color
             doc.setTextColor(0, 0, 0);
