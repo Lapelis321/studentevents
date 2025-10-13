@@ -203,6 +203,7 @@ Created: ${new Date().toLocaleString('en-US', { hour12: false })}
     }
     
     async downloadTicketPDF() {
+        console.log('🎫 PDF Generation v6.1.0 - Warning box removed');
         try {
             const { booking, event } = this.booking;
             const { jsPDF } = window.jspdf;
