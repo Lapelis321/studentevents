@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Admin Dashboard - FIXED</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="stylesheet" href="/admin/admin-dashboard.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="header-left">
+                    <button class="back-btn-header" onclick="history.back()" aria-label="Go back">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <div class="logo">
+                        <svg class="globe-logo" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                            <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        <span>Admin Dashboard - FIXED</span>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <button class="logout-btn" onclick="logout()">
+                        <i class="fas fa-sign-out-alt"></i>
+                        Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Navigation Tabs -->
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('events')" id="eventsTab">
+                    <i class="fas fa-calendar-alt"></i>
+                    Events
+                </button>
+                <button class="tab-btn" onclick="switchTab('bookings')" id="bookingsTab">
+                    <i class="fas fa-ticket-alt"></i>
+                    Bookings
+                </button>
+                <button class="tab-btn" onclick="switchTab('workers')" id="workersTab">
+                    <i class="fas fa-users"></i>
+                    Workers
+                </button>
+                <button class="tab-btn" onclick="switchTab('settings')" id="settingsTab">
+                    <i class="fas fa-cog"></i>
+                    Settings
+                </button>
+            </div>
+
+            <!-- Events Tab Content -->
+            <div id="eventsContent" class="tab-content active">
+                <div class="content-header">
+                    <h2>Event Management</h2>
+                    <div class="header-actions">
+                        <button class="btn btn-secondary" onclick="loadEvents()">
+                            <i class="fas fa-sync-alt"></i>
+                            Refresh
+                        </button>
+                        <button class="btn btn-primary" onclick="showCreateEventForm()">
+                            <i class="fas fa-plus"></i>
+                            Create Event
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="events-grid" id="eventsGrid">
+                    <!-- Events will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Bookings Tab Content -->
+            <div id="bookingsContent" class="tab-content">
+                <div class="content-header">
+                    <h2>Booking Management</h2>
+                    <div class="header-actions">
+                        <button class="btn btn-secondary" onclick="loadBookings()">
+                            <i class="fas fa-sync-alt"></i>
+                            Refresh
+                        </button>
+                        <button class="btn btn-success" onclick="exportBookings()">
+                            <i class="fas fa-download"></i>
+                            Export Excel
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Booking Filters -->
+                <div class="booking-filters">
+                    <div class="filter-group">
+                        <label for="bookingEventFilter">Event:</label>
+                        <select id="bookingEventFilter" onchange="filterBookingsByEvent(this.value)">
+                            <option value="all">All Events</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="bookingStatusFilter">Status:</label>
+                        <select id="bookingStatusFilter" onchange="filterBookings(this.value)">
+                            <option value="pending">Pending</option>
+                            <option value="paid">Paid</option>
+                            <option value="cancelled">Cancelled</option>
+                            <option value="all">All</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="bookingSearch">Search:</label>
+                        <input type="text" id="bookingSearch" placeholder="Name, email, or reference..." onkeyup="searchBookings(this.value)">
+                    </div>
+                </div>
+                
+                <div class="bookings-stats" id="bookingsStats">
+                    <!-- Stats will be loaded here -->
+                </div>
+                
+                <div class="bookings-list" id="bookingsList">
+                    <!-- Bookings will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Workers Tab Content -->
+            <div id="workersContent" class="tab-content">
+                <div class="content-header">
+                    <h2>Worker Management</h2>
+                    <button class="btn btn-primary" onclick="showCreateWorkerForm()">
+                        <i class="fas fa-plus"></i>
+                        Add Worker
+                    </button>
+                </div>
+                
+                <div class="workers-list" id="workersList">
+                    <!-- Workers will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Settings Tab Content -->
+            <div id="settingsContent" class="tab-content">
+                <div class="content-header">
+                    <h2>System Settings</h2>
+                </div>
+                
+                <div class="settings-sections">
+                    <!-- Organization Settings -->
+                    <div class="settings-section">
+                        <h3>Organization</h3>
+                        <form id="orgSettingsForm" onsubmit="saveOrgSettings(event)">
+                            <div class="form-group">
+                                <label for="orgName">Organization Name:</label>
+                                <input type="text" id="orgName" name="orgName" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Save Organization Settings</button>
+                        </form>
+                    </div>
+                    
+                    <!-- Bank Transfer Settings -->
+                    <div class="settings-section">
+                        <h3>Bank Transfer Payment</h3>
+                        <form id="bankSettingsForm" onsubmit="saveBankSettings(event)">
+                            <div class="form-group">
+                                <label for="bankRecipientName">Recipient Name:</label>
+                                <input type="text" id="bankRecipientName" name="bankRecipientName" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="bankAccountNumber">Account Number:</label>
+                                <input type="text" id="bankAccountNumber" name="bankAccountNumber" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="bankSortCode">Sort Code:</label>
+                                <input type="text" id="bankSortCode" name="bankSortCode" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="bankReference">Payment Reference:</label>
+                                <input type="text" id="bankReference" name="bankReference" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Save Bank Settings</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Notification Container -->
+    <div id="notificationContainer" class="notification-container"></div>
+
+    <!-- Scripts -->
+    <script src="/scripts/main.js"></script>
+    <script>
+        // HARDCODED API URL - NO CACHE ISSUES
+        const API_BASE_URL = 'https://studentevents-production.up.railway.app/api';
+        console.log('🔧 FIXED Admin Dashboard - API URL:', API_BASE_URL);
+        
+        // Global variables
+        let events = [];
+        let bookings = [];
+        let workers = [];
+        let currentTab = 'events';
+        
+        // Tab switching
+        function switchTab(tabName) {
+            // Hide all content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab-btn').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected content and activate tab
+            document.getElementById(tabName + 'Content').classList.add('active');
+            document.getElementById(tabName + 'Tab').classList.add('active');
+            
+            currentTab = tabName;
+            
+            // Load data for the tab
+            if (tabName === 'events') {
+                loadEvents();
+            } else if (tabName === 'bookings') {
+                loadBookings();
+            } else if (tabName === 'workers') {
+                loadWorkers();
+            }
+        }
+        
+        // Load events
+        async function loadEvents() {
+            try {
+                console.log('🔄 Loading events...');
+                const response = await fetch(`${API_BASE_URL}/events`);
+                
+                if (response.ok) {
+                    events = await response.json();
+                    console.log('✅ Loaded events:', events.length);
+                    renderEvents();
+                } else {
+                    console.error('❌ Failed to load events:', response.status);
+                    showNotification('Failed to load events', 'error');
+                }
+            } catch (error) {
+                console.error('❌ Error loading events:', error);
+                showNotification('Error loading events', 'error');
+            }
+        }
+        
+        // Render events
+        function renderEvents() {
+            const container = document.getElementById('eventsGrid');
+            
+            if (events.length === 0) {
+                container.innerHTML = '<p>No events found.</p>';
+                return;
+            }
+            
+            container.innerHTML = events.map(event => `
+                <div class="event-card">
+                    <h3>${event.title}</h3>
+                    <p><strong>Date:</strong> ${new Date(event.date).toLocaleDateString()}</p>
+                    <p><strong>Location:</strong> ${event.location}</p>
+                    <p><strong>Price:</strong> €${event.price}</p>
+                    <p><strong>Tickets:</strong> ${event.available_tickets || 0} / ${event.total_tickets || 0}</p>
+                    <div class="event-actions">
+                        <button class="btn btn-primary" onclick="editEvent('${event.id}')">Edit</button>
+                        <button class="btn btn-danger" onclick="deleteEvent('${event.id}')">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // Load bookings - FIXED VERSION
+        async function loadBookings() {
+            try {
+                console.log('🔄 Loading bookings...');
+                console.log('🔗 API URL:', `${API_BASE_URL}/admin/bookings`);
+                
+                const token = localStorage.getItem('adminToken');
+                if (!token) {
+                    showNotification('Not logged in', 'error');
+                    return;
+                }
+                
+                const response = await fetch(`${API_BASE_URL}/admin/bookings`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                console.log('📡 Response status:', response.status, response.statusText);
+                
+                if (response.ok) {
+                    bookings = await response.json();
+                    console.log('✅ Loaded bookings:', bookings.length);
+                    renderBookings();
+                    updateBookingStats();
+                } else {
+                    const errorText = await response.text();
+                    console.error('❌ Failed to load bookings:', response.status, errorText);
+                    showNotification(`Failed to load bookings: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                console.error('❌ Error loading bookings:', error);
+                showNotification('Error loading bookings', 'error');
+            }
+        }
+        
+        // Render bookings
+        function renderBookings() {
+            const container = document.getElementById('bookingsList');
+            
+            if (bookings.length === 0) {
+                container.innerHTML = '<p>No bookings found.</p>';
+                return;
+            }
+            
+            container.innerHTML = bookings.map(booking => `
+                <div class="booking-item">
+                    <h4>${booking.first_name} ${booking.last_name}</h4>
+                    <p><strong>Event:</strong> ${booking.event_title || 'Unknown'}</p>
+                    <p><strong>Email:</strong> ${booking.email}</p>
+                    <p><strong>Reference:</strong> ${booking.payment_reference}</p>
+                    <p><strong>Status:</strong> <span class="badge ${booking.payment_status}">${booking.payment_status}</span></p>
+                    <div class="booking-actions">
+                        ${booking.payment_status === 'pending' ? 
+                            `<button class="btn btn-success" onclick="confirmBooking('${booking.id}')">Confirm Payment</button>` : 
+                            ''
+                        }
+                        <button class="btn btn-danger" onclick="cancelBooking('${booking.id}')">Cancel</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // Update booking stats
+        function updateBookingStats() {
+            const pending = bookings.filter(b => b.payment_status === 'pending').length;
+            const paid = bookings.filter(b => b.payment_status === 'paid').length;
+            const cancelled = bookings.filter(b => b.payment_status === 'cancelled').length;
+            const revenue = bookings.filter(b => b.payment_status === 'paid').reduce((sum, b) => sum + (b.total_amount || 0), 0);
+            
+            document.getElementById('bookingsStats').innerHTML = `
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3>${pending}</h3>
+                        <p>Pending Payment</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>${paid}</h3>
+                        <p>Paid</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>€${revenue}</h3>
+                        <p>Total Revenue</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>${cancelled}</h3>
+                        <p>Cancelled</p>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Load workers
+        async function loadWorkers() {
+            try {
+                console.log('🔄 Loading workers...');
+                const token = localStorage.getItem('adminToken');
+                const response = await fetch(`${API_BASE_URL}/admin/workers`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (response.ok) {
+                    workers = await response.json();
+                    console.log('✅ Loaded workers:', workers.length);
+                    renderWorkers();
+                } else {
+                    console.error('❌ Failed to load workers:', response.status);
+                }
+            } catch (error) {
+                console.error('❌ Error loading workers:', error);
+            }
+        }
+        
+        // Render workers
+        function renderWorkers() {
+            const container = document.getElementById('workersList');
+            
+            if (workers.length === 0) {
+                container.innerHTML = '<p>No workers found.</p>';
+                return;
+            }
+            
+            container.innerHTML = workers.map(worker => `
+                <div class="worker-item">
+                    <h4>${worker.full_name}</h4>
+                    <p><strong>Email:</strong> ${worker.email}</p>
+                    <p><strong>Role:</strong> ${worker.role}</p>
+                    <p><strong>Event:</strong> ${worker.assigned_event || 'None'}</p>
+                    <div class="worker-actions">
+                        <button class="btn btn-primary" onclick="editWorker('${worker.id}')">Edit</button>
+                        <button class="btn btn-danger" onclick="deleteWorker('${worker.id}')">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // Booking actions
+        async function confirmBooking(bookingId) {
+            if (!confirm('Mark this booking as paid?')) return;
+            
+            try {
+                const token = localStorage.getItem('adminToken');
+                const response = await fetch(`${API_BASE_URL}/admin/bookings/${bookingId}/confirm`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (response.ok) {
+                    showNotification('Booking confirmed!', 'success');
+                    loadBookings(); // Refresh
+                } else {
+                    showNotification('Failed to confirm booking', 'error');
+                }
+            } catch (error) {
+                console.error('❌ Error confirming booking:', error);
+                showNotification('Error confirming booking', 'error');
+            }
+        }
+        
+        async function cancelBooking(bookingId) {
+            if (!confirm('Cancel this booking?')) return;
+            
+            try {
+                const token = localStorage.getItem('adminToken');
+                const response = await fetch(`${API_BASE_URL}/admin/bookings/${bookingId}/cancel`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (response.ok) {
+                    showNotification('Booking cancelled!', 'success');
+                    loadBookings(); // Refresh
+                } else {
+                    showNotification('Failed to cancel booking', 'error');
+                }
+            } catch (error) {
+                console.error('❌ Error cancelling booking:', error);
+                showNotification('Error cancelling booking', 'error');
+            }
+        }
+        
+        // Filter functions
+        function filterBookings(status) {
+            // Implementation for filtering bookings
+            console.log('Filtering bookings by status:', status);
+        }
+        
+        function filterBookingsByEvent(eventId) {
+            // Implementation for filtering by event
+            console.log('Filtering bookings by event:', eventId);
+        }
+        
+        function searchBookings(term) {
+            // Implementation for searching bookings
+            console.log('Searching bookings:', term);
+        }
+        
+        // Export functions
+        function exportBookings() {
+            console.log('Exporting bookings...');
+            // Implementation for Excel export
+        }
+        
+        // Settings functions
+        function saveOrgSettings(event) {
+            event.preventDefault();
+            console.log('Saving organization settings...');
+        }
+        
+        function saveBankSettings(event) {
+            event.preventDefault();
+            console.log('Saving bank settings...');
+        }
+        
+        // Notification system
+        function showNotification(message, type = 'info') {
+            const container = document.getElementById('notificationContainer');
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            container.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+        
+        // Logout function
+        function logout() {
+            localStorage.removeItem('adminToken');
+            window.location.href = '/admin/login.html';
+        }
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🔧 FIXED Admin Dashboard loaded');
+            
+            // Check authentication
+            const token = localStorage.getItem('adminToken');
+            if (!token) {
+                window.location.href = '/admin/login.html';
+                return;
+            }
+            
+            // Load initial data
+            loadEvents();
+        });
+    </script>
+</body>
+</html>
