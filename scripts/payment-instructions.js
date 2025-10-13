@@ -230,20 +230,20 @@ Created: ${new Date().toLocaleString('en-US', { hour12: false })}
             doc.setFontSize(16);
             doc.text('E-TICKET', pageWidth / 2, 35, { align: 'center' });
             
-            // PAYMENT NOTE - Subject to Payment Confirmation
-            doc.setFillColor(255, 243, 205); // Light yellow background
+            // VALID TICKET - Confirmed and Ready
+            doc.setFillColor(240, 253, 244); // Light green background
             doc.roundedRect(15, 45, pageWidth - 30, 18, 3, 3, 'F');
-            doc.setDrawColor(245, 158, 11);
+            doc.setDrawColor(34, 197, 94);
             doc.setLineWidth(0.5);
             doc.roundedRect(15, 45, pageWidth - 30, 18, 3, 3, 'S');
             
             doc.setFontSize(10);
-            doc.setTextColor(146, 64, 14); // Dark amber text
+            doc.setTextColor(22, 163, 74); // Dark green text
             doc.setFont(undefined, 'bold');
-            doc.text('Subject to Payment Confirmation', pageWidth / 2, 53, { align: 'center' });
+            doc.text('✓ VALID TICKET', pageWidth / 2, 53, { align: 'center' });
             doc.setFont(undefined, 'normal');
             doc.setFontSize(8);
-            doc.text('Valid upon admin confirmation of bank transfer', pageWidth / 2, 59, { align: 'center' });
+            doc.text('Ready for event entry', pageWidth / 2, 59, { align: 'center' });
             
             // Reset text color
             doc.setTextColor(0, 0, 0);
@@ -348,7 +348,7 @@ Created: ${new Date().toLocaleString('en-US', { hour12: false })}
             doc.text('A valid ticket is required for event entry', pageWidth / 2, yPos, { align: 'center' });
             
             // Save PDF
-            doc.save(`pending-ticket-${booking.payment_reference}.pdf`);
+            doc.save(`ticket-${booking.payment_reference}.pdf`);
             
         } catch (error) {
             console.error('Error generating PDF:', error);
