@@ -15,14 +15,18 @@
 <body>
     <!-- Cache Busting Script -->
     <script>
-        // Force cache bust for all resources
-        if (window.location.search.indexOf('cb=FORCE') === -1) {
+        // Force cache bust with unique URL parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentCacheBust = urlParams.get('cacheBust');
+        const latestVersion = '5.7.0';
+
+        if (currentCacheBust !== latestVersion) {
             const url = new URL(window.location);
-            url.searchParams.set('cb', 'FORCE');
+            url.searchParams.set('cacheBust', latestVersion);
             url.searchParams.set('t', Date.now());
             window.location.replace(url.toString());
         }
-        console.log('🔄 Cache busting applied - version 5.7.0');
+        console.log('🔄 Cache version:', latestVersion);
     </script>
     
     <!-- Header -->
