@@ -340,6 +340,12 @@ Created: ${new Date().toLocaleString('en-US', { hour12: false })}
             
             document.body.removeChild(qrContainer);
             
+            // Small note at bottom
+            yPos = pageHeight - 45;
+            doc.setFontSize(7);
+            doc.setTextColor(60, 60, 60);
+            doc.text('Note: This ticket is only valid after payment confirmation.', pageWidth / 2, yPos, { align: 'center' });
+            
             // Footer
             yPos = pageHeight - 30;
             doc.setFontSize(8);
