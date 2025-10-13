@@ -399,6 +399,12 @@ app.get('/api/settings', async (req, res) => {
 app.get('/api/policy', async (req, res) => {
   try {
     if (pool) {
+      // First, let's check if the settings table exists and has data
+      const tableCheck = await pool.query(`
+        SELECT COUNT(*) as count FROM settings WHERE key LIKE 'policy_%'
+      `);
+      console.log('🔍 Database check - Policy records count:', tableCheck.rows[0].count);
+      
       const result = await pool.query(`
         SELECT key, value FROM settings 
         WHERE key LIKE 'policy_%' 
@@ -1009,6 +1015,47 @@ app.delete('/api/workers/:id', verifyAdminToken, async (req, res) => {
 });
 
 // ===== POLICY & RULES ENDPOINTS =====
+
+// GET /api/debug/database - Debug database connection and settings
+app.get('/api/debug/database', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(503).json({ error: 'Database not available' });
+    }
+    
+    // Check if settings table exists
+    const tableExists = await pool.query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_name = 'settings'
+      );
+    `);
+    
+    // Count total settings
+    const totalSettings = await pool.query('SELECT COUNT(*) as count FROM settings');
+    
+    // Count policy settings
+    const policySettings = await pool.query(`
+      SELECT COUNT(*) as count FROM settings WHERE key LIKE 'policy_%'
+    `);
+    
+    // Get all policy settings
+    const allPolicySettings = await pool.query(`
+      SELECT key, value, updated_at FROM settings WHERE key LIKE 'policy_%' ORDER BY key
+    `);
+    
+    res.json({
+      databaseConnected: true,
+      settingsTableExists: tableExists.rows[0].exists,
+      totalSettings: totalSettings.rows[0].count,
+      policySettingsCount: policySettings.rows[0].count,
+      policySettings: allPolicySettings.rows
+    });
+  } catch (error) {
+    console.error('Database debug error:', error);
+    res.status(500).json({ error: 'Database debug failed', details: error.message });
+  }
+});
 
 // GET /api/policy - Get policy data (public) - REMOVED DUPLICATE
 // This endpoint was removed because it conflicts with the database-based policy system above
