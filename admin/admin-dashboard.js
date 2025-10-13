@@ -2673,9 +2673,9 @@ Created: ${new Date(booking.created_at).toLocaleString('en-US', { hour12: false 
     
     async loadBankSettings() {
         try {
-            const API_BASE_URL = window.CONFIG?.API_BASE_URL?.replace('/api', '') || 'http://localhost:3001';
+            const API_BASE_URL = window.CONFIG?.API_BASE_URL || 'http://localhost:3001/api';
             
-            const response = await fetch(`${API_BASE_URL}/api/settings`);
+            const response = await fetch(`${API_BASE_URL}/settings`);
             
             if (response.ok) {
                 const settings = await response.json();
@@ -2707,7 +2707,7 @@ Created: ${new Date(booking.created_at).toLocaleString('en-US', { hour12: false 
         event.preventDefault();
         
         try {
-            const API_BASE_URL = window.CONFIG?.API_BASE_URL?.replace('/api', '') || 'http://localhost:3001';
+            const API_BASE_URL = window.CONFIG?.API_BASE_URL || 'http://localhost:3001/api';
             const token = localStorage.getItem('adminToken');
             
             // Only get values from existing fields
@@ -2721,7 +2721,7 @@ Created: ${new Date(booking.created_at).toLocaleString('en-US', { hour12: false 
             
             // Update each setting individually
             for (const [key, value] of Object.entries(settings)) {
-                const response = await fetch(`${API_BASE_URL}/api/admin/settings/${key}`, {
+                const response = await fetch(`${API_BASE_URL}/admin/settings/${key}`, {
                     method: 'PUT',
                     headers: {
                         'Authorization': `Bearer ${token}`,
