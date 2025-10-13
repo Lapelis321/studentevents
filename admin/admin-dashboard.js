@@ -2204,13 +2204,13 @@ class AdminDashboard {
                         ? new Date(policy.metadata.lastUpdated).toLocaleDateString('en-US', { hour12: false }) 
                         : '--';
                 } else {
-                    // Old structure - direct properties
-                    document.getElementById('termsOfService').value = policy.termsOfService || '';
-                    document.getElementById('privacyPolicy').value = policy.privacyPolicy || '';
-                    document.getElementById('eventGuidelines').value = policy.eventGuidelines || '';
-                    document.getElementById('ticketPolicy').value = policy.ticketPolicy || '';
-                    document.getElementById('refundPolicy').value = policy.refundPolicy || '';
-                    document.getElementById('codeOfConduct').value = policy.codeOfConduct || '';
+                    // Backend returns snake_case properties, map to form fields
+                    document.getElementById('termsOfService').value = policy.terms_of_service || '';
+                    document.getElementById('privacyPolicy').value = policy.privacy_policy || '';
+                    document.getElementById('eventGuidelines').value = policy.event_guidelines || '';
+                    document.getElementById('ticketPolicy').value = policy.ticket_policy || '';
+                    document.getElementById('refundPolicy').value = policy.refund_policy || '';
+                    document.getElementById('codeOfConduct').value = policy.code_of_conduct || '';
                     document.getElementById('currentPolicyVersion').textContent = policy.version || '1.0';
                     document.getElementById('policyLastUpdated').textContent = policy.lastUpdated 
                         ? new Date(policy.lastUpdated).toLocaleDateString('en-US', { hour12: false }) 
