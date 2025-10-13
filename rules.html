@@ -199,21 +199,119 @@
         // Load rules from API
         async function loadRules() {
             try {
-                const response = await fetch(`${API_BASE_URL}/api/settings`);
-                if (!response.ok) throw new Error('Failed to load settings');
+                const response = await fetch(`${API_BASE_URL}/api/policy`);
+                if (!response.ok) throw new Error('Failed to load policy');
                 
-                const settings = await response.json();
-                const rulesData = settings.find(s => s.key === 'rules_policy');
+                const policy = await response.json();
+                console.log('📄 Policy loaded for rules page:', policy);
                 
-                if (rulesData && rulesData.value) {
-                    displayRules(rulesData.value);
+                if (policy && (policy.terms_of_service || policy.privacy_policy || policy.event_guidelines)) {
+                    displayPolicyContent(policy);
                 } else {
                     displayDefaultRules();
                 }
             } catch (error) {
-                console.error('Error loading rules:', error);
+                console.error('Error loading policy:', error);
                 displayDefaultRules();
             }
+        }
+
+        function displayPolicyContent(policy) {
+            const container = document.getElementById('rulesContent');
+            
+            let content = '';
+            
+            // Terms of Service
+            if (policy.terms_of_service) {
+                content += `
+                    <div class="rules-section">
+                        <h3 class="section-title">
+                            <i class="fas fa-gavel"></i>
+                            Terms of Service
+                        </h3>
+                        <div class="section-content">
+                            ${policy.terms_of_service.replace(/\n/g, '<br>')}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Privacy Policy
+            if (policy.privacy_policy) {
+                content += `
+                    <div class="rules-section">
+                        <h3 class="section-title">
+                            <i class="fas fa-shield-alt"></i>
+                            Privacy Policy
+                        </h3>
+                        <div class="section-content">
+                            ${policy.privacy_policy.replace(/\n/g, '<br>')}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Event Guidelines
+            if (policy.event_guidelines) {
+                content += `
+                    <div class="rules-section">
+                        <h3 class="section-title">
+                            <i class="fas fa-calendar-check"></i>
+                            Event Guidelines
+                        </h3>
+                        <div class="section-content">
+                            ${policy.event_guidelines.replace(/\n/g, '<br>')}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Ticket Policy
+            if (policy.ticket_policy) {
+                content += `
+                    <div class="rules-section">
+                        <h3 class="section-title">
+                            <i class="fas fa-ticket-alt"></i>
+                            Ticket Policy
+                        </h3>
+                        <div class="section-content">
+                            ${policy.ticket_policy.replace(/\n/g, '<br>')}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Refund Policy
+            if (policy.refund_policy) {
+                content += `
+                    <div class="rules-section">
+                        <h3 class="section-title">
+                            <i class="fas fa-undo"></i>
+                            Refund Policy
+                        </h3>
+                        <div class="section-content">
+                            ${policy.refund_policy.replace(/\n/g, '<br>')}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Code of Conduct
+            if (policy.code_of_conduct) {
+                content += `
+                    <div class="rules-section">
+                        <h3 class="section-title">
+                            <i class="fas fa-handshake"></i>
+                            Code of Conduct
+                        </h3>
+                        <div class="section-content">
+                            ${policy.code_of_conduct.replace(/\n/g, '<br>')}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            container.innerHTML = content || '<p>No policy content available.</p>';
         }
 
         function displayRules(rulesContent) {
@@ -332,6 +430,6 @@ Refunds will be processed within 7-10 business days.
         // Load rules on page load
         document.addEventListener('DOMContentLoaded', loadRules);
     </script>
-    <script src="scripts/org-branding.js?v=1.0.0"></script>
+    <script src="scripts/org-branding.js?v=5.5.0&t=1736707000"></script>
 </body>
 </html>
