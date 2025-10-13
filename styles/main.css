@@ -402,6 +402,12 @@ p {
     font-size: var(--font-size-2xl);
 }
 
+.globe-logo {
+    width: 24px;
+    height: 24px;
+    color: var(--primary-500);
+}
+
 /* ===== HEADER BACK BUTTON ===== */
 
 .back-btn-header {
