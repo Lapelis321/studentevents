@@ -168,7 +168,7 @@ class EventDetails {
 
         // Determine button text and icon
         let buttonText = 'Buy Ticket';
-        let buttonIcon = 'fa-ticket-alt';
+        let buttonIcon = 'globe-logo';
         
         if (isCompleted) {
             buttonText = 'Event Completed';

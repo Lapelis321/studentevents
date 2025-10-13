@@ -138,7 +138,19 @@ class PostPayment {
                         <img src="${ticket.qrCodeUrl}" alt="QR Code Ticket ${index + 1}" class="qr-code-image">
                     </div>
                     <div class="ticket-number">
-                        <i class="fas fa-ticket-alt"></i>
+                        <svg class="globe-logo" viewBox="0 0 24 24" width="16" height="16">
+                            <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="0.5" opacity="0.3"/>
+                            <ellipse cx="12" cy="12" rx="10" ry="5" fill="none" stroke="currentColor" stroke-width="0.5" opacity="0.3"/>
+                            <ellipse cx="12" cy="12" rx="10" ry="3" fill="none" stroke="currentColor" stroke-width="0.5" opacity="0.3"/>
+                            <ellipse cx="12" cy="12" rx="10" ry="7" fill="none" stroke="currentColor" stroke-width="0.5" opacity="0.3"/>
+                            <line x1="2" y1="12" x2="22" y2="12" stroke="currentColor" stroke-width="0.5" opacity="0.3"/>
+                            <line x1="2" y1="8" x2="22" y2="8" stroke="currentColor" stroke-width="0.5" opacity="0.3"/>
+                            <line x1="2" y1="16" x2="22" y2="16" stroke="currentColor" stroke-width="0.5" opacity="0.3"/>
+                            <line x1="2" y1="6" x2="22" y2="6" stroke="currentColor" stroke-width="0.5" opacity="0.3"/>
+                            <line x1="2" y1="18" x2="22" y2="18" stroke="currentColor" stroke-width="0.5" opacity="0.3"/>
+                            <line x1="2" y1="4" x2="22" y2="4" stroke="currentColor" stroke-width="0.5" opacity="0.3"/>
+                            <line x1="2" y1="20" x2="22" y2="20" stroke="currentColor" stroke-width="0.5" opacity="0.3"/>
+                        </svg>
                         Ticket: ${ticket.ticketNumber}
                     </div>
                 </div>

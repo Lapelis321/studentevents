@@ -124,7 +124,19 @@ class PaymentInstructions {
 
             <div class="actions-section">
                 <button class="btn btn-primary btn-large" onclick="paymentInstructions.downloadTicketPDF()">
-                    <i class="fas fa-ticket-alt"></i>
+                    <svg class="globe-logo" viewBox="0 0 24 24" width="16" height="16">
+                        <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="0.5" opacity="0.3"/>
+                        <ellipse cx="12" cy="12" rx="10" ry="5" fill="none" stroke="currentColor" stroke-width="0.5" opacity="0.3"/>
+                        <ellipse cx="12" cy="12" rx="10" ry="3" fill="none" stroke="currentColor" stroke-width="0.5" opacity="0.3"/>
+                        <ellipse cx="12" cy="12" rx="10" ry="7" fill="none" stroke="currentColor" stroke-width="0.5" opacity="0.3"/>
+                        <line x1="2" y1="12" x2="22" y2="12" stroke="currentColor" stroke-width="0.5" opacity="0.3"/>
+                        <line x1="2" y1="8" x2="22" y2="8" stroke="currentColor" stroke-width="0.5" opacity="0.3"/>
+                        <line x1="2" y1="16" x2="22" y2="16" stroke="currentColor" stroke-width="0.5" opacity="0.3"/>
+                        <line x1="2" y1="6" x2="22" y2="6" stroke="currentColor" stroke-width="0.5" opacity="0.3"/>
+                        <line x1="2" y1="18" x2="22" y2="18" stroke="currentColor" stroke-width="0.5" opacity="0.3"/>
+                        <line x1="2" y1="4" x2="22" y2="4" stroke="currentColor" stroke-width="0.5" opacity="0.3"/>
+                        <line x1="2" y1="20" x2="22" y2="20" stroke="currentColor" stroke-width="0.5" opacity="0.3"/>
+                    </svg>
                     Download Ticket PDF
                 </button>
                 <button class="btn btn-secondary btn-large" onclick="paymentInstructions.downloadInstructions()">
