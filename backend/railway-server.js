@@ -123,7 +123,7 @@ let inMemoryEvents = [
 let inMemoryWorkers = [];
 
 // In-memory policy storage - Enhanced structure
-let policyData = {
+// let policyData = { // REMOVED - using database-based policy system instead
   metadata: {
     version: '1.0',
     lastUpdated: new Date().toISOString(),
@@ -186,7 +186,7 @@ let policyData = {
       isDefault: true
     }
   ]
-};
+// };
 
 // Middleware to verify admin token
 function verifyAdminToken(req, res, next) {
@@ -1066,115 +1066,19 @@ app.delete('/api/workers/:id', verifyAdminToken, async (req, res) => {
 
 // ===== POLICY & RULES ENDPOINTS =====
 
-// GET /api/policy - Get policy data (public)
-app.get('/api/policy', async (req, res) => {
-  try {
-    res.json(policyData);
-    console.log(`📄 Policy data requested (version ${policyData.version})`);
-  } catch (error) {
-    console.error('Policy API error:', error);
-    res.status(500).json({ error: 'Failed to fetch policy' });
-  }
+// GET /api/policy - Get policy data (public) - REMOVED DUPLICATE
+// This endpoint was removed because it conflicts with the database-based policy system above
+
+// PUT /api/policy - Update policy (admin only) - REMOVED DUPLICATE
+// app.put('/api/policy', verifyAdminToken, async (req, res) => {
+// This entire endpoint was removed because it conflicts with the database-based policy system above
+// The database-based system uses PUT /api/admin/policy instead
 });
 
-// PUT /api/policy - Update policy (admin only)
-app.put('/api/policy', verifyAdminToken, async (req, res) => {
-  try {
-    const { metadata, sections } = req.body;
-    
-    // Update metadata
-    if (metadata) {
-      if (metadata.autoIncrementVersion !== false && policyData.metadata.autoIncrementVersion) {
-        // Auto-increment version if enabled
-        const currentVersion = parseFloat(policyData.metadata.version);
-        policyData.metadata.version = (currentVersion + 0.1).toFixed(1);
-      } else if (metadata.version) {
-        // Manual version override
-        policyData.metadata.version = metadata.version;
-      }
-      
-      if (metadata.autoUpdateDate !== false && policyData.metadata.autoUpdateDate) {
-        // Auto-update date if enabled
-        policyData.metadata.lastUpdated = new Date().toISOString();
-      } else if (metadata.lastUpdated) {
-        // Manual date override
-        policyData.metadata.lastUpdated = metadata.lastUpdated;
-      }
-      
-      policyData.metadata.autoIncrementVersion = metadata.autoIncrementVersion !== false;
-      policyData.metadata.autoUpdateDate = metadata.autoUpdateDate !== false;
-    }
-    
-    // Update sections
-    if (sections && Array.isArray(sections)) {
-      policyData.sections = sections.map((section, index) => ({
-        ...section,
-        order: section.order !== undefined ? section.order : index + 1
-      }));
-    }
-    
-    console.log(`✅ Policy updated to version ${policyData.metadata.version}`);
-    console.log(`📝 Total sections: ${policyData.sections.length} (${policyData.sections.filter(s => s.visible).length} visible)`);
-    
-    res.json(policyData);
-  } catch (error) {
-    console.error('Error updating policy:', error);
-    res.status(500).json({ error: 'Failed to update policy' });
-  }
-});
-
-// POST /api/policy/sections - Add new section (admin only)
-app.post('/api/policy/sections', verifyAdminToken, async (req, res) => {
-  try {
-    const { title, icon, content } = req.body;
-    
-    if (!title || !content) {
-      return res.status(400).json({ error: 'Title and content are required' });
-    }
-    
-    const newSection = {
-      id: `custom-${Date.now()}`,
-      title,
-      icon: icon || 'fa-file-alt',
-      content,
-      order: policyData.sections.length + 1,
-      visible: true,
-      isDefault: false
-    };
-    
-    policyData.sections.push(newSection);
-    console.log(`✅ New section added: ${title} (Total: ${policyData.sections.length})`);
-    
-    res.json(newSection);
-  } catch (error) {
-    console.error('Error adding section:', error);
-    res.status(500).json({ error: 'Failed to add section' });
-  }
-});
-
-// DELETE /api/policy/sections/:id - Delete section (admin only, non-default only)
-app.delete('/api/policy/sections/:id', verifyAdminToken, async (req, res) => {
-  try {
-    const sectionId = req.params.id;
-    const sectionIndex = policyData.sections.findIndex(s => s.id === sectionId);
-    
-    if (sectionIndex === -1) {
-      return res.status(404).json({ error: 'Section not found' });
-    }
-    
-    if (policyData.sections[sectionIndex].isDefault) {
-      return res.status(403).json({ error: 'Cannot delete default sections' });
-    }
-    
-    const deletedSection = policyData.sections.splice(sectionIndex, 1)[0];
-    console.log(`✅ Section deleted: ${deletedSection.title} (Remaining: ${policyData.sections.length})`);
-    
-    res.json({ success: true, message: 'Section deleted successfully' });
-  } catch (error) {
-    console.error('Error deleting section:', error);
-    res.status(500).json({ error: 'Failed to delete section' });
-  }
-});
+// POST /api/policy/sections - REMOVED (in-memory system)
+// DELETE /api/policy/sections/:id - REMOVED (in-memory system)
+// These endpoints were removed because they use the in-memory policyData system
+// The database-based policy system above handles all policy operations
 
 // Catch-all for undefined routes
 app.use((req, res) => {
