@@ -274,11 +274,17 @@ app.put('/api/events/:id', verifyAdminToken, async (req, res) => {
     const eventId = req.params.id; // Keep as string for UUID support
     const { title, date, location, price, description, additionalInfo, totalTickets, availableTickets, minAge, dressCode, currency, is_active, status, ticketsAvailableDate } = req.body;
     
+    // Ensure totalTickets is properly parsed as integer
+    const parsedTotalTickets = totalTickets ? parseInt(totalTickets) : null;
+    const parsedAvailableTickets = availableTickets ? parseInt(availableTickets) : null;
+    
     console.log('🔍 PUT /api/events/:id - Received data:', { eventId, minAge, dressCode, title, date, totalTickets });
     console.log('🔍 Date received:', date, 'Type:', typeof date);
     console.log('🔍 minAge received:', minAge, 'Type:', typeof minAge);
     console.log('🔍 dressCode received:', dressCode, 'Type:', typeof dressCode);
     console.log('🔍 totalTickets received:', totalTickets, 'Type:', typeof totalTickets);
+    console.log('🔍 parsedTotalTickets:', parsedTotalTickets, 'Type:', typeof parsedTotalTickets);
+    console.log('🔍 parsedAvailableTickets:', parsedAvailableTickets, 'Type:', typeof parsedAvailableTickets);
     
     if (pool) {
       // Update in database
@@ -287,7 +293,7 @@ app.put('/api/events/:id', verifyAdminToken, async (req, res) => {
          dress_code = $7, description = $8, additional_info = $9, total_tickets = $10, available_tickets = $11, is_active = $12, 
          status = $13, tickets_available_date = $14
          WHERE id = $15 RETURNING *`,
-        [title, date, location, price, currency, minAge, dressCode, description, additionalInfo, totalTickets, availableTickets, is_active, status, ticketsAvailableDate, eventId]
+        [title, date, location, price, currency, minAge, dressCode, description, additionalInfo, parsedTotalTickets, parsedAvailableTickets, is_active, status, ticketsAvailableDate, eventId]
       );
       
       if (result.rows.length === 0) {

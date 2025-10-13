@@ -112,6 +112,8 @@ class AdminDashboard {
 
         document.getElementById('editEventForm')?.addEventListener('submit', (e) => {
             e.preventDefault();
+            console.log('📝 Edit form submitted');
+            console.log('🔍 Total tickets input value:', document.getElementById('editEventTotalTickets').value);
             this.saveEditedEvent();
         });
 
