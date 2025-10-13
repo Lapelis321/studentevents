@@ -405,6 +405,8 @@ app.get('/api/policy', async (req, res) => {
         ORDER BY key
       `);
       
+      console.log('🔍 Policy query result:', result.rows);
+      
       const policy = {
         terms_of_service: '',
         privacy_policy: '',
@@ -417,8 +419,10 @@ app.get('/api/policy', async (req, res) => {
       result.rows.forEach(row => {
         const policyKey = row.key.replace('policy_', '');
         policy[policyKey] = row.value || '';
+        console.log(`🔍 Policy field: ${row.key} -> ${policyKey} = ${row.value}`);
       });
       
+      console.log('🔍 Final policy object:', policy);
       res.json(policy);
     } else {
       // Fallback policy
@@ -449,6 +453,8 @@ app.put('/api/admin/policy', verifyAdminToken, async (req, res) => {
       code_of_conduct 
     } = req.body;
 
+    console.log('🔍 Policy update request:', req.body);
+
     if (!pool) {
       return res.status(503).json({ error: 'Database not available' });
     }
@@ -465,6 +471,7 @@ app.put('/api/admin/policy', verifyAdminToken, async (req, res) => {
 
     for (const update of updates) {
       if (update.value !== undefined) {
+        console.log(`🔍 Updating policy field: ${update.key} = ${update.value}`);
         await pool.query(`
           INSERT INTO settings (key, value, category, label)
           VALUES ($1, $2, 'policy', $1)
