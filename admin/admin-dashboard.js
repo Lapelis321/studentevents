@@ -979,6 +979,9 @@ class AdminDashboard {
             console.log('🔍 Form field values - totalTickets input:', document.getElementById('editEventTotalTickets').value);
             
             // Call backend API to update event
+            console.log('🚀 Making API call to:', `${API_BASE_URL}/events/${this.editingEventId}`);
+            console.log('🔑 Using token:', token ? 'Present' : 'Missing');
+            
             const response = await fetch(`${API_BASE_URL}/events/${this.editingEventId}`, {
                 method: 'PUT',
                 headers: {
@@ -988,13 +991,18 @@ class AdminDashboard {
                 body: JSON.stringify(eventData)
             });
             
+            console.log('📡 API Response status:', response.status, response.statusText);
+            
             if (!response.ok) {
                 const errorData = await response.json();
+                console.error('❌ API Error:', errorData);
                 throw new Error(`API Error: ${errorData.error || response.statusText}`);
             }
             
             const updatedEvent = await response.json();
             console.log('✅ Event updated via API:', updatedEvent);
+            console.log('🔍 Database total_tickets:', updatedEvent.total_tickets);
+            console.log('🔍 Database available_tickets:', updatedEvent.available_tickets);
             
             // Update local object with API response
             Object.assign(event, {
@@ -1018,6 +1026,13 @@ class AdminDashboard {
             this.saveEventsToStorage();
             console.log('✅ Saved to localStorage');
             
+            // Show success message
+            this.showNotification(`Event "${updatedEvent.title}" updated successfully in database!`, 'success');
+            
+            // Verify the update by refreshing data from API
+            console.log('🔄 Verifying database update by refreshing from API...');
+            await this.loadMockData(); // This will reload from API/database
+            
             // Close modal and refresh UI
             this.closeEditEventModal();
             this.renderEventsTab();
@@ -1028,12 +1043,16 @@ class AdminDashboard {
                 window.Homepage.loadEvents();
             }
             
-            this.showNotification(`Event "${event.name}" updated successfully!`, 'success');
-            console.log('✅ Event edit completed');
+            console.log('✅ Event edit completed and uploaded to database');
             
         } catch (error) {
-            console.error('❌ Error saving event:', error);
-            this.showNotification('Failed to save event: ' + error.message, 'error');
+            console.error('❌ Error saving event to database:', error);
+            console.error('❌ Full error details:', {
+                message: error.message,
+                stack: error.stack,
+                name: error.name
+            });
+            this.showNotification('Failed to upload event to database: ' + error.message, 'error');
         }
     }
 
