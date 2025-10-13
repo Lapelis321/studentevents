@@ -2290,6 +2290,48 @@ class AdminDashboard {
         }
     }
 
+    // Clear all policy data to fix field mapping issues
+    async clearPolicyData() {
+        if (!confirm('Are you sure you want to clear ALL policy data? This action cannot be undone.')) {
+            return;
+        }
+        
+        try {
+            const API_BASE_URL = window.CONFIG?.API_BASE_URL || 'http://localhost:3001/api';
+            const token = localStorage.getItem('adminToken');
+            
+            const response = await fetch(`${API_BASE_URL}/admin/policy/clear`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            
+            if (response.ok) {
+                const result = await response.json();
+                console.log('🧹 Policy data cleared:', result);
+                this.showNotification(`Cleared ${result.clearedCount} policy settings`, 'success');
+                
+                // Clear the form fields
+                document.getElementById('termsOfService').value = '';
+                document.getElementById('privacyPolicy').value = '';
+                document.getElementById('eventGuidelines').value = '';
+                document.getElementById('ticketPolicy').value = '';
+                document.getElementById('refundPolicy').value = '';
+                document.getElementById('codeOfConduct').value = '';
+                
+                // Reload policy to show empty state
+                await this.loadPolicy();
+            } else {
+                throw new Error('Failed to clear policy data');
+            }
+        } catch (error) {
+            console.error('Error clearing policy data:', error);
+            this.showNotification('Failed to clear policy data', 'error');
+        }
+    }
+
     // ===== BOOKINGS MANAGEMENT =====
     
     async loadBookings() {

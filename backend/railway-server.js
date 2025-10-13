@@ -1016,6 +1016,31 @@ app.delete('/api/workers/:id', verifyAdminToken, async (req, res) => {
 
 // ===== POLICY & RULES ENDPOINTS =====
 
+// POST /api/admin/policy/clear - Clear all policy data (admin only)
+app.post('/api/admin/policy/clear', verifyAdminToken, async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(503).json({ error: 'Database not available' });
+    }
+    
+    // Delete all existing policy settings
+    const result = await pool.query(`
+      DELETE FROM settings WHERE key LIKE 'policy_%'
+    `);
+    
+    console.log(`🧹 Cleared ${result.rowCount} policy settings`);
+    
+    res.json({ 
+      success: true, 
+      message: 'Policy data cleared successfully',
+      clearedCount: result.rowCount 
+    });
+  } catch (error) {
+    console.error('Error clearing policy data:', error);
+    res.status(500).json({ error: 'Failed to clear policy data' });
+  }
+});
+
 // GET /api/debug/database - Debug database connection and settings
 app.get('/api/debug/database', async (req, res) => {
   try {
