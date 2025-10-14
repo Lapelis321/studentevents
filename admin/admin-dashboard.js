@@ -305,6 +305,7 @@ class AdminDashboard {
                     // Transform API data to include event info
                     this.workers = apiWorkers.map(worker => {
                         console.log('🔍 Processing worker:', worker.full_name, 'Event:', worker.event_title, 'Event ID:', worker.event_id);
+                        console.log('🔍 Full worker object from API:', worker);
                         return {
                             ...worker,
                             name: worker.full_name,
@@ -312,6 +313,8 @@ class AdminDashboard {
                             password: 'Hidden' // Passwords are hashed in database, show as hidden
                         };
                     });
+                    
+                    console.log('📋 Final workers array after transformation:', this.workers);
                     
                     this.saveWorkersToStorage();
                     this.renderWorkersTable();
@@ -512,6 +515,9 @@ class AdminDashboard {
     renderWorkersTable() {
         const tbody = document.getElementById('workersTableBody');
         if (!tbody) return;
+        
+        console.log('🎨 Rendering workers table with', this.workers.length, 'workers');
+        console.log('🎨 Workers data for rendering:', this.workers);
 
         if (this.workers.length === 0) {
             tbody.innerHTML = `
@@ -529,6 +535,7 @@ class AdminDashboard {
         }
 
         tbody.innerHTML = this.workers.map(worker => {
+            console.log('🎨 Rendering worker row:', worker.full_name, 'Event Title:', worker.event_title, 'Event ID:', worker.event_id);
             const roleBadge = worker.role === 'supervisor' 
                 ? '<span class="role-badge supervisor"><i class="fas fa-user-shield"></i> SUPERVISOR</span>'
                 : '<span class="role-badge worker"><i class="fas fa-user"></i> WORKER</span>';
