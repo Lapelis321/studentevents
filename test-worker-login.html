@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Worker Login</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-title {
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+        .test-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-button:hover {
+            background: #0056b3;
+        }
+        .result {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+            white-space: pre-wrap;
+        }
+        .success { border-color: #28a745; background: #d4edda; }
+        .error { border-color: #dc3545; background: #f8d7da; }
+        .info { border-color: #17a2b8; background: #d1ecf1; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Worker Login Test</h1>
+    
+    <div class="test-section">
+        <h2 class="test-title">Worker Login Page Test</h2>
+        <p>Testing worker login page accessibility and functionality.</p>
+        
+        <button class="test-button" onclick="testWorkerLoginPage()">Test Worker Login Page</button>
+        <button class="test-button" onclick="testWorkerLoginAPI()">Test Worker Login API</button>
+        
+        <div id="testResult" class="result" style="display: none;"></div>
+    </div>
+
+    <script>
+        async function testWorkerLoginPage() {
+            try {
+                // Test if worker login page is accessible
+                const response = await fetch('/worker/login.html');
+                
+                if (response.ok) {
+                    showResult('testResult', 
+                        `✅ Worker Login Page Accessible!\n` +
+                        `Status: ${response.status}\n` +
+                        `URL: /worker/login.html\n` +
+                        `Content-Type: ${response.headers.get('content-type')}`, 'success');
+                } else {
+                    showResult('testResult', 
+                        `❌ Worker Login Page Not Accessible!\n` +
+                        `Status: ${response.status}\n` +
+                        `URL: /worker/login.html`, 'error');
+                }
+            } catch (error) {
+                showResult('testResult', 
+                    `❌ Worker Login Page Error!\n` +
+                    `Error: ${error.message}\n` +
+                    `URL: /worker/login.html`, 'error');
+            }
+        }
+
+        async function testWorkerLoginAPI() {
+            try {
+                const API_BASE_URL = 'https://studentevents-production.up.railway.app';
+                
+                const response = await fetch(`${API_BASE_URL}/api/workers/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        email: 'worker@test.com', 
+                        password: 'worker123' 
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.token) {
+                    showResult('testResult', 
+                        `✅ Worker Login API Working!\n` +
+                        `Status: ${response.status}\n` +
+                        `Token: ${data.token.substring(0, 20)}...\n` +
+                        `Worker: ${data.worker?.fullName || 'N/A'}`, 'success');
+                } else {
+                    showResult('testResult', 
+                        `❌ Worker Login API Failed!\n` +
+                        `Status: ${response.status}\n` +
+                        `Error: ${data.error || 'Unknown error'}`, 'error');
+                }
+            } catch (error) {
+                showResult('testResult', 
+                    `❌ Worker Login API Error!\n` +
+                    `Error: ${error.message}`, 'error');
+            }
+        }
+
+        function showResult(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.style.display = 'block';
+            element.className = `result ${type}`;
+            element.textContent = message;
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🔧 Worker Login Test Page Loaded');
+        });
+    </script>
+</body>
+</html>
