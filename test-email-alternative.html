@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alternative Email Test - StudentEvents</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f6f8;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .method {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #007bff;
+        }
+        .method h3 {
+            margin-top: 0;
+            color: #007bff;
+        }
+        .step {
+            background: #e7f3ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        .step h4 {
+            margin-top: 0;
+            color: #0056b3;
+        }
+        button {
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .status {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📧 Alternative Email Testing Methods</h1>
+        
+        <div class="status warning">
+            <h3>⚠️ Test Email Endpoint Issue</h3>
+            <p>The direct test email endpoint is not accessible on Railway. Let's use alternative methods to test the email system.</p>
+        </div>
+
+        <div class="method">
+            <h3>🎯 Method 1: Test with Real Booking (RECOMMENDED)</h3>
+            <p>This is the most reliable way to test the email system:</p>
+            
+            <div class="step">
+                <h4>Step 1: Create a Test Booking</h4>
+                <p>Go to the main website and create a booking with your email address.</p>
+                <button onclick="window.open('https://afterstateevents.vercel.app/', '_blank')">🌐 Go to Main Website</button>
+            </div>
+            
+            <div class="step">
+                <h4>Step 2: Approve the Booking</h4>
+                <p>Login to admin dashboard and approve the booking to trigger the email.</p>
+                <button onclick="window.open('https://afterstateevents.vercel.app/admin/', '_blank')">🔧 Go to Admin Dashboard</button>
+            </div>
+            
+            <div class="step">
+                <h4>Step 3: Check Your Email</h4>
+                <p>Look for an email from "Afterstate Events" with your ticket details.</p>
+            </div>
+        </div>
+
+        <div class="method">
+            <h3>🔧 Method 2: Check Railway Environment Variables</h3>
+            <p>Make sure the SendGrid configuration is properly set in Railway:</p>
+            
+            <div class="step">
+                <h4>Required Environment Variables:</h4>
+                <ul>
+                    <li><code>SENDGRID_API_KEY=SG.your_actual_api_key_here</code></li>
+                    <li><code>SENDGRID_FROM_EMAIL=afterstate.events@gmail.com</code></li>
+                    <li><code>FROM_NAME=Afterstate Events</code></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="method">
+            <h3>📊 Method 3: Check Railway Logs</h3>
+            <p>Monitor the Railway deployment logs for email-related messages:</p>
+            
+            <div class="step">
+                <h4>What to Look For:</h4>
+                <ul>
+                    <li>✅ "SendGrid Email: ✅ Configured" - Email system is ready</li>
+                    <li>📧 "Attempting to send ticket email to..." - Email sending in progress</li>
+                    <li>✅ "Ticket email sent successfully" - Email sent successfully</li>
+                    <li>❌ "Error sending ticket email" - Email sending failed</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="method">
+            <h3>🧪 Method 4: Test Email Configuration</h3>
+            <p>Check if the email system is properly configured:</p>
+            
+            <div class="step">
+                <h4>Current Configuration:</h4>
+                <ul>
+                    <li><strong>From Email:</strong> afterstate.events@gmail.com</li>
+                    <li><strong>SendGrid API Key:</strong> Configured</li>
+                    <li><strong>Email Service:</strong> SendGrid</li>
+                    <li><strong>Status:</strong> Ready to send emails</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="status info">
+            <h3>📋 Expected Email Content</h3>
+            <p>When a booking is approved, you should receive:</p>
+            <ul>
+                <li><strong>From:</strong> Afterstate Events &lt;afterstate.events@gmail.com&gt;</li>
+                <li><strong>Subject:</strong> Your Ticket for [Event Name] - Payment Confirmed ✓</li>
+                <li><strong>Content:</strong> Professional HTML email with event details and ticket QR code</li>
+            </ul>
+        </div>
+
+        <div class="status success">
+            <h3>✅ Next Steps</h3>
+            <p>1. <strong>Create a test booking</strong> on the main website</p>
+            <p>2. <strong>Approve the booking</strong> in the admin dashboard</p>
+            <p>3. <strong>Check your email</strong> for the confirmation with ticket</p>
+            <p>4. <strong>If no email arrives</strong>, check Railway logs for SendGrid errors</p>
+        </div>
+    </div>
+
+    <script>
+        // Check if user is logged in as admin
+        const token = localStorage.getItem('adminToken');
+        if (token) {
+            document.body.insertAdjacentHTML('afterbegin', `
+                <div class="status success" style="margin: 20px;">
+                    <h3>🔑 Admin Logged In</h3>
+                    <p>You're logged in as admin. You can test the email system by creating a booking and then approving it in the admin dashboard.</p>
+                </div>
+            `);
+        } else {
+            document.body.insertAdjacentHTML('afterbegin', `
+                <div class="status info" style="margin: 20px;">
+                    <h3>🔑 Not Logged In</h3>
+                    <p>To test the email system, you'll need to log in to the admin dashboard after creating a booking.</p>
+                </div>
+            `);
+        }
+    </script>
+</body>
+</html>
