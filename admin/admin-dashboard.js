@@ -292,10 +292,17 @@ class AdminDashboard {
             
             // Clean up any workers with local IDs (they don't exist in database)
             const originalLength = this.workers.length;
+            const localWorkers = this.workers.filter(worker => worker.id.startsWith('worker-'));
             this.workers = this.workers.filter(worker => !worker.id.startsWith('worker-'));
             if (this.workers.length !== originalLength) {
-                console.log('🧹 Cleaned up workers with local IDs');
+                console.log('🧹 Cleaned up workers with local IDs:', localWorkers.length);
+                console.log('🧹 Local workers removed:', localWorkers.map(w => `${w.name} (${w.id})`));
                 this.saveWorkersToStorage();
+                
+                // Show notification about local workers that need to be recreated
+                if (localWorkers.length > 0) {
+                    this.showNotification(`${localWorkers.length} workers were not properly saved to the database. Please recreate them.`, 'warning');
+                }
             }
             
             if (token) {
@@ -375,6 +382,20 @@ class AdminDashboard {
 
         this.currentTab = tabName;
         this.renderCurrentTab();
+        
+        // Load events when accessing workers tab
+        if (tabName === 'workers' && this.events.length === 0) {
+            this.loadMockData();
+        }
+        
+        // Force refresh workers from API when accessing workers tab
+        if (tabName === 'workers') {
+            this.loadWorkersFromAPI().then(apiLoaded => {
+                if (apiLoaded) {
+                    console.log('✅ Workers refreshed from API');
+                }
+            });
+        }
     }
 
     renderCurrentTab() {
