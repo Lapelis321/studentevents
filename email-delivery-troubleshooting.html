@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Delivery Troubleshooting - StudentEvents</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f6f8;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .status {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .step {
+            background: #e7f3ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        .step h4 {
+            margin-top: 0;
+            color: #0056b3;
+        }
+        button {
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .code {
+            background: #f1f3f4;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            margin: 10px 0;
+        }
+        .checklist {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        .checklist h4 {
+            margin-top: 0;
+            color: #333;
+        }
+        .checklist ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .checklist li {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📧 Email Delivery Troubleshooting</h1>
+        
+        <div class="status success">
+            <h3>✅ Email System is Working!</h3>
+            <p><strong>Railway logs show:</strong></p>
+            <ul>
+                <li>✅ SendGrid Email: ✅ Configured</li>
+                <li>✅ From: afterstate.events@gmail.com</li>
+                <li>✅ Ticket email sent successfully to ignaslapas.pm@gmail.com</li>
+            </ul>
+            <p><strong>The backend is sending emails successfully!</strong> The issue is email delivery.</p>
+        </div>
+
+        <div class="status warning">
+            <h3>⚠️ Email Delivery Issue</h3>
+            <p>Emails are being sent from the backend but not reaching your inbox. This is a common issue with email delivery.</p>
+        </div>
+
+        <div class="step">
+            <h4>🔍 Step 1: Check Spam/Junk Folder</h4>
+            <p><strong>Most common cause:</strong> Emails are being filtered as spam</p>
+            <div class="checklist">
+                <h4>Check these locations:</h4>
+                <ul>
+                    <li>📧 Gmail: Spam folder</li>
+                    <li>📧 Gmail: Promotions tab</li>
+                    <li>📧 Gmail: Updates tab</li>
+                    <li>📧 Gmail: Social tab</li>
+                    <li>📧 Gmail: All Mail folder</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="step">
+            <h4>🔧 Step 2: Whitelist Sender Email</h4>
+            <p>Add the sender email to your contacts to prevent future filtering:</p>
+            <div class="code">
+From: Afterstate Events &lt;afterstate.events@gmail.com&gt;
+            </div>
+            <p><strong>How to whitelist:</strong></p>
+            <ol>
+                <li>Add <code>afterstate.events@gmail.com</code> to your Gmail contacts</li>
+                <li>Mark any existing emails from this address as "Not Spam"</li>
+                <li>Create a filter to always deliver emails from this address</li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <h4>📊 Step 3: Check SendGrid Activity</h4>
+            <p>Verify email delivery status in SendGrid dashboard:</p>
+            <div class="checklist">
+                <h4>SendGrid Dashboard Checks:</h4>
+                <ul>
+                    <li>Go to SendGrid → Activity</li>
+                    <li>Look for emails to ignaslapas.pm@gmail.com</li>
+                    <li>Check delivery status (Delivered, Bounced, Blocked)</li>
+                    <li>Look for any error messages</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="step">
+            <h4>🧪 Step 4: Test with Different Email Address</h4>
+            <p>Try sending to a different email address to isolate the issue:</p>
+            <div class="checklist">
+                <h4>Test Options:</h4>
+                <ul>
+                    <li>Try a different Gmail account</li>
+                    <li>Try a different email provider (Outlook, Yahoo)</li>
+                    <li>Try a work email address</li>
+                    <li>Check if the issue is specific to ignaslapas.pm@gmail.com</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="step">
+            <h4>📧 Step 5: Check Email Content</h4>
+            <p>The email should contain:</p>
+            <div class="code">
+Subject: Your Ticket for [Event Name] - Payment Confirmed ✓
+From: Afterstate Events &lt;afterstate.events@gmail.com&gt;
+Content: Professional HTML email with event details and ticket QR code
+            </div>
+        </div>
+
+        <div class="status info">
+            <h3>🔍 Advanced Troubleshooting</h3>
+            <p>If emails still don't arrive, try these advanced steps:</p>
+            
+            <div class="checklist">
+                <h4>Gmail-Specific Solutions:</h4>
+                <ul>
+                    <li>Check Gmail's "All Mail" folder (not just Inbox)</li>
+                    <li>Search for "Afterstate Events" in Gmail</li>
+                    <li>Check Gmail's "Important" section</li>
+                    <li>Look in Gmail's "Updates" or "Promotions" tabs</li>
+                </ul>
+            </div>
+
+            <div class="checklist">
+                <h4>Email Provider Settings:</h4>
+                <ul>
+                    <li>Check if Gmail has aggressive spam filtering</li>
+                    <li>Verify email forwarding rules</li>
+                    <li>Check if emails are being auto-deleted</li>
+                    <li>Look for email size limits</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="step">
+            <h4>📱 Step 6: Test Email Delivery</h4>
+            <p>Create a new test booking to verify email delivery:</p>
+            <button onclick="window.open('https://afterstateevents.vercel.app/', '_blank')">🌐 Create New Booking</button>
+            <button onclick="window.open('https://afterstateevents.vercel.app/admin/', '_blank')">🔧 Approve Booking</button>
+        </div>
+
+        <div class="status success">
+            <h3>✅ Expected Results</h3>
+            <p>When working correctly, you should receive:</p>
+            <ul>
+                <li>📧 Email from: Afterstate Events &lt;afterstate.events@gmail.com&gt;</li>
+                <li>📧 Subject: Your Ticket for [Event Name] - Payment Confirmed ✓</li>
+                <li>📧 Content: Professional HTML email with event details and ticket QR code</li>
+                <li>📧 Delivery: Within 1-2 minutes of approving the booking</li>
+            </ul>
+        </div>
+
+        <div class="status warning">
+            <h3>🚨 If Still No Email</h3>
+            <p>If you still don't receive emails after checking all locations:</p>
+            <ol>
+                <li><strong>Check SendGrid Activity</strong> - Look for delivery status</li>
+                <li><strong>Try different email address</strong> - Test with another provider</li>
+                <li><strong>Contact Gmail support</strong> - If emails are being blocked</li>
+                <li><strong>Check email size</strong> - Large emails might be blocked</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        // Check if user is logged in as admin
+        const token = localStorage.getItem('adminToken');
+        if (token) {
+            document.body.insertAdjacentHTML('afterbegin', `
+                <div class="status success" style="margin: 20px;">
+                    <h3>🔑 Admin Logged In</h3>
+                    <p>You're logged in as admin. You can test the email system by creating a booking and then approving it.</p>
+                </div>
+            `);
+        } else {
+            document.body.insertAdjacentHTML('afterbegin', `
+                <div class="status info" style="margin: 20px;">
+                    <h3>🔑 Not Logged In</h3>
+                    <p>To test the email system, you'll need to log in to the admin dashboard after creating a booking.</p>
+                </div>
+            `);
+        }
+    </script>
+</body>
+</html>
