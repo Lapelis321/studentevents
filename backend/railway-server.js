@@ -1719,6 +1719,8 @@ app.put('/api/admin/workers/:id', verifyAdminToken, async (req, res) => {
     const workerName = fullName || full_name || name;
     const workerEventId = eventId || event_id;
 
+    console.log('🔍 PUT /api/admin/workers - Update request:', { id, workerName, email, role, eventId, event_id, workerEventId });
+
     if (!pool) {
       return res.status(503).json({ error: 'Database not available' });
     }
@@ -1762,9 +1764,13 @@ app.put('/api/admin/workers/:id', verifyAdminToken, async (req, res) => {
       updates.push(`role = $${paramCount++}`);
       values.push(role);
     }
+    // Handle event assignment - always update event_id
     if (workerEventId !== undefined) {
       updates.push(`event_id = $${paramCount++}`);
-      values.push(workerEventId || null); // Allow setting to null (no event)
+      // Convert empty string to null, keep null as null, keep valid IDs as is
+      const eventIdValue = (workerEventId === '' || workerEventId === null) ? null : workerEventId;
+      values.push(eventIdValue);
+      console.log(`🔍 Setting event_id to: ${eventIdValue} (original: ${workerEventId})`);
     }
 
     if (updates.length === 0) {

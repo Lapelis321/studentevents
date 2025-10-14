@@ -1699,6 +1699,8 @@ class AdminDashboard {
         
         console.log('🔧 Editing worker with event ID:', eventId);
         console.log('📋 Available events for assignment:', this.events?.length || 0);
+        console.log('🔧 Raw eventId value from dropdown:', document.getElementById('editWorkerEvent')?.value);
+        console.log('🔧 Processed eventId (after || null):', eventId);
         
         // Check if worker has a valid database ID
         if (this.editingWorkerId.startsWith('worker-')) {
@@ -1721,6 +1723,8 @@ class AdminDashboard {
                     },
                     body: JSON.stringify({ full_name: name, email, role, status, event_id: eventId })
                 });
+                
+                console.log('🔧 API request body:', { full_name: name, email, role, status, event_id: eventId });
                 
                 if (response.ok) {
                     const updatedWorker = await response.json();
