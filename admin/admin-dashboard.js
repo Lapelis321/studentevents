@@ -373,11 +373,23 @@ class AdminDashboard {
                 this.startBookingsPolling();
                 break;
             case 'workers':
-                this.loadWorkersFromAPI().then(apiLoaded => {
-                    if (!apiLoaded) {
-                        this.renderWorkersTab();
-                    }
-                });
+                // Ensure events are loaded before populating dropdowns
+                if (!this.events || this.events.length === 0) {
+                    console.log('🔄 Loading events for worker assignment...');
+                    this.loadMockData().then(() => {
+                        this.loadWorkersFromAPI().then(apiLoaded => {
+                            if (!apiLoaded) {
+                                this.renderWorkersTab();
+                            }
+                        });
+                    });
+                } else {
+                    this.loadWorkersFromAPI().then(apiLoaded => {
+                        if (!apiLoaded) {
+                            this.renderWorkersTab();
+                        }
+                    });
+                }
                 this.stopBookingsPolling();
                 break;
             case 'settings':
@@ -1400,17 +1412,23 @@ class AdminDashboard {
         const eventSelect = document.getElementById(selectId);
         if (!eventSelect) return;
         
+        console.log('📋 Populating event dropdown with', this.events?.length || 0, 'events');
+        
         // Keep the "No event assigned" option
         eventSelect.innerHTML = '<option value="">No event assigned</option>';
         
         // Add all events
         if (this.events && this.events.length > 0) {
+            console.log('First event structure:', this.events[0]);
             this.events.forEach(event => {
                 const option = document.createElement('option');
                 option.value = event.id;
-                option.textContent = event.name || event.title;
+                option.textContent = event.title || event.name; // Use title as primary field
                 eventSelect.appendChild(option);
+                console.log('Added event option:', event.title || event.name, 'ID:', event.id);
             });
+        } else {
+            console.warn('⚠️ No events available for dropdown');
         }
     }
 
@@ -1426,6 +1444,9 @@ class AdminDashboard {
             const password = document.getElementById('createWorkerPassword').value;
             const role = document.getElementById('createWorkerRole')?.value || 'worker';
             const eventId = document.getElementById('createWorkerEvent')?.value || null;
+            
+            console.log('🔧 Creating worker with event ID:', eventId);
+            console.log('📋 Available events for assignment:', this.events?.length || 0);
             
             if (!name || !email || !password) {
                 this.showNotification('Name, email and password are required', 'error');
@@ -1645,6 +1666,9 @@ class AdminDashboard {
         const role = document.getElementById('editWorkerRole').value;
         const status = document.getElementById('editWorkerStatus').value;
         const eventId = document.getElementById('editWorkerEvent')?.value || null;
+        
+        console.log('🔧 Editing worker with event ID:', eventId);
+        console.log('📋 Available events for assignment:', this.events?.length || 0);
         
         // Update via API
         const token = localStorage.getItem('adminToken');
