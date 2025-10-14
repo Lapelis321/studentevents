@@ -284,6 +284,44 @@ class AdminDashboard {
         }
     }
 
+    async loadWorkersFromAPI() {
+        try {
+            console.log('🔄 Loading workers from API...');
+            const token = localStorage.getItem('adminToken');
+            const API_BASE_URL = window.CONFIG?.API_BASE_URL || window.API_BASE_URL || 'https://studentevents-production.up.railway.app/api';
+            
+            if (token) {
+                const response = await fetch(`${API_BASE_URL}/admin/workers`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const apiWorkers = await response.json();
+                    console.log('✅ Loaded workers from API:', apiWorkers.length);
+                    
+                    // Transform API data to include event info
+                    this.workers = apiWorkers.map(worker => ({
+                        ...worker,
+                        name: worker.full_name,
+                        event_title: worker.event_title || 'No event assigned',
+                        password: 'Hidden' // Passwords are hashed in database, show as hidden
+                    }));
+                    
+                    this.saveWorkersToStorage();
+                    this.renderWorkersTable();
+                    return true;
+                } else {
+                    console.warn('⚠️ API failed, using local storage');
+                }
+            }
+        } catch (error) {
+            console.warn('⚠️ API error, using local storage:', error.message);
+        }
+        return false;
+    }
+
     loadWorkersFromStorage() {
         try {
             const savedWorkers = localStorage.getItem('adminWorkers');
@@ -335,7 +373,11 @@ class AdminDashboard {
                 this.startBookingsPolling();
                 break;
             case 'workers':
-                this.renderWorkersTab();
+                this.loadWorkersFromAPI().then(apiLoaded => {
+                    if (!apiLoaded) {
+                        this.renderWorkersTab();
+                    }
+                });
                 this.stopBookingsPolling();
                 break;
             case 'settings':
@@ -1399,13 +1441,13 @@ class AdminDashboard {
             if (token) {
                 try {
                     console.log('📡 Creating worker via API...');
-                    const response = await fetch(`${API_BASE_URL}/workers`, {
+                    const response = await fetch(`${API_BASE_URL}/admin/workers`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                             'Authorization': `Bearer ${token}`
                         },
-                        body: JSON.stringify({ name, email, password, role, event_id: eventId })
+                        body: JSON.stringify({ full_name: name, email, password, role, event_id: eventId })
                     });
                     
                     if (response.ok) {
@@ -1529,7 +1571,7 @@ class AdminDashboard {
             try {
                 console.log(`🔐 Updating worker credentials via API...`);
                 const API_BASE_URL = window.CONFIG?.API_BASE_URL || window.API_BASE_URL || 'https://studentevents-production.up.railway.app/api';
-                const response = await fetch(`${API_BASE_URL}/workers/${workerId}`, {
+                const response = await fetch(`${API_BASE_URL}/admin/workers/${workerId}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
@@ -1610,13 +1652,13 @@ class AdminDashboard {
             try {
                 console.log(`💾 Updating worker via API...`);
                 const API_BASE_URL = window.CONFIG?.API_BASE_URL || window.API_BASE_URL || 'https://studentevents-production.up.railway.app/api';
-                const response = await fetch(`${API_BASE_URL}/workers/${this.editingWorkerId}`, {
+                const response = await fetch(`${API_BASE_URL}/admin/workers/${this.editingWorkerId}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`
                     },
-                    body: JSON.stringify({ name, email, role, status, event_id: eventId })
+                    body: JSON.stringify({ full_name: name, email, role, status, event_id: eventId })
                 });
                 
                 if (response.ok) {
@@ -1696,9 +1738,10 @@ class AdminDashboard {
                     <label><i class="fas fa-key"></i> Password:</label>
                     <div style="display: flex; align-items: center; gap: 10px;">
                         <span id="workerPassword" style="letter-spacing: 2px;">••••••••</span>
-                        <button class="btn btn-secondary btn-small" onclick="adminDashboard.togglePasswordVisibility('${worker.id}', '${worker.password || 'N/A'}')">
+                        <button class="btn btn-secondary btn-small" onclick="adminDashboard.togglePasswordVisibility('${worker.id}', '${worker.password || 'Hidden'}')">
                             <i class="fas fa-eye" id="passwordIcon"></i> Show
                         </button>
+                        <small style="color: #666; margin-left: 10px;">(Passwords are securely hashed in database)</small>
                     </div>
                 </div>
                 <div class="detail-row">
@@ -1774,7 +1817,7 @@ class AdminDashboard {
             try {
                 console.log(`🗑️ Deleting worker ${workerId} via API...`);
                 const API_BASE_URL = window.CONFIG?.API_BASE_URL || window.API_BASE_URL || 'https://studentevents-production.up.railway.app/api';
-                const response = await fetch(`${API_BASE_URL}/workers/${workerId}`, {
+                const response = await fetch(`${API_BASE_URL}/admin/workers/${workerId}`, {
                     method: 'DELETE',
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
@@ -1954,7 +1997,7 @@ class AdminDashboard {
                 console.log(`🗑️ Deleting ${this.workers.length} workers from backend...`);
                 for (const worker of this.workers) {
                     try {
-                        await fetch(`${API_BASE_URL}/workers/${worker.id}`, {
+                        await fetch(`${API_BASE_URL}/admin/workers/${worker.id}`, {
                             method: 'DELETE',
                             headers: {
                                 'Authorization': `Bearer ${token}`
