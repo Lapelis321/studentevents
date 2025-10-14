@@ -290,6 +290,14 @@ class AdminDashboard {
             const token = localStorage.getItem('adminToken');
             const API_BASE_URL = window.CONFIG?.API_BASE_URL || window.API_BASE_URL || 'https://studentevents-production.up.railway.app/api';
             
+            // Clean up any workers with local IDs (they don't exist in database)
+            const originalLength = this.workers.length;
+            this.workers = this.workers.filter(worker => !worker.id.startsWith('worker-'));
+            if (this.workers.length !== originalLength) {
+                console.log('🧹 Cleaned up workers with local IDs');
+                this.saveWorkersToStorage();
+            }
+            
             if (token) {
                 const response = await fetch(`${API_BASE_URL}/admin/workers`, {
                     headers: {
@@ -1494,24 +1502,28 @@ class AdminDashboard {
                 }
             }
             
-            // Create local worker object
-            const newWorker = {
-                id: createdWorker?.id || `worker-${Date.now()}`,
-                name,
-                email,
-                password,
-                role,
-                status: 'active',
-                lastActive: null,
-                createdAt: createdWorker?.createdAt || new Date().toISOString()
-            };
-            
-            this.workers.push(newWorker);
-            this.saveWorkersToStorage();
-            this.renderWorkersTab();
-            this.closeCreateWorkerModal();
-            
-            this.showNotification(`Worker "${name}" added successfully!`, 'success');
+            // Only create local worker if API call succeeded
+            if (createdWorker && createdWorker.id) {
+                const newWorker = {
+                    id: createdWorker.id,
+                    name,
+                    email,
+                    password,
+                    role,
+                    status: 'active',
+                    lastActive: null,
+                    createdAt: createdWorker.createdAt || new Date().toISOString()
+                };
+                
+                this.workers.push(newWorker);
+                this.saveWorkersToStorage();
+                this.renderWorkersTab();
+                this.closeCreateWorkerModal();
+                
+                this.showNotification(`Worker "${name}" added successfully!`, 'success');
+            } else {
+                this.showNotification(`Failed to create worker on server. Please try again.`, 'error');
+            }
         } catch (error) {
             console.error('Error creating worker:', error);
             this.showNotification('Failed to add worker', 'error');
@@ -1687,6 +1699,13 @@ class AdminDashboard {
         
         console.log('🔧 Editing worker with event ID:', eventId);
         console.log('📋 Available events for assignment:', this.events?.length || 0);
+        
+        // Check if worker has a valid database ID
+        if (this.editingWorkerId.startsWith('worker-')) {
+            console.warn('⚠️ Worker has local ID, not database ID. Cannot update via API.');
+            this.showNotification('This worker was not properly saved to the database. Please delete and recreate.', 'warning');
+            return;
+        }
         
         // Update via API
         const token = localStorage.getItem('adminToken');
