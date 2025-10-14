@@ -300,14 +300,18 @@ class AdminDashboard {
                 if (response.ok) {
                     const apiWorkers = await response.json();
                     console.log('✅ Loaded workers from API:', apiWorkers.length);
+                    console.log('📋 API Workers data:', apiWorkers);
                     
                     // Transform API data to include event info
-                    this.workers = apiWorkers.map(worker => ({
-                        ...worker,
-                        name: worker.full_name,
-                        event_title: worker.event_title || 'No event assigned',
-                        password: 'Hidden' // Passwords are hashed in database, show as hidden
-                    }));
+                    this.workers = apiWorkers.map(worker => {
+                        console.log('🔍 Processing worker:', worker.full_name, 'Event:', worker.event_title, 'Event ID:', worker.event_id);
+                        return {
+                            ...worker,
+                            name: worker.full_name,
+                            event_title: worker.event_title || 'No event assigned',
+                            password: 'Hidden' // Passwords are hashed in database, show as hidden
+                        };
+                    });
                     
                     this.saveWorkersToStorage();
                     this.renderWorkersTable();
@@ -1693,7 +1697,8 @@ class AdminDashboard {
                 });
                 
                 if (response.ok) {
-                    console.log('✅ Worker updated on API');
+                    const updatedWorker = await response.json();
+                    console.log('✅ Worker updated on API:', updatedWorker);
                 } else {
                     const errorData = await response.json().catch(() => ({}));
                     console.warn('⚠️ API update failed:', response.status, errorData);
@@ -1724,6 +1729,15 @@ class AdminDashboard {
         this.closeEditWorkerModal();
         
         this.showNotification(`Worker "${name}" updated successfully`, 'success');
+        
+        // Refresh workers from API to ensure data consistency
+        setTimeout(() => {
+            this.loadWorkersFromAPI().then(apiLoaded => {
+                if (apiLoaded) {
+                    console.log('✅ Workers refreshed from API after edit');
+                }
+            });
+        }, 1000);
     }
 
 
