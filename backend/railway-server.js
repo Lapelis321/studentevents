@@ -1830,4 +1830,66 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ Worker credentials: john.worker@studentevents.com / worker123`);
 });
 
+// Test email endpoint for debugging
+app.post('/api/test-email', async (req, res) => {
+  try {
+    const { to, subject = 'Test Email from StudentEvents' } = req.body;
+    
+    if (!to) {
+      return res.status(400).json({ error: 'Email address required' });
+    }
+    
+    if (!process.env.SENDGRID_API_KEY) {
+      return res.status(500).json({ 
+        error: 'SendGrid not configured',
+        message: 'SENDGRID_API_KEY environment variable is missing'
+      });
+    }
+    
+    const msg = {
+      to: to,
+      from: process.env.SENDGRID_FROM_EMAIL || 'noreply@studentevents.com',
+      subject: subject,
+      html: `
+        <h1>🧪 Test Email from StudentEvents</h1>
+        <p>This is a test email to verify the email system is working.</p>
+        <p><strong>Sent at:</strong> ${new Date().toISOString()}</p>
+        <p><strong>From:</strong> ${process.env.SENDGRID_FROM_EMAIL || 'noreply@studentevents.com'}</p>
+        <p>If you receive this email, the email system is working correctly!</p>
+        <hr>
+        <p style="color: #666; font-size: 12px;">
+          StudentEvents - Event Management System<br>
+          This is a test email sent from the backend API.
+        </p>
+      `
+    };
+    
+    console.log(`📧 Sending test email to: ${to}`);
+    console.log(`📧 From: ${msg.from}`);
+    
+    await sgMail.send(msg);
+    console.log(`✅ Test email sent successfully to ${to}`);
+    
+    res.json({ 
+      success: true, 
+      message: 'Test email sent successfully',
+      to: to,
+      from: msg.from,
+      timestamp: new Date().toISOString()
+    });
+    
+  } catch (error) {
+    console.error('❌ Test email failed:', error.message);
+    if (error.response) {
+      console.error('SendGrid Response:', error.response.body);
+    }
+    
+    res.status(500).json({ 
+      success: false,
+      error: error.message,
+      details: error.response ? error.response.body : null
+    });
+  }
+});
+
 module.exports = app;
