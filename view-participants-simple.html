@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View All Participants - StudentEvents</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f6f8;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        select, input {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        button {
+            padding: 8px 16px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .stats {
+            margin: 15px 0;
+            color: #666;
+            font-size: 14px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+        .badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: capitalize;
+        }
+        .pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .paid {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .cancelled {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        .error {
+            color: #dc3545;
+            background: #f8d7da;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .success {
+            color: #155724;
+            background: #d4edda;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 All Participants</h1>
+        
+        <div class="controls">
+            <select id="eventFilter">
+                <option value="all">All Events</option>
+            </select>
+            <select id="statusFilter">
+                <option value="all">All Statuses</option>
+                <option value="paid">Paid</option>
+                <option value="pending">Pending</option>
+                <option value="cancelled">Cancelled</option>
+            </select>
+            <input type="text" id="searchInput" placeholder="Search name, email, or reference...">
+            <button onclick="loadParticipants()">🔄 Refresh</button>
+            <button onclick="exportToCSV()" id="exportBtn" disabled>📥 Export CSV</button>
+        </div>
+
+        <div class="stats" id="stats">Loading participants...</div>
+
+        <div id="content">
+            <div class="loading">Loading participants...</div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'https://studentevents-production.up.railway.app/api';
+        let allParticipants = [];
+        let filteredParticipants = [];
+
+        async function loadParticipants() {
+            const content = document.getElementById('content');
+            const stats = document.getElementById('stats');
+            
+            try {
+                content.innerHTML = '<div class="loading">Loading participants...</div>';
+                stats.textContent = 'Loading participants...';
+
+                const token = localStorage.getItem('adminToken');
+                if (!token) {
+                    throw new Error('Not logged in. Please log in to admin dashboard first.');
+                }
+
+                console.log('🔍 Fetching from:', `${API_BASE_URL}/admin/bookings`);
+                
+                const response = await fetch(`${API_BASE_URL}/admin/bookings`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Failed to load: ${response.status} ${response.statusText}`);
+                }
+
+                const bookings = await response.json();
+                console.log('✅ Loaded bookings:', bookings.length);
+
+                // Flatten participants from bookings
+                allParticipants = [];
+                bookings.forEach(booking => {
+                    // If booking has attendees array, use it; otherwise use main contact
+                    const attendees = Array.isArray(booking.attendees) && booking.attendees.length 
+                        ? booking.attendees 
+                        : [{
+                            first_name: booking.first_name,
+                            last_name: booking.last_name,
+                            email: booking.email
+                        }];
+
+                    attendees.forEach(attendee => {
+                        allParticipants.push({
+                            event_title: booking.event_title || 'Unknown Event',
+                            event_id: booking.event_id,
+                            status: booking.payment_status,
+                            first_name: attendee.first_name || '',
+                            last_name: attendee.last_name || '',
+                            email: attendee.email || '',
+                            reference: booking.payment_reference || '',
+                            amount: booking.total_amount || 0,
+                            created_at: booking.created_at || ''
+                        });
+                    });
+                });
+
+                console.log('👥 Total participants:', allParticipants.length);
+                
+                // Populate event filter
+                populateEventFilter();
+                
+                // Apply current filters
+                applyFilters();
+                
+            } catch (error) {
+                console.error('❌ Error loading participants:', error);
+                content.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+                stats.textContent = 'Error loading participants';
+            }
+        }
+
+        function populateEventFilter() {
+            const eventFilter = document.getElementById('eventFilter');
+            const uniqueEvents = [...new Set(allParticipants.map(p => p.event_title))];
+            
+            eventFilter.innerHTML = '<option value="all">All Events</option>';
+            uniqueEvents.forEach(eventTitle => {
+                const option = document.createElement('option');
+                option.value = eventTitle;
+                option.textContent = eventTitle;
+                eventFilter.appendChild(option);
+            });
+        }
+
+        function applyFilters() {
+            const eventFilter = document.getElementById('eventFilter').value;
+            const statusFilter = document.getElementById('statusFilter').value;
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+
+            filteredParticipants = allParticipants.filter(participant => {
+                // Event filter
+                if (eventFilter !== 'all' && participant.event_title !== eventFilter) {
+                    return false;
+                }
+
+                // Status filter
+                if (statusFilter !== 'all' && participant.status !== statusFilter) {
+                    return false;
+                }
+
+                // Search filter
+                if (searchTerm) {
+                    const searchText = `${participant.first_name} ${participant.last_name} ${participant.email} ${participant.reference}`.toLowerCase();
+                    if (!searchText.includes(searchTerm)) {
+                        return false;
+                    }
+                }
+
+                return true;
+            });
+
+            renderParticipants();
+        }
+
+        function renderParticipants() {
+            const content = document.getElementById('content');
+            const stats = document.getElementById('stats');
+            const exportBtn = document.getElementById('exportBtn');
+
+            if (filteredParticipants.length === 0) {
+                content.innerHTML = '<div class="loading">No participants found matching your criteria.</div>';
+                exportBtn.disabled = true;
+                return;
+            }
+
+            // Create table
+            let tableHTML = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Event</th>
+                            <th>Status</th>
+                            <th>First Name</th>
+                            <th>Last Name</th>
+                            <th>Email</th>
+                            <th>Reference</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            filteredParticipants.forEach(participant => {
+                tableHTML += `
+                    <tr>
+                        <td>${escapeHtml(participant.event_title)}</td>
+                        <td><span class="badge ${participant.status}">${participant.status}</span></td>
+                        <td>${escapeHtml(participant.first_name)}</td>
+                        <td>${escapeHtml(participant.last_name)}</td>
+                        <td>${escapeHtml(participant.email)}</td>
+                        <td>${escapeHtml(participant.reference)}</td>
+                        <td>€${participant.amount.toFixed(2)}</td>
+                    </tr>
+                `;
+            });
+
+            tableHTML += '</tbody></table>';
+            content.innerHTML = tableHTML;
+
+            // Update stats
+            stats.textContent = `Showing ${filteredParticipants.length} of ${allParticipants.length} participants`;
+            exportBtn.disabled = false;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function exportToCSV() {
+            if (filteredParticipants.length === 0) {
+                alert('No participants to export');
+                return;
+            }
+
+            const headers = ['Event', 'Status', 'First Name', 'Last Name', 'Email', 'Reference', 'Amount'];
+            const csvContent = [
+                headers.join(','),
+                ...filteredParticipants.map(p => [
+                    `"${p.event_title}"`,
+                    p.status,
+                    `"${p.first_name}"`,
+                    `"${p.last_name}"`,
+                    `"${p.email}"`,
+                    `"${p.reference}"`,
+                    p.amount.toFixed(2)
+                ].join(','))
+            ].join('\n');
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `participants-${new Date().toISOString().slice(0,10)}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Event listeners
+        document.getElementById('eventFilter').addEventListener('change', applyFilters);
+        document.getElementById('statusFilter').addEventListener('change', applyFilters);
+        document.getElementById('searchInput').addEventListener('input', applyFilters);
+
+        // Load participants on page load
+        loadParticipants();
+    </script>
+</body>
+</html>
