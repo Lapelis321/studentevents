@@ -1652,8 +1652,15 @@ class AdminDashboard {
         this.editingWorkerId = null;
     }
     
-    async saveEditedWorker() {
-        if (!this.editingWorkerId) return;
+    async saveEditedWorker(event) {
+        if (event) {
+            event.preventDefault();
+        }
+        
+        if (!this.editingWorkerId) {
+            console.error('No worker being edited');
+            return;
+        }
         
         const worker = this.workers.find(w => w.id === this.editingWorkerId);
         if (!worker) {
@@ -1687,8 +1694,10 @@ class AdminDashboard {
                 
                 if (response.ok) {
                     console.log('✅ Worker updated on API');
-        } else {
-                    console.warn('⚠️ API update failed, updating locally only...');
+                } else {
+                    const errorData = await response.json().catch(() => ({}));
+                    console.warn('⚠️ API update failed:', response.status, errorData);
+                    this.showNotification(`API update failed: ${errorData.error || 'Unknown error'}`, 'warning');
                 }
             } catch (error) {
                 console.warn('⚠️ API update error:', error.message);
@@ -1700,6 +1709,15 @@ class AdminDashboard {
         worker.email = email;
         worker.role = role;
         worker.status = status;
+        worker.event_id = eventId;
+        
+        // Update event title if event is assigned
+        if (eventId && this.events) {
+            const assignedEvent = this.events.find(e => e.id === eventId);
+            worker.event_title = assignedEvent ? assignedEvent.title : 'Unknown Event';
+        } else {
+            worker.event_title = 'No event assigned';
+        }
         
         this.saveWorkersToStorage();
         this.renderWorkersTable();
