@@ -117,7 +117,7 @@ class PaymentInstructions {
                 <h3><i class="fas fa-clock"></i> Important Information</h3>
                 <ul class="info-list">
                     <li><strong>Reference Required:</strong> Use the exact reference number above in your transfer</li>
-                    <li><strong>Ticket Delivery:</strong> You'll receive your confirmed ticket via email within 24 hours after payment confirmation. If not, <a href="mailto:${bankDetails.supportEmail || 'support@studentevents.com'}" style="color: var(--primary-500); text-decoration: underline;">contact support</a></li>
+                    <li><strong>Ticket Delivery:</strong> You'll receive your confirmed ticket via email within 24 hours after payment confirmation. If not, <a href="mailto:afterstate.events@gmail.com" style="color: var(--primary-500); text-decoration: underline;">contact support</a></li>
                     <li class="highlight-warning"><strong>Event Entry:</strong> A valid ticket is required for event entry. <span style="color: #dc2626; font-weight: 600;">If you did NOT pay for tickets, you will not be let in!</span></li>
                 </ul>
             </div>
@@ -150,7 +150,7 @@ class PaymentInstructions {
             </div>
 
             <div class="contact-footer">
-                <p>Questions? Email us at <a href="mailto:support@studentevents.com">support@studentevents.com</a></p>
+                <p>Questions? Email us at <a href="mailto:afterstate.events@gmail.com">afterstate.events@gmail.com</a> or call +37063849474</p>
             </div>
         `;
     }
@@ -199,7 +199,7 @@ IMPORTANT:
 - Use the EXACT reference number: ${booking.payment_reference}
 - Transfer within 24 hours
 - Ticket sent to: ${booking.email}
-- Questions? support@studentevents.com
+- Questions? afterstate.events@gmail.com or +37063849474
 
 Booking Reference: ${booking.payment_reference}
 Created: ${new Date().toLocaleString('en-US', { hour12: false })}
@@ -347,7 +347,7 @@ Created: ${new Date().toLocaleString('en-US', { hour12: false })}
             yPos = pageHeight - 30;
             doc.setFontSize(8);
             doc.setTextColor(100, 100, 100);
-            doc.text('For support, please contact: support@studentevents.com', pageWidth / 2, yPos, { align: 'center' });
+            doc.text('For support, please contact: afterstate.events@gmail.com or +37063849474', pageWidth / 2, yPos, { align: 'center' });
             yPos += 5;
             doc.text('A valid ticket is required for event entry', pageWidth / 2, yPos, { align: 'center' });
             
