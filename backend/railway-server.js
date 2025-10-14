@@ -42,7 +42,7 @@ const pool = process.env.DATABASE_URL ? new Pool({
   ssl: { rejectUnauthorized: false } // Always use SSL for production databases
 }) : null;
 
-// PDF Generation function for tickets
+// PDF Generation function for tickets - matches frontend exactly
 async function generateTicketPDF(ticketData) {
   return new Promise((resolve, reject) => {
     try {
@@ -58,93 +58,137 @@ async function generateTicketPDF(ticketData) {
         resolve(pdfData.toString('base64'));
       });
       
-      // Add subtle border
-      doc.rect(10, 10, 570, 800).stroke();
+      const pageWidth = doc.internal.pageSize.width;
+      const pageHeight = doc.internal.pageSize.height;
       
-      // Header
-      doc.fontSize(24)
-         .fillColor('#2c3e50')
-         .text('🎫 STUDENT EVENTS', 50, 50, { align: 'center' });
+      // Add subtle border (matches frontend)
+      doc.setDrawColor(200, 200, 200);
+      doc.setLineWidth(0.5);
+      doc.rect(5, 5, pageWidth - 10, pageHeight - 10);
       
-      doc.fontSize(18)
-         .fillColor('#34495e')
-         .text('VALID TICKET', 50, 80, { align: 'center' });
+      // Header (matches frontend exactly)
+      doc.setFontSize(24);
+      doc.setFont(undefined, 'bold');
+      doc.text('STUDENT EVENTS', pageWidth / 2, 25, { align: 'center' });
       
-      // Event details
-      doc.fontSize(16)
-         .fillColor('#2c3e50')
-         .text(ticketData.eventTitle, 50, 120, { align: 'center' });
+      doc.setFontSize(16);
+      doc.setFont(undefined, 'normal');
+      doc.text('E-TICKET', pageWidth / 2, 35, { align: 'center' });
       
-      // Date and time
+      // Reset text color
+      doc.setTextColor(0, 0, 0);
+      
+      // Event Details (matches frontend layout)
+      let yPos = 50;
+      doc.setFontSize(14);
+      doc.setFont(undefined, 'bold');
+      doc.text('EVENT DETAILS', 15, yPos);
+      
+      yPos += 8;
+      doc.setFontSize(11);
+      doc.setFont(undefined, 'bold');
+      doc.text(ticketData.eventTitle || 'Event Name', 15, yPos);
+      
+      yPos += 7;
+      doc.setFontSize(10);
+      doc.setFont(undefined, 'normal');
       const eventDate = new Date(ticketData.eventDate).toLocaleDateString('en-US', {
         weekday: 'long',
         year: 'numeric',
         month: 'long',
         day: 'numeric'
       });
+      doc.text(`Date: ${eventDate}`, 15, yPos);
       
-      doc.fontSize(14)
-         .fillColor('#7f8c8d')
-         .text(eventDate, 50, 150, { align: 'center' });
-      
-      if (ticketData.eventTime !== 'TBD') {
-        doc.text(ticketData.eventTime, 50, 170, { align: 'center' });
+      if (ticketData.eventTime && ticketData.eventTime !== 'TBD') {
+        yPos += 5;
+        doc.text(`Time: ${ticketData.eventTime}`, 15, yPos);
       }
       
-      if (ticketData.eventLocation !== 'TBD') {
-        doc.text(ticketData.eventLocation, 50, 190, { align: 'center' });
+      yPos += 5;
+      doc.text(`Location: ${ticketData.eventLocation || 'TBD'}`, 15, yPos);
+      
+      if (ticketData.eventMinAge) {
+        yPos += 5;
+        doc.text(`Age Restriction: ${ticketData.eventMinAge}+`, 15, yPos);
       }
       
-      // Ticket details box
-      doc.rect(50, 220, 500, 200)
-         .fillColor('#f8f9fa')
-         .fill()
-         .stroke();
-      
-      doc.fillColor('#2c3e50')
-         .fontSize(16)
-         .text('TICKET DETAILS', 70, 240);
-      
-      doc.fontSize(14)
-         .fillColor('#34495e')
-         .text(`Name: ${ticketData.attendeeName}`, 70, 270);
-      
-      doc.text(`Ticket Number: ${ticketData.ticketNumber}`, 70, 290);
-      
-      if (ticketData.totalAttendees > 1) {
-        doc.text(`Ticket ${ticketData.attendeeNumber} of ${ticketData.totalAttendees}`, 70, 310);
+      if (ticketData.eventDressCode) {
+        yPos += 5;
+        doc.text(`Dress Code: ${ticketData.eventDressCode}`, 15, yPos);
       }
       
-      // QR Code section
-      doc.rect(50, 450, 200, 200)
-         .stroke();
+      // Attendee Information (matches frontend)
+      yPos += 12;
+      doc.setFontSize(14);
+      doc.setFont(undefined, 'bold');
+      doc.text('ATTENDEE INFORMATION', 15, yPos);
       
-      doc.fillColor('#2c3e50')
-         .fontSize(12)
-         .text('QR CODE', 150, 460, { align: 'center' });
+      yPos += 8;
+      doc.setFontSize(10);
+      doc.setFont(undefined, 'normal');
+      doc.text(`Name: ${ticketData.attendeeName}`, 15, yPos);
       
-      // Add QR code placeholder (in real implementation, you'd embed the actual QR code)
-      doc.rect(70, 480, 160, 160)
-         .fillColor('#ecf0f1')
-         .fill()
-         .stroke();
+      yPos += 5;
+      doc.text(`Email: ${ticketData.attendeeEmail}`, 15, yPos);
       
-      doc.fillColor('#7f8c8d')
-         .fontSize(10)
-         .text('QR Code for verification', 150, 550, { align: 'center' });
+      yPos += 5;
+      doc.text(`Phone: ${ticketData.attendeePhone}`, 15, yPos);
       
-      // Terms and conditions
-      doc.fillColor('#7f8c8d')
-         .fontSize(10)
-         .text('• This ticket is valid for entry to the event', 50, 700);
-      doc.text('• Please arrive on time with valid ID', 50, 715);
-      doc.text('• No refunds or exchanges', 50, 730);
-      doc.text('• For support: afterstate.events@gmail.com or +37063849474', 50, 745);
+      yPos += 5;
+      doc.text(`Tickets: ${ticketData.quantity || 1}`, 15, yPos);
       
-      // Footer
-      doc.fillColor('#95a5a6')
-         .fontSize(8)
-         .text('Generated by StudentEvents - Valid Ticket', 300, 780, { align: 'center' });
+      yPos += 5;
+      doc.setFont(undefined, 'bold');
+      doc.text(`Total Amount: €${ticketData.totalAmount || '0.00'}`, 15, yPos);
+      
+      // Ticket Number & QR Code (matches frontend)
+      yPos += 12;
+      doc.setFontSize(14);
+      doc.setFont(undefined, 'bold');
+      doc.text('TICKET NUMBER', 15, yPos);
+      
+      yPos += 8;
+      doc.setFontSize(12);
+      doc.setFont(undefined, 'normal');
+      doc.text(ticketData.ticketNumber, 15, yPos);
+      
+      // Add QR Code (matches frontend positioning)
+      if (ticketData.qrCode) {
+        try {
+          // Convert base64 QR code to image
+          const qrImage = ticketData.qrCode.replace(/^data:image\/png;base64,/, '');
+          const qrBuffer = Buffer.from(qrImage, 'base64');
+          
+          // Position QR code on the right side, similar to frontend
+          const qrX = pageWidth - 60;
+          const qrY = yPos - 10;
+          const qrSize = 40;
+          
+          doc.image(qrBuffer, qrX, qrY, { width: qrSize, height: qrSize });
+          
+          // Add QR code label
+          doc.setFontSize(8);
+          doc.text('QR CODE', qrX + qrSize/2, qrY + qrSize + 5, { align: 'center' });
+        } catch (error) {
+          console.error('Error adding QR code to PDF:', error);
+          // Add fallback text if QR code fails
+          doc.setFontSize(8);
+          doc.text('QR Code: ' + ticketData.ticketNumber, pageWidth - 60, yPos + 20);
+        }
+      }
+      
+      // Small note at bottom (matches frontend)
+      yPos = pageHeight - 45;
+      doc.setFontSize(7);
+      doc.text('Note: This ticket is only valid after payment confirmation.', pageWidth / 2, yPos, { align: 'center' });
+      
+      // Footer (matches frontend)
+      yPos = pageHeight - 30;
+      doc.setFontSize(8);
+      doc.text('For support, please contact: afterstate.events@gmail.com or +37063849474', pageWidth / 2, yPos, { align: 'center' });
+      yPos += 5;
+      doc.text('A valid ticket is required for event entry', pageWidth / 2, yPos, { align: 'center' });
       
       doc.end();
       
@@ -876,14 +920,24 @@ app.post('/api/admin/bookings/:id/confirm', verifyAdminToken, async (req, res) =
       });
     });
 
-    // Generate QR codes for each ticket
+    // Generate QR codes for each ticket - matches frontend format
     const ticketsWithQR = [];
     for (const ticket of tickets) {
+      // Generate QR code with the same format as frontend
       const qrDataUrl = await QRCode.toDataURL(ticket.ticketNumber, {
-        width: 200,
-        margin: 1
+        width: 128,
+        height: 128,
+        margin: 1,
+        color: {
+          dark: '#000000',
+          light: '#FFFFFF'
+        }
       });
-      ticketsWithQR.push({ ...ticket, qrCode: qrDataUrl });
+      ticketsWithQR.push({ 
+        ...ticket, 
+        qrCode: qrDataUrl,
+        qrCodeUrl: qrDataUrl // For compatibility
+      });
     }
 
     // Send email with tickets (if SendGrid is configured)
@@ -902,15 +956,21 @@ app.post('/api/admin/bookings/:id/confirm', verifyAdminToken, async (req, res) =
         const ticket = ticketsWithQR[i];
         const attendeeNumber = i + 1;
         
-        // Generate PDF content for this ticket
+        // Generate PDF content for this ticket - matches frontend format exactly
         const pdfContent = await generateTicketPDF({
           eventTitle: booking.event_title,
           eventDate: booking.event_date,
           eventTime: booking.event_time || 'TBD',
           eventLocation: booking.event_location || 'TBD',
+          eventMinAge: booking.event_min_age,
+          eventDressCode: booking.event_dress_code,
           attendeeName: `${ticket.firstName} ${ticket.lastName}`,
+          attendeeEmail: ticket.email,
+          attendeePhone: booking.phone,
           ticketNumber: ticket.ticketNumber,
           qrCode: ticket.qrCode,
+          quantity: booking.quantity,
+          totalAmount: booking.total_amount,
           attendeeNumber: attendeeNumber,
           totalAttendees: ticketsWithQR.length
         });
