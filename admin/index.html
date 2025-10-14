@@ -674,7 +674,7 @@
                 <div class="form-group">
                     <label class="form-label" for="editEventTotalTickets">Total Tickets</label>
                     <input type="number" class="form-input" id="editEventTotalTickets" name="editEventTotalTickets" min="1" required>
-                </div>
+                    </div>
                 <div class="form-group">
                     <label class="form-label" for="editEventMinAge">Minimum Age</label>
                     <input type="number" class="form-input" id="editEventMinAge" name="editEventMinAge" min="0" max="99" placeholder="e.g., 18">
@@ -882,7 +882,7 @@
                 }
             }
         });
-
+        
         async function checkAuthentication() {
             try {
                 // Check if JWT token exists
@@ -891,12 +891,12 @@
                     console.log('❌ No JWT token found');
                     return false;
                 }
-
+                
                 // Check token expiration
                 try {
                     const payload = JSON.parse(atob(token.split('.')[1]));
                     const now = Math.floor(Date.now() / 1000);
-
+                    
                     if (payload.exp < now) {
                         console.log('❌ JWT token expired');
                         clearAuthData();
@@ -907,30 +907,30 @@
                     clearAuthData();
                     return false;
                 }
-
+                
                 console.log('✅ Authentication successful');
                 return true;
-
+                
             } catch (error) {
                 console.error('❌ Authentication check failed:', error);
                 clearAuthData();
                 return false;
             }
         }
-
+        
         function clearAuthData() {
             localStorage.removeItem('adminToken');
             localStorage.removeItem('adminUser');
             sessionStorage.removeItem('adminAccess');
         }
-
+        
         function adminLogout() {
             if (confirm('Are you sure you want to logout?')) {
                 // Clear all authentication data
                 localStorage.removeItem('adminToken');
                 localStorage.removeItem('adminUser');
                 sessionStorage.removeItem('adminAccess');
-
+                
                 // Redirect to login page
                 window.location.href = '/admin/login.html';
             }
