@@ -143,17 +143,57 @@ class WorkerScan {
     startScanningLoop() {
         if (!this.isScanning) return;
         
-        // Simulate QR code scanning (in real implementation, you'd use a QR code library)
-        setTimeout(() => {
-            if (this.isScanning) {
-                // Randomly simulate finding a QR code for demo purposes
-                if (Math.random() < 0.1) { // 10% chance per scan cycle
-                    const mockTicketId = this.generateMockTicketId();
-                    this.processTicket(mockTicketId, 'camera');
-                }
-                this.startScanningLoop();
+        const video = document.getElementById('cameraVideo');
+        const canvas = document.getElementById('cameraCanvas');
+        
+        if (!video || !canvas) {
+            setTimeout(() => this.startScanningLoop(), 1000);
+            return;
+        }
+        
+        // Get canvas context for image processing
+        const context = canvas.getContext('2d');
+        const videoWidth = video.videoWidth;
+        const videoHeight = video.videoHeight;
+        
+        if (videoWidth > 0 && videoHeight > 0) {
+            // Set canvas size to match video
+            canvas.width = videoWidth;
+            canvas.height = videoHeight;
+            
+            // Draw video frame to canvas
+            context.drawImage(video, 0, 0, videoWidth, videoHeight);
+            
+            // Get image data for QR code detection
+            const imageData = context.getImageData(0, 0, videoWidth, videoHeight);
+            
+            // Use jsQR to detect QR codes
+            const code = jsQR(imageData.data, imageData.width, imageData.height);
+            
+            if (code) {
+                console.log('QR Code detected:', code.data);
+                this.handleQRCodeData(code.data);
             }
-        }, 1000);
+        }
+        
+        // Continue scanning loop
+        setTimeout(() => this.startScanningLoop(), 100);
+    }
+    
+    handleQRCodeData(qrData) {
+        try {
+            // Try to parse as JSON (new format with personalized data)
+            const ticketData = JSON.parse(qrData);
+            if (ticketData.ticketNumber) {
+                console.log('Personalized QR code detected:', ticketData);
+                this.processTicket(ticketData.ticketNumber, 'camera');
+                return;
+            }
+        } catch (error) {
+            // Not JSON, treat as plain ticket number (backwards compatibility)
+            console.log('Legacy QR code detected:', qrData);
+            this.processTicket(qrData, 'camera');
+        }
     }
 
     generateMockTicketId() {
@@ -231,10 +271,18 @@ class WorkerScan {
                 // Mark as scanned to prevent duplicates
                 this.scannedTickets.add(ticketId);
                 
+                // Parse attendee name to separate first and last name
+                const attendeeName = data.attendeeName || 'Unknown';
+                const nameParts = attendeeName.split(' ');
+                const firstName = nameParts[0] || '';
+                const lastName = nameParts.slice(1).join(' ') || '';
+                
                 return {
                     status: 'valid',
                     ticketId: ticketId,
-                    name: data.attendeeName || 'Unknown',
+                    firstName: firstName,
+                    lastName: lastName,
+                    fullName: attendeeName,
                     event: data.eventTitle || 'Unknown Event',
                     message: data.message || 'Ticket verified successfully',
                     timestamp: new Date()
@@ -243,6 +291,9 @@ class WorkerScan {
                 return {
                     status: data.status === 'already_used' ? 'duplicate' : 'invalid',
                     ticketId: ticketId,
+                    firstName: data.attendeeName ? data.attendeeName.split(' ')[0] : '',
+                    lastName: data.attendeeName ? data.attendeeName.split(' ').slice(1).join(' ') : '',
+                    fullName: data.attendeeName || '',
                     message: data.message || 'Ticket validation failed',
                     timestamp: new Date()
                 };
@@ -326,16 +377,17 @@ class WorkerScan {
                 statusText = 'VALID TICKET';
                 iconClass = 'fas fa-check-circle';
                 detailsHtml = `
-                    <div class="result-detail"><strong>Name:</strong> ${result.name}</div>
+                    <div class="result-detail"><strong>First Name:</strong> ${result.firstName || 'N/A'}</div>
+                    <div class="result-detail"><strong>Last Name:</strong> ${result.lastName || 'N/A'}</div>
+                    <div class="result-detail"><strong>Ticket Code:</strong> ${result.ticketId}</div>
                     <div class="result-detail"><strong>Event:</strong> ${result.event}</div>
-                    <div class="result-detail"><strong>Ticket ID:</strong> ${result.ticketId}</div>
                 `;
                 break;
             case 'invalid':
                 statusText = 'INVALID TICKET';
                 iconClass = 'fas fa-times-circle';
                 detailsHtml = `
-                    <div class="result-detail"><strong>Ticket ID:</strong> ${result.ticketId}</div>
+                    <div class="result-detail"><strong>Ticket Code:</strong> ${result.ticketId}</div>
                     <div class="result-detail"><strong>Reason:</strong> ${result.message}</div>
                 `;
                 break;
@@ -343,9 +395,10 @@ class WorkerScan {
                 statusText = 'ALREADY SCANNED';
                 iconClass = 'fas fa-exclamation-triangle';
                 detailsHtml = `
-                    <div class="result-detail"><strong>Name:</strong> ${result.name}</div>
+                    <div class="result-detail"><strong>First Name:</strong> ${result.firstName || 'N/A'}</div>
+                    <div class="result-detail"><strong>Last Name:</strong> ${result.lastName || 'N/A'}</div>
+                    <div class="result-detail"><strong>Ticket Code:</strong> ${result.ticketId}</div>
                     <div class="result-detail"><strong>Event:</strong> ${result.event}</div>
-                    <div class="result-detail"><strong>Ticket ID:</strong> ${result.ticketId}</div>
                     <div class="result-detail"><strong>Warning:</strong> ${result.message}</div>
                 `;
                 break;

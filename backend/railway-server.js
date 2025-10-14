@@ -920,11 +920,18 @@ app.post('/api/admin/bookings/:id/confirm', verifyAdminToken, async (req, res) =
       });
     });
 
-    // Generate QR codes for each ticket - matches frontend format
+    // Generate QR codes for each ticket - matches frontend format with personalized data
     const ticketsWithQR = [];
     for (const ticket of tickets) {
-      // Generate QR code with the same format as frontend
-      const qrDataUrl = await QRCode.toDataURL(ticket.ticketNumber, {
+      // Create personalized QR data with ticket number, first name, last name
+      const qrData = JSON.stringify({
+        ticketNumber: ticket.ticketNumber,
+        firstName: ticket.firstName,
+        lastName: ticket.lastName
+      });
+      
+      // Generate QR code with personalized data
+      const qrDataUrl = await QRCode.toDataURL(qrData, {
         width: 128,
         height: 128,
         margin: 1,

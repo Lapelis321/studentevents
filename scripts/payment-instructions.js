@@ -315,13 +315,20 @@ Created: ${new Date().toLocaleString('en-US', { hour12: false })}
             doc.setFont(undefined, 'normal');
             doc.text(booking.payment_reference, 15, yPos);
             
-            // Generate QR Code
+            // Generate QR Code with personalized data
             const qrContainer = document.createElement('div');
             qrContainer.style.display = 'none';
             document.body.appendChild(qrContainer);
             
+            // Create personalized QR data with ticket number, first name, last name
+            const qrData = JSON.stringify({
+                ticketNumber: booking.payment_reference,
+                firstName: booking.first_name,
+                lastName: booking.last_name
+            });
+            
             const qrCode = new QRCode(qrContainer, {
-                text: booking.payment_reference,
+                text: qrData,
                 width: 128,
                 height: 128
             });
