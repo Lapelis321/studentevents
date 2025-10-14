@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Railway Log Checker - StudentEvents</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f6f8;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .status {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .step {
+            background: #e7f3ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        .step h4 {
+            margin-top: 0;
+            color: #0056b3;
+        }
+        button {
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .code {
+            background: #f1f3f4;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚂 Railway Log Checker</h1>
+        
+        <div class="status warning">
+            <h3>📋 How to Check Railway Logs</h3>
+            <p>Follow these steps to check what's happening with the email system in Railway:</p>
+        </div>
+
+        <div class="step">
+            <h4>Step 1: Access Railway Dashboard</h4>
+            <p>1. Go to <a href="https://railway.app/dashboard" target="_blank">Railway Dashboard</a></p>
+            <p>2. Select your project</p>
+            <p>3. Click on your backend service</p>
+        </div>
+
+        <div class="step">
+            <h4>Step 2: Check Deployment Logs</h4>
+            <p>Look for these messages in the deployment logs:</p>
+            <div class="code">
+✅ "SendGrid Email: ✅ Configured"
+✅ "From: afterstate.events@gmail.com"
+✅ "Server running on port 3001"
+            </div>
+        </div>
+
+        <div class="step">
+            <h4>Step 3: Monitor Runtime Logs</h4>
+            <p>After creating and approving a booking, look for:</p>
+            <div class="code">
+📧 "Attempting to send ticket email to ignaslapas.pm@gmail.com..."
+✅ "Ticket email sent successfully to ignaslapas.pm@gmail.com"
+❌ "Error sending ticket email: [error message]"
+            </div>
+        </div>
+
+        <div class="step">
+            <h4>Step 4: Common Error Messages</h4>
+            <p>If you see these errors, here's what they mean:</p>
+            <div class="code">
+❌ "SendGrid not configured" → Missing SENDGRID_API_KEY
+❌ "Sender not verified" → Email address not verified in SendGrid
+❌ "Invalid API key" → Wrong or expired API key
+❌ "Forbidden" → API key doesn't have send permissions
+            </div>
+        </div>
+
+        <div class="status info">
+            <h3>🔧 Quick Fixes</h3>
+            <p><strong>If you see "SendGrid not configured":</strong></p>
+            <ul>
+                <li>Check Railway environment variables</li>
+                <li>Make sure SENDGRID_API_KEY is set correctly</li>
+                <li>Redeploy the service</li>
+            </ul>
+            
+            <p><strong>If you see "Sender not verified":</strong></p>
+            <ul>
+                <li>Go to SendGrid dashboard</li>
+                <li>Verify afterstate.events@gmail.com</li>
+                <li>Check sender authentication settings</li>
+            </ul>
+        </div>
+
+        <div class="step">
+            <h4>Step 5: Test Email System</h4>
+            <p>1. Create a booking on the main website</p>
+            <button onclick="window.open('https://afterstateevents.vercel.app/', '_blank')">🌐 Create Booking</button>
+            
+            <p>2. Approve the booking in admin dashboard</p>
+            <button onclick="window.open('https://afterstateevents.vercel.app/admin/', '_blank')">🔧 Admin Dashboard</button>
+            
+            <p>3. Watch Railway logs for email sending messages</p>
+        </div>
+
+        <div class="status success">
+            <h3>✅ What to Look For</h3>
+            <p>In Railway logs, you should see:</p>
+            <ul>
+                <li>✅ "SendGrid Email: ✅ Configured" on startup</li>
+                <li>📧 "Attempting to send ticket email..." when booking is approved</li>
+                <li>✅ "Ticket email sent successfully" if email works</li>
+                <li>❌ Error message if something is wrong</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>
