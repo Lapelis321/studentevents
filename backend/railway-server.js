@@ -1687,6 +1687,7 @@ app.get('/api/admin/workers', verifyAdminToken, async (req, res) => {
       return res.status(503).json({ error: 'Database not available' });
     }
 
+    console.log('🔍 GET /api/admin/workers - Fetching workers from database...');
     const result = await pool.query(`
       SELECT 
         w.id, w.full_name, w.email, w.role, w.event_id, w.created_at,
@@ -1695,6 +1696,11 @@ app.get('/api/admin/workers', verifyAdminToken, async (req, res) => {
       LEFT JOIN events e ON w.event_id = e.id
       ORDER BY w.created_at DESC
     `);
+
+    console.log(`🔍 Found ${result.rows.length} workers in database`);
+    result.rows.forEach(worker => {
+      console.log(`🔍 Worker: ${worker.full_name} - Event: ${worker.event_title || 'No event'} (ID: ${worker.event_id})`);
+    });
 
     res.json(result.rows);
   } catch (error) {
@@ -1775,7 +1781,21 @@ app.put('/api/admin/workers/:id', verifyAdminToken, async (req, res) => {
 
     const result = await pool.query(query, values);
     console.log(`✅ Worker updated: ${id}`);
-    res.json(result.rows[0]);
+    console.log(`🔍 Updated worker data:`, result.rows[0]);
+    
+    // Fetch the updated worker with event details
+    const updatedWorker = await pool.query(`
+      SELECT 
+        w.id, w.full_name, w.email, w.role, w.event_id, w.created_at,
+        e.title as event_title
+      FROM workers w
+      LEFT JOIN events e ON w.event_id = e.id
+      WHERE w.id = $1
+    `, [id]);
+    
+    console.log(`🔍 Worker after update: ${updatedWorker.rows[0]?.full_name} - Event: ${updatedWorker.rows[0]?.event_title || 'No event'} (ID: ${updatedWorker.rows[0]?.event_id})`);
+    
+    res.json(updatedWorker.rows[0]);
   } catch (error) {
     console.error('Error updating worker:', error);
     res.status(500).json({ error: 'Failed to update worker' });
