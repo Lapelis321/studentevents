@@ -813,7 +813,7 @@ app.post('/api/admin/bookings/:id/confirm', verifyAdminToken, async (req, res) =
 
       const msg = {
         to: booking.email,
-        from: process.env.SENDGRID_FROM_EMAIL || 'noreply@studentevents.com',
+        from: process.env.SENDGRID_FROM_EMAIL || 'afterstate.events@gmail.com',
         subject: `Your Ticket for ${booking.event_title} - Payment Confirmed ✓`,
         html: emailBody
       };
@@ -1211,7 +1211,7 @@ async function sendTicketEmail(attendeeEmail, eventDetails, tickets) {
   const msg = {
     to: attendeeEmail,
     from: { 
-      email: process.env.FROM_EMAIL || 'noreply@studentevents.com', 
+      email: process.env.FROM_EMAIL || 'afterstate.events@gmail.com', 
       name: process.env.FROM_NAME || 'StudentEvents' 
     },
     subject: `Your Ticket for ${eventDetails.title}`,
@@ -1848,13 +1848,13 @@ app.post('/api/test-email', async (req, res) => {
     
     const msg = {
       to: to,
-      from: process.env.SENDGRID_FROM_EMAIL || 'noreply@studentevents.com',
+      from: process.env.SENDGRID_FROM_EMAIL || 'afterstate.events@gmail.com',
       subject: subject,
       html: `
         <h1>🧪 Test Email from StudentEvents</h1>
         <p>This is a test email to verify the email system is working.</p>
         <p><strong>Sent at:</strong> ${new Date().toISOString()}</p>
-        <p><strong>From:</strong> ${process.env.SENDGRID_FROM_EMAIL || 'noreply@studentevents.com'}</p>
+        <p><strong>From:</strong> ${process.env.SENDGRID_FROM_EMAIL || 'afterstate.events@gmail.com'}</p>
         <p>If you receive this email, the email system is working correctly!</p>
         <hr>
         <p style="color: #666; font-size: 12px;">
