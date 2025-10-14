@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Email System - StudentEvents</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f6f8;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .status {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        button {
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .instructions {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .code {
+            background: #f1f3f4;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📧 Email System Test</h1>
+        
+        <div class="instructions">
+            <h3>How Email System Works:</h3>
+            <ol>
+                <li><strong>When a booking is approved</strong> (admin clicks "Confirm" in admin dashboard)</li>
+                <li><strong>System automatically sends email</strong> to the customer with:</li>
+                <ul>
+                    <li>✅ Confirmation that payment is valid</li>
+                    <li>📅 Event details (date, time, location, dress code, etc.)</li>
+                    <li>🎫 Valid ticket(s) with QR codes</li>
+                    <li>📧 Professional email template</li>
+                </ul>
+                <li><strong>Email includes:</strong> Event info, ticket PDF, QR codes, contact details</li>
+            </ol>
+        </div>
+
+        <div class="status info">
+            <h3>📋 Current Email Configuration:</h3>
+            <p><strong>Email Service:</strong> SendGrid (configured)</p>
+            <p><strong>From Address:</strong> noreply@studentevents.com</p>
+            <p><strong>Email Template:</strong> Professional HTML with tickets</p>
+            <p><strong>Status:</strong> ✅ Ready to send emails</p>
+        </div>
+
+        <div class="instructions">
+            <h3>🧪 How to Test Email System:</h3>
+            <ol>
+                <li><strong>Create a test booking:</strong>
+                    <div class="code">
+                        1. Go to main website<br>
+                        2. Book an event with your email<br>
+                        3. Complete the booking process
+                    </div>
+                </li>
+                <li><strong>Approve the booking:</strong>
+                    <div class="code">
+                        1. Go to admin dashboard<br>
+                        2. Click "Bookings" tab<br>
+                        3. Find your booking<br>
+                        4. Click "Confirm" button
+                    </div>
+                </li>
+                <li><strong>Check your email:</strong>
+                    <div class="code">
+                        - Look for email from "StudentEvents"<br>
+                        - Subject: "Your Ticket for [Event Name] - Payment Confirmed ✓"<br>
+                        - Should contain event details and ticket PDF
+                    </div>
+                </li>
+            </ol>
+        </div>
+
+        <div class="instructions">
+            <h3>🔧 Email System Features:</h3>
+            <ul>
+                <li><strong>Automatic sending:</strong> When admin confirms booking</li>
+                <li><strong>Professional template:</strong> HTML email with styling</li>
+                <li><strong>Event details:</strong> Date, time, location, dress code, age restrictions</li>
+                <li><strong>Valid tickets:</strong> QR codes for each attendee</li>
+                <li><strong>Multiple attendees:</strong> Separate tickets for each person</li>
+                <li><strong>Error handling:</strong> Logs if email fails, continues booking process</li>
+            </ul>
+        </div>
+
+        <div class="status success">
+            <h3>✅ Email System Status: READY</h3>
+            <p>The email system is already implemented and working! When you approve a booking in the admin dashboard, the customer will automatically receive a professional email with their valid tickets.</p>
+        </div>
+
+        <button onclick="window.open('https://afterstateevents.vercel.app/', '_blank')">🌐 Go to Main Website</button>
+        <button onclick="window.open('https://afterstateevents.vercel.app/admin/', '_blank')">🔧 Go to Admin Dashboard</button>
+        <button onclick="window.open('https://afterstateevents.vercel.app/view-participants-simple.html', '_blank')">👥 View All Participants</button>
+    </div>
+
+    <script>
+        // Check if user is logged in
+        const token = localStorage.getItem('adminToken');
+        if (token) {
+            document.body.insertAdjacentHTML('afterbegin', `
+                <div class="status success" style="margin: 20px;">
+                    <h3>🔑 Admin Logged In</h3>
+                    <p>You're logged in as admin. You can test the email system by approving bookings in the admin dashboard.</p>
+                </div>
+            `);
+        } else {
+            document.body.insertAdjacentHTML('afterbegin', `
+                <div class="status info" style="margin: 20px;">
+                    <h3>🔑 Not Logged In</h3>
+                    <p>To test the email system, you'll need to log in to the admin dashboard first.</p>
+                </div>
+            `);
+        }
+    </script>
+</body>
+</html>

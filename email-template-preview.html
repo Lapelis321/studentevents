@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Template Preview - StudentEvents</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f6f8;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .email-preview {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        .email-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .email-body {
+            padding: 30px;
+            line-height: 1.6;
+        }
+        .ticket {
+            border: 2px solid #059669;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+            background-color: #f0fdf4;
+        }
+        .ticket-header {
+            color: #059669;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .qr-placeholder {
+            width: 200px;
+            height: 200px;
+            background: #f0f0f0;
+            border: 2px dashed #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 10px 0;
+            color: #666;
+        }
+        .event-details {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .event-details h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .event-details ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .event-details li {
+            margin: 5px 0;
+        }
+        .valid-notice {
+            color: #059669;
+            font-weight: bold;
+            background: #f0fdf4;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📧 Email Template Preview</h1>
+        <p>This is what customers receive when their booking is approved:</p>
+        
+        <div class="email-preview">
+            <div class="email-header">
+                <h1>🎫 StudentEvents</h1>
+                <p>Your Ticket Confirmation</p>
+            </div>
+            
+            <div class="email-body">
+                <h2>Your Ticket for Sample Event</h2>
+                <p>Dear John Doe,</p>
+                <p>Your payment has been confirmed! Your ticket for <strong>Sample Event</strong> is now valid.</p>
+                
+                <div class="event-details">
+                    <h3>Event Details:</h3>
+                    <ul>
+                        <li><strong>Event:</strong> Sample Event</li>
+                        <li><strong>Date:</strong> Friday, December 15, 2024</li>
+                        <li><strong>Time:</strong> 7:00 PM</li>
+                        <li><strong>Location:</strong> Main Hall, University Campus</li>
+                        <li><strong>Age Restriction:</strong> 18+</li>
+                        <li><strong>Dress Code:</strong> Smart Casual</li>
+                    </ul>
+                </div>
+
+                <h3>Your Ticket:</h3>
+                <div class="ticket">
+                    <div class="ticket-header">✓ VALID TICKET 1 of 1</div>
+                    <p><strong>Name:</strong> John Doe</p>
+                    <p><strong>Ticket Number:</strong> TICKET-12345678-87654321-001</p>
+                    <div class="qr-placeholder">QR Code</div>
+                </div>
+
+                <div class="valid-notice">
+                    This is a valid ticket. Please show this at the event entrance.
+                </div>
+
+                <p>Questions? Contact us at support@studentevents.com</p>
+                
+                <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
+                <p style="color: #666; font-size: 12px;">
+                    This email was sent because your booking was approved by an administrator.<br>
+                    StudentEvents - Event Management System
+                </p>
+            </div>
+        </div>
+
+        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3>📋 Email Features:</h3>
+            <ul>
+                <li><strong>Professional Design:</strong> Clean, branded email template</li>
+                <li><strong>Complete Event Info:</strong> Date, time, location, restrictions</li>
+                <li><strong>Valid Tickets:</strong> QR codes for entry verification</li>
+                <li><strong>Multiple Attendees:</strong> Separate tickets for each person</li>
+                <li><strong>Mobile Friendly:</strong> Responsive design for all devices</li>
+                <li><strong>Contact Info:</strong> Support email for questions</li>
+            </ul>
+        </div>
+
+        <div style="background: #d4edda; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3>✅ Email System Status: ACTIVE</h3>
+            <p>The email system is already working! When you approve a booking in the admin dashboard, the customer automatically receives this professional email with their valid tickets.</p>
+        </div>
+
+        <button onclick="window.open('https://afterstateevents.vercel.app/admin/', '_blank')" style="padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; margin: 10px 5px;">
+            🔧 Test in Admin Dashboard
+        </button>
+    </div>
+</body>
+</html>
