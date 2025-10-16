@@ -433,8 +433,12 @@ app.post('/api/events', verifyAdminToken, async (req, res) => {
 // PUT /api/events/:id - Update event (admin only)
 app.put('/api/events/:id', verifyAdminToken, async (req, res) => {
   try {
+    console.log('🔍 PUT /api/events/:id - Starting event update...');
     const eventId = req.params.id; // Keep as string for UUID support
     const { title, date, location, price, description, additionalInfo, totalTickets, availableTickets, minAge, dressCode, currency, is_active, status, ticketsAvailableDate } = req.body;
+    
+    console.log('🔍 Event ID:', eventId);
+    console.log('🔍 Request body:', req.body);
     
     // Ensure totalTickets is properly parsed as integer
     const parsedTotalTickets = totalTickets ? parseInt(totalTickets) : null;
@@ -497,8 +501,18 @@ app.put('/api/events/:id', verifyAdminToken, async (req, res) => {
       res.json(inMemoryEvents[eventIndex]);
     }
   } catch (error) {
-    console.error('Error updating event:', error);
-    res.status(500).json({ error: 'Failed to update event' });
+    console.error('❌ Error updating event:', error);
+    console.error('❌ Error details:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name,
+      code: error.code
+    });
+    res.status(500).json({ 
+      error: 'Failed to update event', 
+      details: error.message,
+      code: error.code 
+    });
   }
 });
 
