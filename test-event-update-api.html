@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Event Update API</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        pre { background: #f5f5f5; padding: 10px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>Test Event Update API</h1>
+    
+    <div class="test-section">
+        <h3>1. Test API Connection</h3>
+        <button onclick="testConnection()">Test Connection</button>
+        <div id="connectionResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>2. Get Events List</h3>
+        <button onclick="getEvents()">Get Events</button>
+        <div id="eventsResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>3. Test Event Update</h3>
+        <button onclick="testEventUpdate()">Test Update Event</button>
+        <div id="updateResult"></div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'https://studentevents-production.up.railway.app/api';
+        
+        async function testConnection() {
+            const resultDiv = document.getElementById('connectionResult');
+            resultDiv.innerHTML = '<p class="info">Testing connection...</p>';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/health`);
+                if (response.ok) {
+                    resultDiv.innerHTML = '<p class="success">✅ API Connection successful!</p>';
+                } else {
+                    resultDiv.innerHTML = `<p class="error">❌ API Connection failed: ${response.status}</p>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<p class="error">❌ Connection error: ${error.message}</p>`;
+            }
+        }
+        
+        async function getEvents() {
+            const resultDiv = document.getElementById('eventsResult');
+            resultDiv.innerHTML = '<p class="info">Getting events...</p>';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/events`);
+                const events = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <p class="success">✅ Found ${events.length} events</p>
+                        <pre>${JSON.stringify(events, null, 2)}</pre>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<p class="error">❌ Failed to get events: ${response.status}</p>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<p class="error">❌ Error: ${error.message}</p>`;
+            }
+        }
+        
+        async function testEventUpdate() {
+            const resultDiv = document.getElementById('updateResult');
+            resultDiv.innerHTML = '<p class="info">Testing event update...</p>';
+            
+            try {
+                // First get events to find an event ID
+                const eventsResponse = await fetch(`${API_BASE_URL}/events`);
+                const events = await eventsResponse.json();
+                
+                if (!eventsResponse.ok || events.length === 0) {
+                    resultDiv.innerHTML = '<p class="error">❌ No events found to test with</p>';
+                    return;
+                }
+                
+                const eventId = events[0].id;
+                console.log('Testing with event ID:', eventId);
+                
+                // Test update with minimal data
+                const updateData = {
+                    title: events[0].title,
+                    date: events[0].date,
+                    location: events[0].location,
+                    price: events[0].price || 0,
+                    currency: 'EUR',
+                    minAge: null,
+                    dressCode: 'Casual',
+                    description: events[0].description || '',
+                    additionalInfo: events[0].additional_info || '',
+                    totalTickets: events[0].total_tickets || 100,
+                    availableTickets: events[0].available_tickets || 100,
+                    is_active: events[0].is_active || true,
+                    status: events[0].status || 'upcoming',
+                    ticketsAvailableDate: null
+                };
+                
+                console.log('Update data:', updateData);
+                
+                const response = await fetch(`${API_BASE_URL}/events/${eventId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer test-token' // This will fail auth but test the endpoint
+                    },
+                    body: JSON.stringify(updateData)
+                });
+                
+                const responseText = await response.text();
+                
+                resultDiv.innerHTML = `
+                    <p class="info">Response Status: ${response.status}</p>
+                    <p class="info">Response Text: ${responseText}</p>
+                    <pre>${JSON.stringify(updateData, null, 2)}</pre>
+                `;
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<p class="error">❌ Error: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>
