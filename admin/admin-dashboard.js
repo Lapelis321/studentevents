@@ -1140,8 +1140,8 @@ class AdminDashboard {
                 dressCode: finalDressCode,
                 description: description || '',
                 additionalInfo: image || '',
-                totalTickets: totalTickets,
-                availableTickets: totalTickets - (event.soldTickets || 0),
+            totalTickets: totalTickets,
+            availableTickets: Math.max(0, totalTickets - (event.soldTickets || 0)),
                 is_active: status === 'active' || status === 'upcoming',
                 status: status,
                 ticketsAvailableDate: ticketsAvailableDate || null

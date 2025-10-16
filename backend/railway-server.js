@@ -442,7 +442,8 @@ app.put('/api/events/:id', verifyAdminToken, async (req, res) => {
     
     // Ensure totalTickets is properly parsed as integer
     const parsedTotalTickets = totalTickets ? parseInt(totalTickets) : null;
-    const parsedAvailableTickets = availableTickets ? parseInt(availableTickets) : null;
+    // Fix: available_tickets cannot be null due to database constraint
+    const parsedAvailableTickets = availableTickets ? parseInt(availableTickets) : (parsedTotalTickets || 100);
     
     console.log('🔍 PUT /api/events/:id - Received data:', { eventId, minAge, dressCode, title, date, totalTickets });
     console.log('🔍 Date received:', date, 'Type:', typeof date);
