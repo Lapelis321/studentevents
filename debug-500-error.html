@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug 500 Error</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test { margin: 10px 0; padding: 15px; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>Debug 500 Error</h1>
+    
+    <div class="test info">
+        <h3>🔍 Testing Event Update with Detailed Error Analysis</h3>
+        <p>This will help identify the exact cause of the 500 error.</p>
+    </div>
+    
+    <div id="results"></div>
+
+    <script>
+        const API_BASE_URL = 'https://studentevents-production.up.railway.app/api';
+        
+        async function debug500Error() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="test info">🔄 Debugging 500 error...</div>';
+            
+            try {
+                // Step 1: Login to get token
+                console.log('Step 1: Getting admin token...');
+                const loginResponse = await fetch(`${API_BASE_URL}/admin/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: 'admin@studentevents.com',
+                        password: 'admin123'
+                    })
+                });
+                
+                if (!loginResponse.ok) {
+                    throw new Error(`Login failed: ${loginResponse.status} ${loginResponse.statusText}`);
+                }
+                
+                const loginData = await loginResponse.json();
+                const token = loginData.token;
+                console.log('✅ Admin token obtained');
+                
+                // Step 2: Get events list
+                console.log('Step 2: Getting events list...');
+                const eventsResponse = await fetch(`${API_BASE_URL}/events`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (!eventsResponse.ok) {
+                    throw new Error(`Events fetch failed: ${eventsResponse.status} ${eventsResponse.statusText}`);
+                }
+                
+                const events = await eventsResponse.json();
+                console.log('✅ Events fetched:', events.length);
+                
+                if (events.length === 0) {
+                    throw new Error('No events found to test with');
+                }
+                
+                const eventId = events[0].id;
+                console.log('Testing with event ID:', eventId);
+                console.log('Original event:', events[0]);
+                
+                // Step 3: Test event update with minimal data
+                console.log('Step 3: Testing event update...');
+                const updateData = {
+                    title: events[0].title,
+                    date: events[0].date,
+                    location: events[0].location,
+                    price: 25.00, // Change price to test
+                    currency: 'EUR',
+                    minAge: null,
+                    dressCode: 'Casual',
+                    description: events[0].description || '',
+                    additionalInfo: events[0].additional_info || '',
+                    totalTickets: events[0].total_tickets || 100,
+                    availableTickets: events[0].available_tickets || 100,
+                    is_active: events[0].is_active || true,
+                    status: events[0].status || 'upcoming',
+                    ticketsAvailableDate: null
+                };
+                
+                console.log('Update data being sent:', updateData);
+                
+                const updateResponse = await fetch(`${API_BASE_URL}/events/${eventId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(updateData)
+                });
+                
+                const responseText = await updateResponse.text();
+                let responseData;
+                try {
+                    responseData = JSON.parse(responseText);
+                } catch (e) {
+                    responseData = responseText;
+                }
+                
+                if (updateResponse.ok) {
+                    resultsDiv.innerHTML = `
+                        <div class="test success">
+                            <h4>✅ Event Update Successful</h4>
+                            <p>Status: ${updateResponse.status} ${updateResponse.statusText}</p>
+                            <pre>${JSON.stringify(responseData, null, 2)}</pre>
+                        </div>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `
+                        <div class="test error">
+                            <h4>❌ Event Update Failed</h4>
+                            <p>Status: ${updateResponse.status} ${updateResponse.statusText}</p>
+                            <p>Response Headers:</p>
+                            <pre>${JSON.stringify(Object.fromEntries(updateResponse.headers.entries()), null, 2)}</pre>
+                            <p>Response Body:</p>
+                            <pre>${responseText}</pre>
+                            <p>Request Details:</p>
+                            <pre>${JSON.stringify({
+                                method: 'PUT',
+                                url: `${API_BASE_URL}/events/${eventId}`,
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${token.substring(0, 20)}...`
+                                },
+                                body: updateData
+                            }, null, 2)}</pre>
+                        </div>
+                    `;
+                }
+                
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="test error">
+                        <h4>❌ Test Failed</h4>
+                        <p>Error: ${error.message}</p>
+                        <p>Type: ${error.name}</p>
+                        <p>Stack: ${error.stack}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Auto-run on page load
+        debug500Error();
+    </script>
+</body>
+</html>

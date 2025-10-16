@@ -454,25 +454,42 @@ app.put('/api/events/:id', verifyAdminToken, async (req, res) => {
     
     if (pool) {
       // Update in database
-      const result = await pool.query(
-        `UPDATE events SET title = $1, date = $2, location = $3, price = $4, currency = $5, min_age = $6, 
-         dress_code = $7, description = $8, additional_info = $9, total_tickets = $10, available_tickets = $11, is_active = $12, 
-         status = $13, tickets_available_date = $14
-         WHERE id = $15 RETURNING *`,
-        [title, date, location, price, currency, minAge, dressCode, description, additionalInfo, parsedTotalTickets, parsedAvailableTickets, is_active, status, ticketsAvailableDate, eventId]
-      );
+      console.log('🔍 About to execute database update query...');
+      console.log('🔍 Query parameters:', [title, date, location, price, currency, minAge, dressCode, description, additionalInfo, parsedTotalTickets, parsedAvailableTickets, is_active, status, ticketsAvailableDate, eventId]);
       
-      if (result.rows.length === 0) {
-        return res.status(404).json({ error: 'Event not found' });
+      try {
+        const result = await pool.query(
+          `UPDATE events SET title = $1, date = $2, location = $3, price = $4, currency = $5, min_age = $6, 
+           dress_code = $7, description = $8, additional_info = $9, total_tickets = $10, available_tickets = $11, is_active = $12, 
+           status = $13, tickets_available_date = $14
+           WHERE id = $15 RETURNING *`,
+          [title, date, location, price, currency, minAge, dressCode, description, additionalInfo, parsedTotalTickets, parsedAvailableTickets, is_active, status, ticketsAvailableDate, eventId]
+        );
+        
+        console.log('🔍 Database query executed successfully');
+        console.log('🔍 Result rows:', result.rows.length);
+        
+        if (result.rows.length === 0) {
+          return res.status(404).json({ error: 'Event not found' });
+        }
+        
+        console.log(`✅ Event updated in database: ${title}`);
+        console.log('🔍 Updated event data:', result.rows[0]);
+        console.log('🔍 Updated min_age:', result.rows[0].min_age);
+        console.log('🔍 Updated dress_code:', result.rows[0].dress_code);
+        console.log('🔍 Updated total_tickets:', result.rows[0].total_tickets);
+        console.log('🔍 Updated available_tickets:', result.rows[0].available_tickets);
+        res.json(result.rows[0]);
+      } catch (dbError) {
+        console.error('❌ Database query failed:', dbError);
+        console.error('❌ Database error details:', {
+          message: dbError.message,
+          code: dbError.code,
+          detail: dbError.detail,
+          hint: dbError.hint
+        });
+        throw dbError;
       }
-      
-      console.log(`✅ Event updated in database: ${title}`);
-      console.log('🔍 Updated event data:', result.rows[0]);
-      console.log('🔍 Updated min_age:', result.rows[0].min_age);
-      console.log('🔍 Updated dress_code:', result.rows[0].dress_code);
-      console.log('🔍 Updated total_tickets:', result.rows[0].total_tickets);
-      console.log('🔍 Updated available_tickets:', result.rows[0].available_tickets);
-      res.json(result.rows[0]);
     } else {
       // Update in-memory storage
       const eventIndex = inMemoryEvents.findIndex(e => e.id == eventId);
