@@ -1012,6 +1012,44 @@ class AdminDashboard {
         this.editingEventId = null;
     }
 
+    getEventFormData() {
+        const name = document.getElementById('editEventName').value;
+        const date = document.getElementById('editEventDate').value;
+        const location = document.getElementById('editEventLocation').value;
+        const description = document.getElementById('editEventDescription').value;
+        const image = document.getElementById('editEventImage').value;
+        const price = parseFloat(document.getElementById('editEventPrice').value) || 0;
+        const totalTickets = parseInt(document.getElementById('editEventTotalTickets').value) || 100;
+        const status = document.getElementById('editEventStatus').value;
+        const minAge = document.getElementById('editEventMinAge').value;
+        const dressCode = document.getElementById('editEventDressCode').value;
+        const ticketsAvailableDate = document.getElementById('editEventTicketsAvailableDate').value;
+        
+        // Convert date to ISO format
+        let isoDate = date;
+        if (date) {
+            isoDate = date + ':00.000Z';
+        }
+        
+        return {
+            title: name,
+            name: name,
+            date: isoDate,
+            location: location,
+            price: price,
+            currency: 'EUR',
+            minAge: minAge ? parseInt(minAge) : null,
+            dressCode: dressCode.trim() || 'Casual',
+            description: description || '',
+            additionalInfo: image || '',
+            totalTickets: totalTickets,
+            availableTickets: totalTickets,
+            is_active: status === 'active' || status === 'upcoming',
+            status: status,
+            ticketsAvailableDate: ticketsAvailableDate || null
+        };
+    }
+
     async saveEditedEvent() {
         if (!this.editingEventId) return;
 
@@ -1023,6 +1061,35 @@ class AdminDashboard {
         }
 
         console.log('💾 Saving edited event:', event.id);
+        
+        // Check if fallback is available
+        if (window.AdminDashboardFallback) {
+            console.log('🔄 Using fallback system for event update...');
+            try {
+                const fallback = new window.AdminDashboardFallback();
+                const result = await fallback.updateEvent(this.editingEventId, this.getEventFormData());
+                
+                if (result.success) {
+                    if (result.method === 'local') {
+                        this.showNotification(`Event updated locally (server unavailable): ${result.event.title}`, 'warning');
+                    } else {
+                        this.showNotification(`Event updated successfully: ${result.event.title}`, 'success');
+                    }
+                    
+                    // Update local events array
+                    const eventIndex = this.events.findIndex(e => e.id == this.editingEventId);
+                    if (eventIndex >= 0) {
+                        this.events[eventIndex] = result.event;
+                    }
+                    
+                    this.closeEditEventModal();
+                    this.renderEventsTab();
+                    return;
+                }
+            } catch (error) {
+                console.error('Fallback also failed:', error);
+            }
+        }
 
         try {
             // Get form values directly from DOM (more reliable than FormData)
