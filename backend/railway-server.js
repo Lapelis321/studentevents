@@ -877,7 +877,9 @@ app.get('/api/admin/bookings', verifyAdminToken, async (req, res) => {
       SELECT 
         b.*,
         e.title as event_title,
-        e.date as event_date
+        e.date as event_date,
+        e.time as event_time,
+        e.location as event_location
       FROM bookings b
       JOIN events e ON b.event_id = e.id
       ORDER BY b.created_at DESC

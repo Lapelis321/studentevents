@@ -2705,14 +2705,26 @@ class AdminDashboard {
     }
     
     renderAdditionalParticipants(additionalAttendees) {
-        if (!additionalAttendees) return '';
+        console.log('🔍 renderAdditionalParticipants called with:', additionalAttendees);
+        
+        if (!additionalAttendees) {
+            console.log('❌ No additional attendees data');
+            return '';
+        }
         
         try {
             const attendees = typeof additionalAttendees === 'string' 
                 ? JSON.parse(additionalAttendees) 
                 : additionalAttendees;
             
-            if (!Array.isArray(attendees) || attendees.length === 0) return '';
+            console.log('🔍 Parsed attendees:', attendees);
+            
+            if (!Array.isArray(attendees) || attendees.length === 0) {
+                console.log('❌ No attendees in array or empty array');
+                return '';
+            }
+            
+            console.log('✅ Rendering', attendees.length, 'additional attendees');
             
             return attendees.map((attendee, index) => `
                 <div class="additional-participant" style="margin-top: 8px; padding-left: 12px; border-left: 2px solid #e2e8f0;">
@@ -2723,7 +2735,7 @@ class AdminDashboard {
                 </div>
             `).join('');
         } catch (error) {
-            console.error('Error parsing additional attendees:', error);
+            console.error('❌ Error parsing additional attendees:', error);
             return '';
         }
     }
@@ -2750,6 +2762,7 @@ class AdminDashboard {
         }
         
         tbody.innerHTML = filteredBookings.map(booking => {
+            console.log('🔍 Processing booking:', booking.payment_reference, 'additional_attendees:', booking.additional_attendees);
             const isExpired = new Date(booking.payment_deadline) < new Date();
             const statusBadge = this.getBookingStatusBadge(booking.payment_status, isExpired);
             
