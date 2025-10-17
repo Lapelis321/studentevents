@@ -782,6 +782,11 @@ app.post('/api/bookings', async (req, res) => {
     const paymentDeadline = new Date(Date.now() + deadlineHours * 60 * 60 * 1000);
 
     // Create booking
+    console.log('🔍 Creating booking with data:', {
+      eventId, firstName, lastName, email, phone, isISMStudent, quantity,
+      additionalAttendees: additionalAttendees || []
+    });
+    
     const bookingResult = await pool.query(`
       INSERT INTO bookings (
         event_id, first_name, last_name, email, phone,
@@ -811,8 +816,17 @@ app.post('/api/bookings', async (req, res) => {
 
     res.status(201).json(response);
   } catch (error) {
-    console.error('Error creating booking:', error);
-    res.status(500).json({ error: 'Failed to create booking' });
+    console.error('❌ Error creating booking:', error);
+    console.error('❌ Error details:', {
+      message: error.message,
+      code: error.code,
+      detail: error.detail,
+      hint: error.hint
+    });
+    res.status(500).json({ 
+      error: 'Failed to create booking',
+      details: error.message 
+    });
   }
 });
 
