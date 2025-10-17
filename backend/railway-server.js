@@ -739,7 +739,8 @@ app.post('/api/bookings', async (req, res) => {
       email,
       phone,
       isISMStudent,
-      quantity
+      quantity,
+      additionalAttendees
     } = req.body;
 
     // Validate required fields
@@ -785,13 +786,13 @@ app.post('/api/bookings', async (req, res) => {
       INSERT INTO bookings (
         event_id, first_name, last_name, email, phone,
         is_ism_student, quantity, unit_price, discount,
-        total_amount, payment_reference, payment_deadline
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+        total_amount, payment_reference, payment_deadline, additional_attendees
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
       RETURNING *
     `, [
       eventId, firstName, lastName, email, phone,
       isISMStudent, quantity, unitPrice, discount,
-      totalAmount, paymentReference, paymentDeadline
+      totalAmount, paymentReference, paymentDeadline, JSON.stringify(additionalAttendees || [])
     ]);
 
     const booking = bookingResult.rows[0];

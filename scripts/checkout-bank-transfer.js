@@ -18,6 +18,7 @@ class Checkout {
         if (storedEvent) {
             this.event = JSON.parse(storedEvent);
             this.renderCheckout();
+            this.renderAdditionalAttendees();
         } else {
             this.showErrorState('No event selected for checkout');
         }
@@ -118,6 +119,8 @@ class Checkout {
                                 </button>
                             </div>
                         </div>
+
+                        <div id="additionalAttendeesContainer"></div>
 
                         <div class="terms-section">
                             <div class="checkbox-wrapper">
@@ -242,6 +245,7 @@ class Checkout {
         if (this.ticketQuantity < 10) {
             this.ticketQuantity++;
             this.renderCheckout();
+            this.renderAdditionalAttendees();
         }
     }
 
@@ -249,7 +253,58 @@ class Checkout {
         if (this.ticketQuantity > 1) {
             this.ticketQuantity--;
             this.renderCheckout();
+            this.renderAdditionalAttendees();
         }
+    }
+
+    renderAdditionalAttendees() {
+        const container = document.getElementById('additionalAttendeesContainer');
+        if (!container) return;
+
+        const additionalCount = this.ticketQuantity - 1; // -1 for primary contact
+        
+        if (additionalCount === 0) {
+            container.innerHTML = '';
+            return;
+        }
+
+        container.innerHTML = `
+            <div class="form-section">
+                <h3 class="form-section-title">
+                    <i class="fas fa-users"></i>
+                    Additional Attendee Information (${additionalCount} ${additionalCount === 1 ? 'person' : 'people'})
+                </h3>
+                <p class="form-hint" style="margin-bottom: 20px;">Please provide information for each additional attendee.</p>
+                ${Array.from({length: additionalCount}, (_, i) => `
+                    <div class="attendee-card">
+                        <h4 class="attendee-title">Attendee ${i + 1}</h4>
+                        <div class="attendee-form">
+                            <div class="form-group">
+                                <label for="attendee${i}_firstName" class="form-label">First Name *</label>
+                                <input type="text" id="attendee${i}_firstName" class="form-input" required>
+                                <span class="form-error" id="attendee${i}_firstName-error"></span>
+                            </div>
+                            <div class="form-group">
+                                <label for="attendee${i}_lastName" class="form-label">Last Name *</label>
+                                <input type="text" id="attendee${i}_lastName" class="form-input" required>
+                                <span class="form-error" id="attendee${i}_lastName-error"></span>
+                            </div>
+                            <div class="form-group">
+                                <label for="attendee${i}_email" class="form-label">Email Address</label>
+                                <input type="email" id="attendee${i}_email" class="form-input">
+                                <span class="form-error" id="attendee${i}_email-error"></span>
+                                <span class="form-hint">Optional - ticket will be sent to primary contact email</span>
+                            </div>
+                            <div class="form-group">
+                                <label for="attendee${i}_phone" class="form-label">Phone Number</label>
+                                <input type="tel" id="attendee${i}_phone" class="form-input">
+                                <span class="form-error" id="attendee${i}_phone-error"></span>
+                            </div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
     }
 
     async handleSubmit() {
@@ -264,14 +319,37 @@ class Checkout {
         this.showProcessingState();
 
         try {
-            const bookingData = {
-                eventId: this.event.id,
+            // Collect primary contact data
+            const primaryContact = {
                 firstName: document.getElementById('firstName').value.trim(),
                 lastName: document.getElementById('lastName').value.trim(),
                 email: document.getElementById('email').value.trim(),
-                phone: document.getElementById('phone').value.trim(),
+                phone: document.getElementById('phone').value.trim()
+            };
+
+            // Collect additional attendees data
+            const additionalAttendees = [];
+            const additionalCount = this.ticketQuantity - 1;
+            for (let i = 0; i < additionalCount; i++) {
+                const firstName = document.getElementById(`attendee${i}_firstName`)?.value.trim() || '';
+                const lastName = document.getElementById(`attendee${i}_lastName`)?.value.trim() || '';
+                const email = document.getElementById(`attendee${i}_email`)?.value.trim() || '';
+                const phone = document.getElementById(`attendee${i}_phone`)?.value.trim() || '';
+                
+                if (firstName && lastName) {
+                    additionalAttendees.push({ firstName, lastName, email, phone });
+                }
+            }
+
+            const bookingData = {
+                eventId: this.event.id,
+                firstName: primaryContact.firstName,
+                lastName: primaryContact.lastName,
+                email: primaryContact.email,
+                phone: primaryContact.phone,
                 isISMStudent: document.getElementById('ismStudent').checked,
-                quantity: this.ticketQuantity
+                quantity: this.ticketQuantity,
+                additionalAttendees: additionalAttendees
             };
 
             const response = await fetch(`${CONFIG.API_BASE_URL}/bookings`, {
