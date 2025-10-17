@@ -208,6 +208,42 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Database migration endpoint - Add additional_attendees column
+app.post('/api/migrate/add-additional-attendees', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(503).json({ error: 'Database not available' });
+    }
+
+    console.log('🔧 Running migration: Add additional_attendees column');
+    
+    // Add the column if it doesn't exist
+    await pool.query(`
+      ALTER TABLE bookings 
+      ADD COLUMN IF NOT EXISTS additional_attendees TEXT DEFAULT '[]'
+    `);
+    
+    // Update existing bookings to have empty array
+    await pool.query(`
+      UPDATE bookings 
+      SET additional_attendees = '[]' 
+      WHERE additional_attendees IS NULL
+    `);
+    
+    console.log('✅ Migration completed: additional_attendees column added');
+    res.json({ 
+      success: true, 
+      message: 'additional_attendees column added successfully' 
+    });
+  } catch (error) {
+    console.error('❌ Migration failed:', error);
+    res.status(500).json({ 
+      error: 'Migration failed', 
+      details: error.message 
+    });
+  }
+});
+
 // In-memory event storage (used when no database)
 let inMemoryEvents = [
         {
