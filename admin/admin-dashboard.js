@@ -2937,23 +2937,124 @@ class AdminDashboard {
         const booking = (this.bookings || []).find(b => b.id === bookingId);
         if (!booking) return;
         
+        console.log('🔍 Viewing booking:', booking);
+        
         const isExpired = new Date(booking.payment_deadline) < new Date();
         
-        alert(`Booking Details:
+        // Parse additional attendees
+        let additionalAttendees = [];
+        try {
+            additionalAttendees = booking.additional_attendees ? 
+                (typeof booking.additional_attendees === 'string' ? 
+                    JSON.parse(booking.additional_attendees) : 
+                    booking.additional_attendees) : [];
+        } catch (error) {
+            console.error('Error parsing additional attendees:', error);
+            additionalAttendees = [];
+        }
         
-Reference: ${booking.payment_reference}
-Event: ${booking.event_title}
-Customer: ${booking.first_name} ${booking.last_name}
-Email: ${booking.email}
-Phone: ${booking.phone}
-ISM Student: ${booking.is_ism_student ? 'Yes' : 'No'}
-Quantity: ${booking.quantity}
-Unit Price: €${parseFloat(booking.unit_price).toFixed(2)}
-Discount: €${parseFloat(booking.discount).toFixed(2)}
-Total Amount: €${parseFloat(booking.total_amount).toFixed(2)}
-Status: ${booking.payment_status.toUpperCase()}${isExpired ? ' (EXPIRED)' : ''}
-Payment Deadline: ${new Date(booking.payment_deadline).toLocaleString('en-US', { hour12: false })}
-Created: ${new Date(booking.created_at).toLocaleString('en-US', { hour12: false })}`);
+        console.log('🔍 Additional attendees:', additionalAttendees);
+        
+        // Create participants list
+        let participantsList = `
+            <div class="participant-item">
+                <strong>${booking.first_name} ${booking.last_name}</strong> (Primary)
+                <br><small>${booking.email}</small>
+            </div>
+        `;
+        
+        if (additionalAttendees.length > 0) {
+            additionalAttendees.forEach((attendee, index) => {
+                participantsList += `
+                    <div class="participant-item" style="margin-top: 8px; padding-left: 12px; border-left: 2px solid #e2e8f0;">
+                        <strong>${attendee.firstName} ${attendee.lastName}</strong>
+                        ${attendee.email ? `<br><small>${attendee.email}</small>` : ''}
+                    </div>
+                `;
+            });
+        }
+        
+        const modalContent = `
+            <div class="booking-details">
+                <div class="detail-section">
+                    <h4>Booking Information</h4>
+                    <p><strong>Reference:</strong> ${booking.payment_reference}</p>
+                    <p><strong>Event:</strong> ${booking.event_title}</p>
+                    <p><strong>Quantity:</strong> ${booking.quantity}</p>
+                    <p><strong>Unit Price:</strong> €${parseFloat(booking.unit_price).toFixed(2)}</p>
+                    <p><strong>Discount:</strong> €${parseFloat(booking.discount).toFixed(2)}</p>
+                    <p><strong>Total Amount:</strong> €${parseFloat(booking.total_amount).toFixed(2)}</p>
+                </div>
+                
+                <div class="detail-section">
+                    <h4>All Participants (${1 + additionalAttendees.length})</h4>
+                    <div class="participants-list">
+                        ${participantsList}
+                    </div>
+                </div>
+                
+                <div class="detail-section">
+                    <h4>Contact Information</h4>
+                    <p><strong>Primary Contact:</strong> ${booking.first_name} ${booking.last_name}</p>
+                    <p><strong>Email:</strong> ${booking.email}</p>
+                    <p><strong>Phone:</strong> ${booking.phone}</p>
+                    <p><strong>ISM Student:</strong> ${booking.is_ism_student ? 'Yes' : 'No'}</p>
+                </div>
+                
+                <div class="detail-section">
+                    <h4>Status & Dates</h4>
+                    <p><strong>Payment Status:</strong> ${booking.payment_status}</p>
+                    <p><strong>Payment Deadline:</strong> ${new Date(booking.payment_deadline).toLocaleString()}</p>
+                    <p><strong>Created:</strong> ${new Date(booking.created_at).toLocaleString()}</p>
+                    ${isExpired ? '<p style="color: #ef4444;"><strong>⚠️ This booking has expired!</strong></p>' : ''}
+                </div>
+            </div>
+        `;
+        
+        // Show modal
+        this.showBookingDetailsModal(modalContent);
+    }
+    
+    showBookingDetailsModal(content) {
+        // Create modal if it doesn't exist
+        let modal = document.getElementById('bookingDetailsModal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'bookingDetailsModal';
+            modal.className = 'modal';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 class="modal-title">Booking Details</h3>
+                        <button class="modal-close" onclick="adminDashboard.closeBookingDetailsModal()" title="Close">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body" id="bookingDetailsContent">
+                        <!-- Content will be populated here -->
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" class="btn btn-secondary" onclick="adminDashboard.closeBookingDetailsModal()">
+                            Close
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+        
+        // Populate content
+        document.getElementById('bookingDetailsContent').innerHTML = content;
+        
+        // Show modal
+        modal.style.display = 'flex';
+    }
+    
+    closeBookingDetailsModal() {
+        const modal = document.getElementById('bookingDetailsModal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
     }
     
     filterBookings(status) {
