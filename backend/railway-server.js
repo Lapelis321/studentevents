@@ -208,6 +208,67 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Test endpoint to check bookings data structure (no auth required for debugging)
+app.get('/api/test/bookings', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(503).json({ error: 'Database not available' });
+    }
+
+    console.log('🔍 Test endpoint: Fetching bookings data structure');
+    
+    const result = await pool.query(`
+      SELECT 
+        b.id,
+        b.payment_reference,
+        b.first_name,
+        b.last_name,
+        b.email,
+        b.quantity,
+        b.additional_attendees,
+        e.title as event_title
+      FROM bookings b
+      JOIN events e ON b.event_id = e.id
+      ORDER BY b.created_at DESC
+      LIMIT 5
+    `);
+
+    console.log('🔍 Test endpoint: Found', result.rows.length, 'bookings');
+    
+    // Log each booking's additional_attendees data
+    result.rows.forEach((booking, index) => {
+      console.log(`🔍 Booking ${index + 1}:`, {
+        reference: booking.payment_reference,
+        quantity: booking.quantity,
+        additional_attendees: booking.additional_attendees,
+        parsed: booking.additional_attendees ? JSON.parse(booking.additional_attendees) : null
+      });
+    });
+
+    res.json({
+      success: true,
+      count: result.rows.length,
+      bookings: result.rows.map(booking => ({
+        id: booking.id,
+        reference: booking.payment_reference,
+        primary_contact: `${booking.first_name} ${booking.last_name}`,
+        email: booking.email,
+        quantity: booking.quantity,
+        event: booking.event_title,
+        additional_attendees_raw: booking.additional_attendees,
+        additional_attendees_parsed: booking.additional_attendees ? JSON.parse(booking.additional_attendees) : [],
+        has_additional_attendees: booking.additional_attendees && booking.additional_attendees !== '[]'
+      }))
+    });
+  } catch (error) {
+    console.error('❌ Test endpoint error:', error);
+    res.status(500).json({ 
+      error: 'Test endpoint failed', 
+      details: error.message 
+    });
+  }
+});
+
 // Database migration endpoint - Add additional_attendees column
 app.post('/api/migrate/add-additional-attendees', async (req, res) => {
   try {
