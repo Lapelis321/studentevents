@@ -58,40 +58,38 @@ async function generateTicketPDF(ticketData) {
         resolve(pdfData.toString('base64'));
       });
       
-      const pageWidth = doc.internal.pageSize.width;
-      const pageHeight = doc.internal.pageSize.height;
+      const pageWidth = doc.page.width;
+      const pageHeight = doc.page.height;
       
       // Add subtle border (matches frontend)
-      doc.setDrawColor(200, 200, 200);
-      doc.setLineWidth(0.5);
-      doc.rect(5, 5, pageWidth - 10, pageHeight - 10);
+      doc.rect(5, 5, pageWidth - 10, pageHeight - 10)
+         .strokeColor('#c8c8c8')
+         .lineWidth(0.5)
+         .stroke();
       
       // Header (matches frontend exactly)
-      doc.setFontSize(24);
-      doc.setFont(undefined, 'bold');
-      doc.text('STUDENT EVENTS', pageWidth / 2, 25, { align: 'center' });
+      doc.fontSize(24)
+         .font('Helvetica-Bold')
+         .text('STUDENT EVENTS', pageWidth / 2, 25, { align: 'center' });
       
-      doc.setFontSize(16);
-      doc.setFont(undefined, 'normal');
-      doc.text('E-TICKET', pageWidth / 2, 35, { align: 'center' });
-      
-      // Reset text color
-      doc.setTextColor(0, 0, 0);
+      doc.fontSize(16)
+         .font('Helvetica')
+         .text('E-TICKET', pageWidth / 2, 35, { align: 'center' });
       
       // Event Details (matches frontend layout)
       let yPos = 50;
-      doc.setFontSize(14);
-      doc.setFont(undefined, 'bold');
-      doc.text('EVENT DETAILS', 15, yPos);
+      doc.fontSize(14)
+         .font('Helvetica-Bold')
+         .text('EVENT DETAILS', 15, yPos);
       
       yPos += 8;
-      doc.setFontSize(11);
-      doc.setFont(undefined, 'bold');
-      doc.text(ticketData.eventTitle || 'Event Name', 15, yPos);
+      doc.fontSize(11)
+         .font('Helvetica-Bold')
+         .text(ticketData.eventTitle || 'Event Name', 15, yPos);
       
       yPos += 7;
-      doc.setFontSize(10);
-      doc.setFont(undefined, 'normal');
+      doc.fontSize(10)
+         .font('Helvetica');
       const eventDate = new Date(ticketData.eventDate).toLocaleDateString('en-US', {
         weekday: 'long',
         year: 'numeric',
@@ -120,14 +118,14 @@ async function generateTicketPDF(ticketData) {
       
       // Attendee Information (matches frontend)
       yPos += 12;
-      doc.setFontSize(14);
-      doc.setFont(undefined, 'bold');
-      doc.text('ATTENDEE INFORMATION', 15, yPos);
+      doc.fontSize(14)
+         .font('Helvetica-Bold')
+         .text('ATTENDEE INFORMATION', 15, yPos);
       
       yPos += 8;
-      doc.setFontSize(10);
-      doc.setFont(undefined, 'normal');
-      doc.text(`Name: ${ticketData.attendeeName}`, 15, yPos);
+      doc.fontSize(10)
+         .font('Helvetica')
+         .text(`Name: ${ticketData.attendeeName}`, 15, yPos);
       
       yPos += 5;
       doc.text(`Email: ${ticketData.attendeeEmail}`, 15, yPos);
@@ -139,19 +137,19 @@ async function generateTicketPDF(ticketData) {
       doc.text(`Tickets: ${ticketData.quantity || 1}`, 15, yPos);
       
       yPos += 5;
-      doc.setFont(undefined, 'bold');
-      doc.text(`Total Amount: €${ticketData.totalAmount || '0.00'}`, 15, yPos);
+      doc.font('Helvetica-Bold')
+         .text(`Total Amount: €${ticketData.totalAmount || '0.00'}`, 15, yPos);
       
       // Ticket Number & QR Code (matches frontend)
       yPos += 12;
-      doc.setFontSize(14);
-      doc.setFont(undefined, 'bold');
-      doc.text('TICKET NUMBER', 15, yPos);
+      doc.fontSize(14)
+         .font('Helvetica-Bold')
+         .text('TICKET NUMBER', 15, yPos);
       
       yPos += 8;
-      doc.setFontSize(12);
-      doc.setFont(undefined, 'normal');
-      doc.text(ticketData.ticketNumber, 15, yPos);
+      doc.fontSize(12)
+         .font('Helvetica')
+         .text(ticketData.ticketNumber, 15, yPos);
       
       // Add QR Code (matches frontend positioning)
       if (ticketData.qrCode) {
@@ -168,25 +166,25 @@ async function generateTicketPDF(ticketData) {
           doc.image(qrBuffer, qrX, qrY, { width: qrSize, height: qrSize });
           
           // Add QR code label
-          doc.setFontSize(8);
-          doc.text('QR CODE', qrX + qrSize/2, qrY + qrSize + 5, { align: 'center' });
+          doc.fontSize(8)
+             .text('QR CODE', qrX + qrSize/2, qrY + qrSize + 5, { align: 'center' });
         } catch (error) {
           console.error('Error adding QR code to PDF:', error);
           // Add fallback text if QR code fails
-          doc.setFontSize(8);
-          doc.text('QR Code: ' + ticketData.ticketNumber, pageWidth - 60, yPos + 20);
+          doc.fontSize(8)
+             .text('QR Code: ' + ticketData.ticketNumber, pageWidth - 60, yPos + 20);
         }
       }
       
       // Small note at bottom (matches frontend)
       yPos = pageHeight - 45;
-      doc.setFontSize(7);
-      doc.text('Note: This ticket is only valid after payment confirmation.', pageWidth / 2, yPos, { align: 'center' });
+      doc.fontSize(7)
+         .text('Note: This ticket is only valid after payment confirmation.', pageWidth / 2, yPos, { align: 'center' });
       
       // Footer (matches frontend)
       yPos = pageHeight - 30;
-      doc.setFontSize(8);
-      doc.text('For support, please contact: afterstate.events@gmail.com or +37063849474', pageWidth / 2, yPos, { align: 'center' });
+      doc.fontSize(8)
+         .text('For support, please contact: afterstate.events@gmail.com or +37063849474', pageWidth / 2, yPos, { align: 'center' });
       yPos += 5;
       doc.text('A valid ticket is required for event entry', pageWidth / 2, yPos, { align: 'center' });
       
@@ -211,20 +209,20 @@ app.get('/health', (req, res) => {
 
 // In-memory event storage (used when no database)
 let inMemoryEvents = [
-  {
-    id: 1,
-    title: "Spring Music Festival",
-    date: "2024-04-15T19:00:00Z",
-    location: "University Campus",
-    price: 25.00,
-    currency: "EUR",
-    minAge: 18,
-    dressCode: "Casual",
-    description: "Join us for an amazing night of live music featuring local and international artists.",
-    additionalInfo: "Food trucks will be available on-site. Bring your student ID for verification.",
-    availableTickets: 150,
-    totalTickets: 500,
-    is_active: true
+        {
+          id: 1,
+          title: "Spring Music Festival",
+          date: "2024-04-15T19:00:00Z",
+          location: "University Campus",
+          price: 25.00,
+          currency: "EUR",
+          minAge: 18,
+          dressCode: "Casual",
+          description: "Join us for an amazing night of live music featuring local and international artists.",
+          additionalInfo: "Food trucks will be available on-site. Bring your student ID for verification.",
+          availableTickets: 150,
+          totalTickets: 500,
+          is_active: true
   },
   {
     id: 2,
@@ -1140,22 +1138,22 @@ app.post('/api/worker/login', async (req, res) => {
     // Update last active
     worker.lastActive = new Date().toISOString();
     
-    const token = jwt.sign(
-      { 
+      const token = jwt.sign(
+        { 
         id: worker.id, 
         email: worker.email, 
         role: worker.role 
-      },
-      process.env.JWT_SECRET || 'your-secret-key',
-      { expiresIn: '24h' }
-    );
+        },
+        process.env.JWT_SECRET || 'your-secret-key',
+        { expiresIn: '24h' }
+      );
     
     console.log(`✅ Worker logged in: ${worker.email}`);
-    
-    res.json({
-      success: true,
-      token,
-      user: {
+      
+      res.json({
+        success: true,
+        token,
+        user: {
         id: worker.id,
         email: worker.email,
         role: worker.role
