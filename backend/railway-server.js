@@ -46,6 +46,7 @@ const pool = process.env.DATABASE_URL ? new Pool({
 async function generateTicketPDF(ticketData) {
   return new Promise((resolve, reject) => {
     try {
+      console.log('🔍 Generating PDF ticket for:', ticketData.ticketNumber);
       const doc = new PDFDocument({
         size: 'A4',
         margin: 20
