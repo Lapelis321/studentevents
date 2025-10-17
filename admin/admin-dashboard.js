@@ -2704,6 +2704,30 @@ class AdminDashboard {
         this.updateBookingsStats();
     }
     
+    renderAdditionalParticipants(additionalAttendees) {
+        if (!additionalAttendees) return '';
+        
+        try {
+            const attendees = typeof additionalAttendees === 'string' 
+                ? JSON.parse(additionalAttendees) 
+                : additionalAttendees;
+            
+            if (!Array.isArray(attendees) || attendees.length === 0) return '';
+            
+            return attendees.map((attendee, index) => `
+                <div class="additional-participant" style="margin-top: 8px; padding-left: 12px; border-left: 2px solid #e2e8f0;">
+                    <div style="font-size: 0.9em;">
+                        <strong>${attendee.firstName} ${attendee.lastName}</strong>
+                        ${attendee.email ? `<br><small style="color: #666;">${attendee.email}</small>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        } catch (error) {
+            console.error('Error parsing additional attendees:', error);
+            return '';
+        }
+    }
+
     renderBookings(filter = 'pending') {
         const tbody = document.getElementById('bookingsTableBody');
         if (!tbody) return;
@@ -2736,7 +2760,15 @@ class AdminDashboard {
                         <strong>${booking.event_title || 'N/A'}</strong><br>
                         <small style="color: #666;">${booking.event_date ? new Date(booking.event_date).toLocaleDateString('en-US', { hour12: false }) : ''}</small>
                     </td>
-                    <td>${booking.first_name} ${booking.last_name}</td>
+                    <td>
+                        <div class="participants-list">
+                            <div class="primary-participant">
+                                <strong>${booking.first_name} ${booking.last_name}</strong>
+                                <small style="color: #666; display: block;">${booking.email}</small>
+                            </div>
+                            ${this.renderAdditionalParticipants(booking.additional_attendees)}
+                        </div>
+                    </td>
                     <td>
                         <small>${booking.email}</small><br>
                         <small style="color: #666;">${booking.phone}</small>
