@@ -1022,43 +1022,36 @@ app.post('/api/admin/bookings/:id/confirm', verifyAdminToken, async (req, res) =
         });
       }
 
-      const emailBody = `
-        <h2>Your Ticket for ${booking.event_title}</h2>
-        <p>Dear ${booking.first_name} ${booking.last_name},</p>
-        <p>Your payment has been confirmed! Your ticket${tickets.length > 1 ? 's' : ''} for <strong>${booking.event_title}</strong> ${tickets.length > 1 ? 'are' : 'is'} now valid.</p>
-        
-        <h3>Event Details:</h3>
-        <ul>
-          <li><strong>Event:</strong> ${booking.event_title}</li>
-          <li><strong>Date:</strong> ${new Date(booking.event_date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</li>
-          <li><strong>Time:</strong> ${booking.event_time || 'TBD'}</li>
-          <li><strong>Location:</strong> ${booking.event_location || 'TBD'}</li>
-          ${booking.event_min_age ? `<li><strong>Age Restriction:</strong> ${booking.event_min_age}+</li>` : ''}
-          ${booking.event_dress_code ? `<li><strong>Dress Code:</strong> ${booking.event_dress_code}</li>` : ''}
-        </ul>
+      // Generate participants list
+      let participantsList = '';
+      tickets.forEach((ticket, index) => {
+        participantsList += `${index + 1}. ${ticket.firstName} ${ticket.lastName} – General Admission\n`;
+      });
 
-        <h3>Your Ticket${tickets.length > 1 ? 's' : ''}:</h3>
-        <p>Your valid ticket${tickets.length > 1 ? 's' : ''} ${tickets.length > 1 ? 'are' : 'is'} attached to this email as PDF${tickets.length > 1 ? 's' : ''}. Please download and save ${tickets.length > 1 ? 'them' : 'it'} to your device.</p>
-        
-        <div style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #007bff;">
-          <h4 style="color: #007bff; margin-top: 0;">📱 How to Use Your Ticket:</h4>
-          <ul style="margin: 10px 0;">
-            <li>Download the PDF ticket${tickets.length > 1 ? 's' : ''} from the attachment${tickets.length > 1 ? 's' : ''}</li>
-            <li>Save ${tickets.length > 1 ? 'them' : 'it'} to your phone or print ${tickets.length > 1 ? 'them' : 'it'}</li>
-            <li>Show the ticket${tickets.length > 1 ? 's' : ''} at the event entrance</li>
-            <li>Each ticket contains a QR code for verification</li>
-          </ul>
-        </div>
+      const emailBody = `Hello ${booking.first_name},
 
-        <p style="color: #059669; font-weight: bold;">This is a valid ticket. Please show this at the event entrance.</p>
-        <p>Questions? Contact us at afterstate.events@gmail.com or +37063849474</p>
-      `;
+Your payment has been successfully approved!
+
+Here are your ticket details:
+
+Event: ${booking.event_title}
+Date: ${new Date(booking.event_date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+Location: ${booking.event_location || 'TBD'}
+
+Participants:
+${participantsList}
+
+Important:
+Until 23:00 there will be a ticket check-up. After that, entrance will not be possible without the bracelet, which will be given between 21:00–23:00.
+
+See you at the event!
+StudentEvents Team`;
 
       const msg = {
         to: booking.email,
         from: process.env.SENDGRID_FROM_EMAIL || 'afterstate.events@gmail.com',
-        subject: `Your Ticket for ${booking.event_title} - Payment Confirmed ✓`,
-        html: emailBody,
+        subject: `Your Tickets Are Approved – ${booking.event_title}`,
+        text: emailBody,
         attachments: pdfAttachments
       };
 
