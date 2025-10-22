@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact Us - StudentEvents</title>
+  
+  <link rel="stylesheet" href="styles/main.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    .contacts-container {
+      max-width: 1000px;
+      margin: 60px auto;
+      padding: 0 20px;
+    }
+    .contacts-header {
+      text-align: center;
+      margin-bottom: 50px;
+    }
+    .contacts-title {
+      font-size: 36px;
+      font-weight: 800;
+      margin-bottom: 12px;
+    }
+    .contacts-subtitle {
+      font-size: 18px;
+      color: var(--gray-600);
+    }
+    .contacts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 30px;
+      margin-bottom: 50px;
+    }
+    .contact-card {
+      background: white;
+      padding: 40px 30px;
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      text-align: center;
+    }
+    .contact-icon {
+      font-size: 48px;
+      color: var(--primary-600);
+      margin-bottom: 20px;
+    }
+    .contact-card h3 {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+    .contact-card p {
+      color: var(--gray-600);
+      margin-bottom: 8px;
+      font-size: 15px;
+    }
+    .contact-card a {
+      color: var(--primary-600);
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .contact-card a:hover {
+      text-decoration: underline;
+    }
+    .organization-info {
+      background: white;
+      padding: 50px 40px;
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+    }
+    .org-title {
+      font-size: 28px;
+      font-weight: 800;
+      margin-bottom: 24px;
+      text-align: center;
+      color: var(--primary-600);
+    }
+    .org-details {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .org-row {
+      display: flex;
+      padding: 16px 0;
+      border-bottom: 1px solid var(--gray-200);
+    }
+    .org-row:last-child {
+      border-bottom: none;
+    }
+    .org-label {
+      flex: 0 0 150px;
+      font-weight: 600;
+      color: var(--gray-700);
+    }
+    .org-value {
+      flex: 1;
+      color: var(--gray-900);
+    }
+  </style>
+</head>
+<body>
+  <header class="main-header">
+    <div class="header-container">
+      <div class="logo">
+        <i class="fas fa-ticket-alt"></i> StudentEvents
+      </div>
+      <nav class="main-nav">
+        <a href="index.html">Events</a>
+        <a href="rules.html">Rules & Policy</a>
+        <a href="contacts.html" class="active">Contacts</a>
+      </nav>
+    </div>
+  </header>
+  
+  <div class="contacts-container">
+    <div class="contacts-header">
+      <h1 class="contacts-title">Get in Touch</h1>
+      <p class="contacts-subtitle">
+        We're here to help! Reach out to us with any questions or concerns.
+      </p>
+    </div>
+    
+    <div class="contacts-grid">
+      <div class="contact-card">
+        <div class="contact-icon">
+          <i class="fas fa-envelope"></i>
+        </div>
+        <h3>Email Support</h3>
+        <p id="supportEmail">Loading...</p>
+        <p style="font-size: 13px; color: var(--gray-500); margin-top: 12px;">
+          We typically respond within 24 hours
+        </p>
+      </div>
+      
+      <div class="contact-card">
+        <div class="contact-icon">
+          <i class="fas fa-phone"></i>
+        </div>
+        <h3>Phone Support</h3>
+        <p id="supportPhone">Loading...</p>
+        <p id="workingHours" style="font-size: 13px; color: var(--gray-500); margin-top: 12px;">
+          Loading...
+        </p>
+      </div>
+      
+      <div class="contact-card">
+        <div class="contact-icon">
+          <i class="fas fa-map-marker-alt"></i>
+        </div>
+        <h3>Social Media</h3>
+        <p>
+          <a href="#" target="_blank"><i class="fab fa-facebook"></i> Facebook</a>
+        </p>
+        <p>
+          <a href="#" target="_blank"><i class="fab fa-instagram"></i> Instagram</a>
+        </p>
+        <p>
+          <a href="#" target="_blank"><i class="fab fa-twitter"></i> Twitter</a>
+        </p>
+      </div>
+    </div>
+    
+    <div class="organization-info">
+      <h2 class="org-title">Organization Information</h2>
+      <div class="org-details" id="orgDetails">
+        <div class="org-row">
+          <div class="org-label">Organization:</div>
+          <div class="org-value" id="orgName">Loading...</div>
+        </div>
+        <div class="org-row">
+          <div class="org-label">Email:</div>
+          <div class="org-value" id="orgEmail">Loading...</div>
+        </div>
+        <div class="org-row">
+          <div class="org-label">Phone:</div>
+          <div class="org-value" id="orgPhone">Loading...</div>
+        </div>
+      </div>
+    </div>
+    
+    <div style="margin-top: 50px; text-align: center;">
+      <a href="index.html" class="btn btn-primary">
+        <i class="fas fa-arrow-left"></i> Back to Events
+      </a>
+    </div>
+  </div>
+  
+  <script src="js/config.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/contacts.js"></script>
+</body>
+</html>
+

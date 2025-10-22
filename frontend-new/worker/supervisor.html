@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Supervisor Dashboard - StudentEvents</title>
+  
+  <link rel="stylesheet" href="../styles/main.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    .supervisor-header {
+      background: var(--primary-700);
+      color: white;
+      padding: 20px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .supervisor-title { font-size: 24px; font-weight: 700; }
+    .supervisor-container { max-width: 1200px; margin: 40px auto; padding: 0 20px; }
+    .section-card { background: white; padding: 30px; border-radius: 16px; box-shadow: var(--shadow); margin-bottom: 30px; }
+    .section-title { font-size: 20px; font-weight: 700; margin-bottom: 20px; }
+    .scan-section { text-align: center; }
+    .scan-icon { font-size: 48px; color: var(--primary-600); margin-bottom: 16px; }
+    .participants-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    .participants-table th { text-align: left; padding: 12px; border-bottom: 2px solid var(--gray-200); font-weight: 700; }
+    .participants-table td { padding: 12px; border-bottom: 1px solid var(--gray-200); }
+  </style>
+</head>
+<body>
+  <div class="supervisor-header">
+    <div class="supervisor-title">
+      <i class="fas fa-user-shield"></i> Supervisor Dashboard
+    </div>
+    <div>
+      <span id="supervisorName" style="margin-right: 20px;"></span>
+      <button onclick="logout()" class="btn btn-secondary">
+        <i class="fas fa-sign-out-alt"></i> Logout
+      </button>
+    </div>
+  </div>
+  
+  <div class="supervisor-container">
+    <!-- Ticket Verification Section -->
+    <div class="section-card scan-section">
+      <div class="scan-icon">
+        <i class="fas fa-qrcode"></i>
+      </div>
+      <h2 class="section-title">Ticket Verification</h2>
+      <p style="color: var(--gray-600); margin-bottom: 24px;">
+        Scan or search for tickets to verify entry
+      </p>
+      
+      <div style="max-width: 500px; margin: 0 auto;">
+        <input 
+          type="text" 
+          id="ticketSearch" 
+          placeholder="Ticket number or participant name..." 
+          class="form-control"
+          style="font-size: 16px; padding: 14px;"
+        >
+        <button onclick="searchTicket()" class="btn btn-primary btn-block" style="margin-top: 12px;">
+          <i class="fas fa-search"></i> Search Ticket
+        </button>
+      </div>
+      
+      <div id="ticketResult" style="margin-top: 24px;"></div>
+    </div>
+    
+    <!-- Assigned Event Participants -->
+    <div class="section-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2 class="section-title" style="margin: 0;">Event Participants</h2>
+        <div style="display: flex; gap: 12px;">
+          <button onclick="supervisor.addParticipant()" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add Participant
+          </button>
+          <button onclick="supervisor.exportParticipants()" class="btn btn-secondary">
+            <i class="fas fa-download"></i> Export
+          </button>
+        </div>
+      </div>
+      
+      <div style="margin-bottom: 16px;">
+        <input 
+          type="text" 
+          id="participantSearch" 
+          placeholder="Search participants..." 
+          class="form-control"
+        >
+      </div>
+      
+      <div id="participantsTable"></div>
+    </div>
+  </div>
+  
+  <script src="../js/config.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="js/supervisor.js"></script>
+</body>
+</html>
+

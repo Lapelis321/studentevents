@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Discover and book amazing student events">
+  <title>StudentEvents - Event Ticketing Platform</title>
+  
+  <!-- Styles -->
+  <link rel="stylesheet" href="styles/main.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    /* Hero Section */
+    .hero {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 80px 0;
+      text-align: center;
+    }
+    
+    .hero h1 {
+      font-size: 48px;
+      font-weight: 800;
+      margin-bottom: 20px;
+      line-height: 1.2;
+    }
+    
+    .hero p {
+      font-size: 20px;
+      opacity: 0.95;
+      max-width: 600px;
+      margin: 0 auto 30px;
+    }
+    
+    /* Events Section */
+    .events-section {
+      padding: 60px 0;
+    }
+    
+    .section-header {
+      text-align: center;
+      margin-bottom: 50px;
+    }
+    
+    .section-title {
+      font-size: 36px;
+      font-weight: 700;
+      color: var(--gray-900);
+      margin-bottom: 12px;
+    }
+    
+    .section-subtitle {
+      font-size: 18px;
+      color: var(--gray-600);
+    }
+    
+    /* Events Grid */
+    .events-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 30px;
+      margin-bottom: 40px;
+    }
+    
+    /* Event Card */
+    .event-card {
+      background: white;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      transition: all var(--transition-normal);
+      cursor: pointer;
+    }
+    
+    .event-card:hover {
+      box-shadow: var(--shadow-lg);
+      transform: translateY(-4px);
+    }
+    
+    .event-image {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 48px;
+    }
+    
+    .event-content {
+      padding: 24px;
+    }
+    
+    .event-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--gray-900);
+      margin-bottom: 12px;
+    }
+    
+    .event-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    
+    .event-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      color: var(--gray-600);
+    }
+    
+    .event-meta-item i {
+      color: var(--primary-500);
+      width: 16px;
+    }
+    
+    .event-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 16px;
+      border-top: 1px solid var(--gray-200);
+    }
+    
+    .event-price {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--primary-600);
+    }
+    
+    .event-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 80px 20px;
+    }
+    
+    .empty-state i {
+      font-size: 64px;
+      color: var(--gray-300);
+      margin-bottom: 20px;
+    }
+    
+    .empty-state h3 {
+      font-size: 24px;
+      color: var(--gray-700);
+      margin-bottom: 12px;
+    }
+    
+    .empty-state p {
+      color: var(--gray-500);
+      font-size: 16px;
+    }
+    
+    @media (max-width: 768px) {
+      .hero h1 {
+        font-size: 32px;
+      }
+      
+      .hero p {
+        font-size: 16px;
+      }
+      
+      .events-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="container">
+      <div class="header-content">
+        <a href="/" class="logo">
+          <div class="logo-icon">
+            <i class="fas fa-ticket-alt"></i>
+          </div>
+          <span>StudentEvents</span>
+        </a>
+        
+        <nav class="nav">
+          <a href="/" class="nav-link">Events</a>
+          <a href="rules.html" class="nav-link">Rules & Policy</a>
+          <a href="contacts.html" class="nav-link">Contacts</a>
+          <a href="admin/login.html" class="nav-link">Admin</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+  
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="container">
+      <h1>Discover Amazing Events</h1>
+      <p>Connect and have fun with events designed for students</p>
+    </div>
+  </section>
+  
+  <!-- Events Section -->
+  <section class="events-section">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">Upcoming Events</h2>
+        <p class="section-subtitle">Browse and book tickets for exciting events</p>
+      </div>
+      
+      <div class="events-grid" id="eventsGrid">
+        <!-- Events will be loaded here -->
+      </div>
+    </div>
+  </section>
+  
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-links">
+          <a href="rules.html" class="footer-link">Rules & Policy</a>
+          <a href="contacts.html" class="footer-link">Contact Us</a>
+        </div>
+        <div class="footer-info">
+          <p>&copy; 2024 StudentEvents. All rights reserved.</p>
+        </div>
+      </div>
+    </div>
+  </footer>
+  
+  <!-- Scripts -->
+  <script src="js/config.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/home.js"></script>
+</body>
+</html>
+
+

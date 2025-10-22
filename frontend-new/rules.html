@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rules & Policy - StudentEvents</title>
+  
+  <link rel="stylesheet" href="styles/main.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    .policy-container {
+      max-width: 900px;
+      margin: 60px auto;
+      padding: 0 20px;
+    }
+    .policy-card {
+      background: white;
+      padding: 50px 40px;
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      margin-bottom: 30px;
+    }
+    .policy-title {
+      font-size: 32px;
+      font-weight: 800;
+      margin-bottom: 30px;
+      text-align: center;
+    }
+    .policy-section {
+      margin-bottom: 40px;
+    }
+    .policy-section h2 {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--primary-600);
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--primary-100);
+    }
+    .policy-section h3 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-top: 20px;
+      margin-bottom: 12px;
+    }
+    .policy-section p {
+      color: var(--gray-700);
+      line-height: 1.8;
+      margin-bottom: 12px;
+    }
+    .policy-section ul {
+      color: var(--gray-700);
+      line-height: 1.8;
+      margin-left: 24px;
+      margin-bottom: 16px;
+    }
+    .policy-section li {
+      margin-bottom: 8px;
+    }
+  </style>
+</head>
+<body>
+  <header class="main-header">
+    <div class="header-container">
+      <div class="logo">
+        <i class="fas fa-ticket-alt"></i> StudentEvents
+      </div>
+      <nav class="main-nav">
+        <a href="index.html">Events</a>
+        <a href="rules.html" class="active">Rules & Policy</a>
+        <a href="contacts.html">Contacts</a>
+      </nav>
+    </div>
+  </header>
+  
+  <div class="policy-container">
+    <div class="policy-card">
+      <h1 class="policy-title">Rules & Policy</h1>
+      
+      <div style="text-align: center; margin-bottom: 40px;">
+        <button onclick="downloadPDF()" class="btn btn-secondary">
+          <i class="fas fa-download"></i> Download as PDF
+        </button>
+      </div>
+      
+      <div id="policyContent">
+        <!-- Policy content will be loaded here -->
+      </div>
+    </div>
+  </div>
+  
+  <script src="js/config.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/rules.js"></script>
+</body>
+</html>
+

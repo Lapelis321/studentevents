@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payment Instructions - StudentEvents</title>
+  
+  <link rel="stylesheet" href="styles/main.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    .instructions-container {
+      max-width: 800px;
+      margin: 40px auto;
+    }
+    
+    .success-icon {
+      width: 80px;
+      height: 80px;
+      background: var(--success);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+      font-size: 40px;
+      color: white;
+    }
+    
+    .success-header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    
+    .success-header h1 {
+      font-size: 32px;
+      font-weight: 800;
+      margin-bottom: 12px;
+    }
+    
+    .success-header p {
+      color: var(--gray-600);
+      font-size: 18px;
+    }
+    
+    .info-card {
+      background: white;
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      margin-bottom: 24px;
+    }
+    
+    .info-card h2 {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      color: var(--gray-900);
+    }
+    
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--gray-200);
+    }
+    
+    .info-row:last-child {
+      border-bottom: none;
+    }
+    
+    .info-label {
+      color: var(--gray-600);
+      font-weight: 500;
+    }
+    
+    .info-value {
+      font-weight: 600;
+      color: var(--gray-900);
+    }
+    
+    .bank-details {
+      background: var(--gray-50);
+      padding: 24px;
+      border-radius: 12px;
+      margin: 20px 0;
+    }
+    
+    .bank-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--gray-200);
+    }
+    
+    .bank-row:last-child {
+      border-bottom: none;
+    }
+    
+    .bank-label {
+      font-weight: 600;
+      color: var(--gray-700);
+    }
+    
+    .bank-value {
+      font-family: monospace;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--primary-600);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .copy-btn {
+      padding: 6px 12px;
+      background: var(--primary-100);
+      color: var(--primary-600);
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all var(--transition-fast);
+    }
+    
+    .copy-btn:hover {
+      background: var(--primary-200);
+    }
+    
+    .warning-box {
+      background: #FEF3C7;
+      border-left: 4px solid #F59E0B;
+      padding: 20px;
+      border-radius: 8px;
+      margin: 24px 0;
+    }
+    
+    .warning-box h3 {
+      color: #92400E;
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .warning-box ul {
+      margin: 0;
+      padding-left: 24px;
+      color: #92400E;
+    }
+    
+    .warning-box li {
+      margin: 8px 0;
+    }
+    
+    .action-buttons {
+      display: flex;
+      gap: 16px;
+      margin-top: 30px;
+    }
+    
+    .action-buttons .btn {
+      flex: 1;
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="container">
+      <div class="header-content">
+        <a href="/" class="logo">
+          <div class="logo-icon">
+            <i class="fas fa-ticket-alt"></i>
+          </div>
+          <span>StudentEvents</span>
+        </a>
+      </div>
+    </div>
+  </header>
+  
+  <main>
+    <div class="container">
+      <div class="instructions-container">
+        <div class="success-header">
+          <div class="success-icon">
+            <i class="fas fa-check"></i>
+          </div>
+          <h1>Booking Confirmed!</h1>
+          <p>Complete your payment to receive your tickets</p>
+        </div>
+        
+        <div id="instructionsContent">
+          <!-- Content will be loaded here -->
+        </div>
+      </div>
+    </div>
+  </main>
+  
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-links">
+          <a href="rules.html" class="footer-link">Rules & Policy</a>
+          <a href="contacts.html" class="footer-link">Contact Us</a>
+        </div>
+        <div class="footer-info">
+          <p>&copy; 2024 StudentEvents. All rights reserved.</p>
+        </div>
+      </div>
+    </div>
+  </footer>
+  
+  <script src="js/config.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/payment-instructions.js"></script>
+</body>
+</html>
+
