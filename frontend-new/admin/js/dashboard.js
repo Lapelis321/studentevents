@@ -250,72 +250,76 @@ const eventsManager = {
       <!-- Create/Edit Modal -->
       <div id="eventModal" class="modal">
         <div class="modal-content">
-          <h3 id="modalTitle">Create Event</h3>
-          <form id="eventForm">
-            <div class="form-group">
-              <label>Event Name *</label>
-              <input type="text" name="name" required class="form-control">
-            </div>
-            <div class="form-group">
-              <label>Date & Time *</label>
-              <input type="datetime-local" name="date" required class="form-control">
-            </div>
-            <div class="form-group">
-              <label>Location *</label>
-              <input type="text" name="location" required class="form-control">
-            </div>
-            <div class="form-group">
-              <label>Description</label>
-              <textarea name="description" rows="3" class="form-control"></textarea>
-            </div>
-            <div class="form-group">
-              <label>Event Image</label>
-              <div style="margin-bottom: 12px;">
-                <button type="button" onclick="document.getElementById('eventImageFile').click()" class="btn btn-secondary" style="margin-right: 8px;">
-                  <i class="fas fa-upload"></i> Upload Image
-                </button>
-                <span id="imageFileName" style="color: var(--gray-600); font-size: 14px;"></span>
-                <input type="file" id="eventImageFile" accept="image/*" style="display: none;">
+          <div class="modal-header">
+            <h2 id="modalTitle">Create Event</h2>
+          </div>
+          <div class="modal-body">
+            <form id="eventForm">
+              <div class="form-group">
+                <label>Event Name *</label>
+                <input type="text" name="name" required class="form-control">
               </div>
-              <div id="imagePreview" style="display: none; margin-bottom: 12px;">
-                <img id="previewImg" style="max-width: 100%; max-height: 200px; border-radius: 8px; border: 2px solid var(--gray-200);">
+              <div class="form-group">
+                <label>Date & Time *</label>
+                <input type="datetime-local" name="date" required class="form-control">
               </div>
-              <div style="margin-top: 8px;">
-                <label style="font-size: 14px; color: var(--gray-600);">Or enter image URL:</label>
-                <input type="url" name="image_url" id="imageUrlInput" class="form-control" placeholder="https://example.com/image.jpg">
+              <div class="form-group">
+                <label>Location *</label>
+                <input type="text" name="location" required class="form-control">
               </div>
-            </div>
-            <div class="form-group">
-              <label>Price (€) *</label>
-              <input type="number" step="0.01" name="price" required class="form-control">
-            </div>
-            <div class="form-group">
-              <label>Total Tickets *</label>
-              <input type="number" name="total_tickets" required class="form-control">
-            </div>
-            <div class="form-group">
-              <label>Minimum Age</label>
-              <input type="number" name="min_age" class="form-control">
-            </div>
-            <div class="form-group">
-              <label>Dress Code</label>
-              <input type="text" name="dress_code" class="form-control">
-            </div>
-            <div class="form-group">
-              <label>Status *</label>
-              <select name="status" class="form-control" required>
-                <option value="active">Active</option>
-                <option value="coming_soon">Coming Soon</option>
-                <option value="cancelled">Cancelled</option>
-                <option value="completed">Completed (Visible)</option>
-                <option value="completed_hidden">Completed (Hidden)</option>
-              </select>
-            </div>
-            <div style="display: flex; gap: 12px; margin-top: 24px;">
-              <button type="button" onclick="eventsManager.closeModal()" class="btn btn-secondary">Cancel</button>
-              <button type="submit" class="btn btn-primary">Save Event</button>
-            </div>
-          </form>
+              <div class="form-group">
+                <label>Description</label>
+                <textarea name="description" rows="3" class="form-control"></textarea>
+              </div>
+              <div class="form-group">
+                <label>Event Image</label>
+                <div style="margin-bottom: 12px;">
+                  <button type="button" onclick="document.getElementById('eventImageFile').click()" class="btn btn-secondary" style="margin-right: 8px;">
+                    <i class="fas fa-upload"></i> Upload Image
+                  </button>
+                  <span id="imageFileName" style="color: var(--gray-600); font-size: 14px;"></span>
+                  <input type="file" id="eventImageFile" accept="image/*" style="display: none;">
+                </div>
+                <div id="imagePreview" style="display: none; margin-bottom: 12px;">
+                  <img id="previewImg" style="max-width: 100%; max-height: 200px; border-radius: 8px; border: 2px solid var(--gray-200);">
+                </div>
+                <div style="margin-top: 8px;">
+                  <label style="font-size: 14px; color: var(--gray-600);">Or enter image URL:</label>
+                  <input type="url" name="image_url" id="imageUrlInput" class="form-control" placeholder="https://example.com/image.jpg">
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Price (€) *</label>
+                <input type="number" step="0.01" name="price" required class="form-control">
+              </div>
+              <div class="form-group">
+                <label>Total Tickets *</label>
+                <input type="number" name="total_tickets" required class="form-control">
+              </div>
+              <div class="form-group">
+                <label>Minimum Age</label>
+                <input type="number" name="min_age" class="form-control">
+              </div>
+              <div class="form-group">
+                <label>Dress Code</label>
+                <input type="text" name="dress_code" class="form-control">
+              </div>
+              <div class="form-group">
+                <label>Status *</label>
+                <select name="status" class="form-control" required>
+                  <option value="active">Active</option>
+                  <option value="coming_soon">Coming Soon</option>
+                  <option value="cancelled">Cancelled</option>
+                  <option value="completed">Completed (Visible)</option>
+                  <option value="completed_hidden">Completed (Hidden)</option>
+                </select>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" onclick="eventsManager.closeModal()" class="btn btn-secondary">Cancel</button>
+            <button type="submit" form="eventForm" class="btn btn-primary">Save Event</button>
+          </div>
         </div>
       </div>
     `;
