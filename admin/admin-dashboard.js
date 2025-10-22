@@ -2611,6 +2611,14 @@ class AdminDashboard {
                 this.bookings = await response.json();
                 this.allBookings = [...this.bookings]; // Keep original copy for filtering
                 console.log('✅ Loaded bookings:', this.bookings.length);
+                
+                // Enhanced debugging: Log bookings with additional attendees
+                const bookingsWithAdditional = this.bookings.filter(b => b.additional_attendees && b.additional_attendees !== '[]');
+                console.log('📊 Bookings with additional attendees:', bookingsWithAdditional.length);
+                bookingsWithAdditional.forEach(b => {
+                    console.log(`  - ${b.payment_reference}: quantity=${b.quantity}, additional_attendees=${b.additional_attendees}`);
+                });
+                
                 this.populateEventFilter();
                 this.restoreFilterStates(); // Restore saved filters
                 this.updateBookingsStats();
@@ -2704,11 +2712,17 @@ class AdminDashboard {
         this.updateBookingsStats();
     }
     
-    renderAdditionalParticipants(additionalAttendees) {
-        console.log('🔍 renderAdditionalParticipants called with:', additionalAttendees);
+    renderAdditionalParticipants(additionalAttendees, quantity = 1) {
+        console.log('🔍 renderAdditionalParticipants called with:', additionalAttendees, 'quantity:', quantity);
         
         if (!additionalAttendees) {
             console.log('❌ No additional attendees data');
+            // Show warning if quantity indicates there should be more people
+            if (quantity > 1) {
+                return `<div style="margin-top: 8px; padding: 8px; background: #fff3cd; border-left: 3px solid #ffc107; font-size: 0.85em;">
+                    ⚠️ Booking has ${quantity} ticket(s) but missing attendee information
+                </div>`;
+            }
             return '';
         }
         
@@ -2721,12 +2735,18 @@ class AdminDashboard {
             
             if (!Array.isArray(attendees) || attendees.length === 0) {
                 console.log('❌ No attendees in array or empty array');
+                // Show warning if quantity indicates there should be more people
+                if (quantity > 1) {
+                    return `<div style="margin-top: 8px; padding: 8px; background: #fff3cd; border-left: 3px solid #ffc107; font-size: 0.85em;">
+                        ⚠️ Booking has ${quantity} ticket(s) but no additional attendee details
+                    </div>`;
+                }
                 return '';
             }
             
             console.log('✅ Rendering', attendees.length, 'additional attendees');
             
-            return attendees.map((attendee, index) => `
+            const html = attendees.map((attendee, index) => `
                 <div class="additional-participant" style="margin-top: 8px; padding-left: 12px; border-left: 2px solid #e2e8f0;">
                     <div style="font-size: 0.9em;">
                         <strong>${attendee.firstName} ${attendee.lastName}</strong>
@@ -2734,9 +2754,14 @@ class AdminDashboard {
                     </div>
                 </div>
             `).join('');
+            
+            console.log('🎨 Generated HTML:', html.substring(0, 100) + '...');
+            return html;
         } catch (error) {
-            console.error('❌ Error parsing additional attendees:', error);
-            return '';
+            console.error('❌ Error parsing additional attendees:', error, error.stack);
+            return `<div style="margin-top: 8px; padding: 8px; background: #fee; border-left: 3px solid #f00; font-size: 0.85em;">
+                ❌ Error displaying attendees: ${error.message}
+            </div>`;
         }
     }
 
@@ -2777,9 +2802,10 @@ class AdminDashboard {
                         <div class="participants-list">
                             <div class="primary-participant">
                                 <strong>${booking.first_name} ${booking.last_name}</strong>
+                                ${booking.quantity > 1 ? `<span style="color: #10b981; font-size: 0.85em; margin-left: 8px;">(+${booking.quantity - 1} more)</span>` : ''}
                                 <small style="color: #666; display: block;">${booking.email}</small>
                             </div>
-                            ${this.renderAdditionalParticipants(booking.additional_attendees)}
+                            ${this.renderAdditionalParticipants(booking.additional_attendees, booking.quantity)}
                         </div>
                     </td>
                     <td>
@@ -2988,6 +3014,16 @@ class AdminDashboard {
                 
                 <div class="detail-section">
                     <h4>All Participants (${1 + additionalAttendees.length})</h4>
+                    ${booking.quantity !== (1 + additionalAttendees.length) ? `
+                        <div style="padding: 10px; background: #fff3cd; border-left: 3px solid #ffc107; margin-bottom: 15px; border-radius: 4px;">
+                            ⚠️ <strong>Data Mismatch Warning:</strong><br>
+                            Booking quantity: ${booking.quantity} ticket(s)<br>
+                            Participants found: ${1 + additionalAttendees.length} person(s)<br>
+                            ${booking.quantity > (1 + additionalAttendees.length) ? 
+                                `Missing ${booking.quantity - (1 + additionalAttendees.length)} attendee details` : 
+                                'More participants than tickets'}
+                        </div>
+                    ` : ''}
                     <div class="participants-list">
                         ${participantsList}
                     </div>
