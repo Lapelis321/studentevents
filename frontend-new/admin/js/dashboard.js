@@ -1153,6 +1153,38 @@ const settingsManager = {
         </div>
         
         <div style="margin-bottom: 32px; border-top: 2px solid var(--gray-200); padding-top: 32px;">
+          <h3>Policy & Rules Content</h3>
+          <p style="color: var(--gray-600);">Edit the content of policies displayed on the public website.</p>
+          
+          <div class="form-group">
+            <label>Terms of Service</label>
+            <textarea id="policyTerms" class="form-control" rows="4" placeholder="Terms of Service content..."></textarea>
+          </div>
+          
+          <div class="form-group">
+            <label>Privacy Policy</label>
+            <textarea id="policyPrivacy" class="form-control" rows="4" placeholder="Privacy Policy content..."></textarea>
+          </div>
+          
+          <div class="form-group">
+            <label>Event Guidelines</label>
+            <textarea id="policyGuidelines" class="form-control" rows="4" placeholder="Event Guidelines content..."></textarea>
+          </div>
+          
+          <div class="form-group">
+            <label>Refund Policy</label>
+            <textarea id="policyRefund" class="form-control" rows="4" placeholder="Refund Policy content..."></textarea>
+          </div>
+          
+          <div class="form-group">
+            <label>Code of Conduct</label>
+            <textarea id="policyConduct" class="form-control" rows="4" placeholder="Code of Conduct content..."></textarea>
+          </div>
+          
+          <button onclick="settingsManager.savePolicies()" class="btn btn-primary">Save All Policies</button>
+        </div>
+        
+        <div style="margin-bottom: 32px; border-top: 2px solid var(--gray-200); padding-top: 32px;">
           <h3 style="color: var(--gray-700);">Data Management</h3>
           <p style="color: var(--gray-600);">Download a complete backup of all system data or reset everything to start fresh.</p>
           <div style="display: flex; gap: 12px; margin-top: 16px;">
@@ -1168,6 +1200,7 @@ const settingsManager = {
     `;
     
     await this.loadSettings();
+    await this.loadPolicies();
   },
   
   async loadSettings() {
@@ -1224,6 +1257,56 @@ const settingsManager = {
       showNotification('Organization settings saved', 'success');
     } catch (error) {
       showNotification('Failed to save settings', 'error');
+    }
+  },
+  
+  async loadPolicies() {
+    try {
+      const policies = await fetchAPI('/api/policies');
+      
+      // Map policy types to field IDs
+      const policyMap = {
+        'terms': 'policyTerms',
+        'privacy': 'policyPrivacy',
+        'guidelines': 'policyGuidelines',
+        'refund': 'policyRefund',
+        'conduct': 'policyConduct'
+      };
+      
+      policies.forEach(policy => {
+        const fieldId = policyMap[policy.type];
+        const field = document.getElementById(fieldId);
+        if (field) {
+          field.value = policy.content || '';
+        }
+      });
+    } catch (error) {
+      console.error('Failed to load policies', error);
+    }
+  },
+  
+  async savePolicies() {
+    const policies = [
+      { type: 'terms', title: 'Terms of Service', content: document.getElementById('policyTerms').value },
+      { type: 'privacy', title: 'Privacy Policy', content: document.getElementById('policyPrivacy').value },
+      { type: 'guidelines', title: 'Event Guidelines', content: document.getElementById('policyGuidelines').value },
+      { type: 'refund', title: 'Refund Policy', content: document.getElementById('policyRefund').value },
+      { type: 'conduct', title: 'Code of Conduct', content: document.getElementById('policyConduct').value }
+    ];
+    
+    try {
+      showLoading();
+      
+      for (const policy of policies) {
+        await fetchAPI(`/api/policies/${policy.type}`, 'PUT', policy);
+      }
+      
+      showNotification('Policies saved successfully', 'success');
+    } catch (error) {
+      showNotification('Failed to save policies', 'error');
+      console.error('Save policies error:', error);
+    } finally {
+      hideLoading();
     }
   },
   
