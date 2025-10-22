@@ -182,15 +182,12 @@ const dashboard = {
         switch(this.currentTab) {
           case 'events':
             await eventsManager.loadEvents();
-            eventsManager.renderEvents();
             break;
           case 'bookings':
             await bookingsManager.loadBookings();
-            bookingsManager.renderBookings();
             break;
           case 'workers':
             await workersManager.loadWorkers();
-            workersManager.renderWorkers();
             break;
         }
       } catch (error) {
@@ -330,7 +327,7 @@ const eventsManager = {
   async loadEvents() {
     try {
       showLoading();
-      const response = await fetchAPI('/api/events');
+      const response = await fetchAPI('/events');
       this.events = response;
       this.updateStats();
       this.renderTable();
@@ -477,15 +474,15 @@ const eventsManager = {
           const uploadFormData = new FormData();
           uploadFormData.append('image', imageFile);
           
-          const uploadResult = await fetchAPI('/api/upload/image', 'POST', uploadFormData, true);
+          const uploadResult = await fetchAPI('/upload/image', 'POST', uploadFormData, true);
           data.image_url = uploadResult.url;
         }
         
         if (eventId) {
-          await fetchAPI(`/api/events/${eventId}`, 'PUT', data);
+          await fetchAPI(`/events/${eventId}`, 'PUT', data);
           showNotification('Event updated successfully', 'success');
         } else {
-          await fetchAPI('/api/events', 'POST', data);
+          await fetchAPI('/events', 'POST', data);
           showNotification('Event created successfully', 'success');
         }
         
@@ -506,7 +503,7 @@ const eventsManager = {
     
     try {
       showLoading();
-      await fetchAPI(`/api/events/${id}`, 'DELETE');
+      await fetchAPI(`/events/${id}`, 'DELETE');
       showNotification('Event deleted successfully', 'success');
       await this.loadEvents();
     } catch (error) {
@@ -636,7 +633,7 @@ const bookingsManager = {
   
   async loadEventsForSelect() {
     try {
-      const events = await fetchAPI('/api/events');
+      const events = await fetchAPI('/events');
       const select = document.getElementById('participantEventSelect');
       if (select) {
         select.innerHTML = '<option value="">Select an event</option>' +
@@ -662,7 +659,7 @@ const bookingsManager = {
       
       try {
         showLoading();
-        await fetchAPI('/api/bookings/manual', 'POST', data);
+        await fetchAPI('/bookings/manual', 'POST', data);
         showNotification('Participant added successfully', 'success');
         this.closeAddModal();
         await this.loadBookings();
@@ -677,7 +674,7 @@ const bookingsManager = {
   async loadBookings() {
     try {
       showLoading();
-      const response = await fetchAPI('/api/bookings');
+      const response = await fetchAPI('/bookings');
       this.bookings = response;
       this.renderTable();
     } catch (error) {
@@ -754,7 +751,7 @@ const bookingsManager = {
     
     try {
       showLoading();
-      await fetchAPI(`/api/bookings/${id}/confirm`, 'POST');
+      await fetchAPI(`/bookings/${id}/confirm`, 'POST');
       showNotification('Payment confirmed and tickets sent', 'success');
       await this.loadBookings();
     } catch (error) {
@@ -769,7 +766,7 @@ const bookingsManager = {
     
     try {
       showLoading();
-      await fetchAPI(`/api/bookings/${id}`, 'DELETE');
+      await fetchAPI(`/bookings/${id}`, 'DELETE');
       showNotification('Booking deleted', 'success');
       await this.loadBookings();
     } catch (error) {
@@ -923,7 +920,7 @@ const workersManager = {
   async loadWorkers() {
     try {
       showLoading();
-      const response = await fetchAPI('/api/workers');
+      const response = await fetchAPI('/workers');
       this.workers = response;
       this.renderTable();
     } catch (error) {
@@ -935,7 +932,7 @@ const workersManager = {
   
   async loadEvents() {
     try {
-      const response = await fetchAPI('/api/events');
+      const response = await fetchAPI('/events');
       this.events = response;
       this.populateEventSelect();
     } catch (error) {
@@ -1009,10 +1006,10 @@ const workersManager = {
         showLoading();
         
         if (workerId) {
-          await fetchAPI(`/api/workers/${workerId}`, 'PUT', data);
+          await fetchAPI(`/workers/${workerId}`, 'PUT', data);
           showNotification('Worker updated', 'success');
         } else {
-          await fetchAPI('/api/workers', 'POST', data);
+          await fetchAPI('/workers', 'POST', data);
           showNotification('Worker created', 'success');
         }
         
@@ -1031,7 +1028,7 @@ const workersManager = {
     
     try {
       showLoading();
-      await fetchAPI(`/api/workers/${id}`, 'DELETE');
+      await fetchAPI(`/workers/${id}`, 'DELETE');
       showNotification('Worker deleted', 'success');
       await this.loadWorkers();
     } catch (error) {
@@ -1205,7 +1202,7 @@ const settingsManager = {
   
   async loadSettings() {
     try {
-      const settings = await fetchAPI('/api/settings');
+      const settings = await fetchAPI('/settings');
       // Populate form fields
       settings.forEach(setting => {
         const field = document.getElementById(setting.key);
@@ -1223,7 +1220,7 @@ const settingsManager = {
     };
     
     try {
-      await fetchAPI('/api/settings', 'PUT', data);
+      await fetchAPI('/settings', 'PUT', data);
       showNotification('Bank settings saved', 'success');
     } catch (error) {
       showNotification('Failed to save settings', 'error');
@@ -1238,7 +1235,7 @@ const settingsManager = {
     };
     
     try {
-      await fetchAPI('/api/settings', 'PUT', data);
+      await fetchAPI('/settings', 'PUT', data);
       showNotification('Contact settings saved', 'success');
     } catch (error) {
       showNotification('Failed to save settings', 'error');
@@ -1253,7 +1250,7 @@ const settingsManager = {
     };
     
     try {
-      await fetchAPI('/api/settings', 'PUT', data);
+      await fetchAPI('/settings', 'PUT', data);
       showNotification('Organization settings saved', 'success');
     } catch (error) {
       showNotification('Failed to save settings', 'error');
@@ -1262,7 +1259,7 @@ const settingsManager = {
   
   async loadPolicies() {
     try {
-      const policies = await fetchAPI('/api/policies');
+      const policies = await fetchAPI('/policies');
       
       // Map policy types to field IDs
       const policyMap = {
@@ -1298,7 +1295,7 @@ const settingsManager = {
       showLoading();
       
       for (const policy of policies) {
-        await fetchAPI(`/api/policies/${policy.type}`, 'PUT', policy);
+        await fetchAPI(`/policies/${policy.type}`, 'PUT', policy);
       }
       
       showNotification('Policies saved successfully', 'success');
@@ -1353,7 +1350,7 @@ const settingsManager = {
       await this.downloadBackup();
       
       // Then reset
-      await fetchAPI('/api/settings/reset', 'POST');
+      await fetchAPI('/settings/reset', 'POST');
       showNotification('System reset complete. Backup downloaded.', 'success');
       
       setTimeout(() => {
