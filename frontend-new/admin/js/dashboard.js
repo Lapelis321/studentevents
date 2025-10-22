@@ -477,11 +477,33 @@ const eventsManager = {
   
   async exportAll() {
     try {
-      const response = await fetchAPI('/api/events/export');
-      downloadJSON(response, 'events-export.json');
+      showLoading();
+      const response = await fetch(`${window.CONFIG.API_BASE_URL}/events/export/all`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Export failed');
+      }
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'events-export.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      
       showNotification('Events exported successfully', 'success');
     } catch (error) {
       showNotification('Failed to export events', 'error');
+      console.error('Export error:', error);
+    } finally {
+      hideLoading();
     }
   }
 };
@@ -773,8 +795,14 @@ Download ticket?`;
   },
   
   exportParticipants() {
-    downloadJSON(this.bookings, 'participants-export.json');
-    showNotification('Participants exported', 'success');
+    // Export all bookings as JSON
+    if (this.bookings.length === 0) {
+      showNotification('No bookings to export', 'info');
+      return;
+    }
+    
+    downloadJSON(this.bookings, `participants-export-${Date.now()}.json`);
+    showNotification(`Exported ${this.bookings.length} bookings successfully`, 'success');
   }
 };
 
@@ -982,9 +1010,36 @@ const workersManager = {
     document.getElementById('workerModal').classList.add('active');
   },
   
-  exportWorkers() {
-    downloadJSON(this.workers, 'workers-export.json');
-    showNotification('Workers exported', 'success');
+  async exportWorkers() {
+    try {
+      showLoading();
+      const response = await fetch(`${window.CONFIG.API_BASE_URL}/workers/export/all`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Export failed');
+      }
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'workers-export.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      
+      showNotification('Workers exported successfully', 'success');
+    } catch (error) {
+      showNotification('Failed to export workers', 'error');
+      console.error('Export error:', error);
+    } finally {
+      hideLoading();
+    }
   }
 };
 
