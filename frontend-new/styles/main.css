@@ -73,14 +73,17 @@ body {
    ===================================================== */
 
 .logo-img {
-  height: 32px;
-  max-height: 32px;
-  width: auto;
-  max-width: 32px;
-  display: inline-block;
+  height: 32px !important;
+  max-height: 32px !important;
+  width: 32px !important;
+  max-width: 32px !important;
+  min-height: 32px;
+  min-width: 32px;
+  display: block;
   vertical-align: middle;
   transition: var(--transition-normal);
   object-fit: contain;
+  overflow: hidden;
 }
 
 .logo-container {
@@ -89,6 +92,8 @@ body {
   gap: 10px;
   text-decoration: none;
   color: inherit;
+  height: 32px;
+  overflow: hidden;
 }
 
 .logo-text {
