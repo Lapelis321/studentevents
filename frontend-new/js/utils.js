@@ -234,4 +234,107 @@ document.head.appendChild(style);
 // Export for use in other scripts
 window.Utils = Utils;
 
+// =====================================================
+// GLOBAL HELPER FUNCTIONS FOR BACKWARD COMPATIBILITY
+// =====================================================
+
+// API Request Helper
+async function fetchAPI(endpoint, method = 'GET', data = null, isFormData = false) {
+  const token = localStorage.getItem('adminToken') || localStorage.getItem('workerToken') || localStorage.getItem('authToken');
+  const url = `${window.CONFIG.API_BASE_URL}${endpoint}`;
+
+  const options = {
+    method,
+    headers: {}
+  };
+
+  if (token) {
+    options.headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  // Handle FormData (for file uploads) vs JSON
+  if (data) {
+    if (isFormData && data instanceof FormData) {
+      options.body = data;
+      // Don't set Content-Type header for FormData - browser sets it automatically with boundary
+    } else {
+      options.headers['Content-Type'] = 'application/json';
+      options.body = JSON.stringify(data);
+    }
+  }
+
+  const response = await fetch(url, options);
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: 'Request failed' }));
+    throw new Error(error.error || 'Request failed');
+  }
+
+  return await response.json();
+}
+
+// Loading State Helpers
+function showLoading() {
+  // Create or show global loading indicator
+  let loader = document.getElementById('globalLoader');
+  if (!loader) {
+    loader = document.createElement('div');
+    loader.id = 'globalLoader';
+    loader.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255, 255, 255, 0.9);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+    `;
+    loader.innerHTML = `
+      <div style="text-align: center;">
+        <div class="spinner" style="
+          border: 4px solid #f3f3f3;
+          border-top: 4px solid #667eea;
+          border-radius: 50%;
+          width: 40px;
+          height: 40px;
+          animation: spin 1s linear infinite;
+          margin: 0 auto 12px;
+        "></div>
+        <p style="color: #666; font-weight: 600;">Loading...</p>
+      </div>
+    `;
+    document.body.appendChild(loader);
+    
+    // Add spin animation if not exists
+    if (!document.getElementById('spinnerStyles')) {
+      const spinStyle = document.createElement('style');
+      spinStyle.id = 'spinnerStyles';
+      spinStyle.textContent = `
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `;
+      document.head.appendChild(spinStyle);
+    }
+  } else {
+    loader.style.display = 'flex';
+  }
+}
+
+function hideLoading() {
+  const loader = document.getElementById('globalLoader');
+  if (loader) {
+    loader.style.display = 'none';
+  }
+}
+
+// Notification Helper
+function showNotification(message, type = 'info') {
+  Utils.showNotification(message, type);
+}
+
 
