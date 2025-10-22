@@ -1,4 +1,100 @@
-// Admin Dashboard Controller
+// =====================================================
+// UTILITY FUNCTIONS
+// =====================================================
+
+// API Request Helper
+async function fetchAPI(endpoint, method = 'GET', data = null, isFormData = false) {
+  const token = localStorage.getItem('adminToken');
+  const url = `${window.CONFIG.API_BASE_URL}${endpoint}`;
+  
+  const options = {
+    method,
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  };
+  
+  // Handle FormData (for file uploads) vs JSON
+  if (data) {
+    if (isFormData && data instanceof FormData) {
+      options.body = data;
+      // Don't set Content-Type header for FormData - browser sets it automatically with boundary
+    } else {
+      options.headers['Content-Type'] = 'application/json';
+      options.body = JSON.stringify(data);
+    }
+  }
+  
+  const response = await fetch(url, options);
+  
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Request failed');
+  }
+  
+  return await response.json();
+}
+
+// Show loading overlay
+function showLoading() {
+  let loader = document.getElementById('globalLoader');
+  if (!loader) {
+    loader = document.createElement('div');
+    loader.id = 'globalLoader';
+    loader.innerHTML = '<div class="spinner"></div>';
+    loader.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 9999;';
+    document.body.appendChild(loader);
+  }
+  loader.style.display = 'flex';
+}
+
+// Hide loading overlay
+function hideLoading() {
+  const loader = document.getElementById('globalLoader');
+  if (loader) loader.style.display = 'none';
+}
+
+// Show notification
+function showNotification(message, type = 'info') {
+  const notification = document.createElement('div');
+  notification.className = 'notification';
+  notification.textContent = message;
+  notification.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 16px 24px;
+    background: ${type === 'success' ? '#10B981' : type === 'error' ? '#EF4444' : '#3B82F6'};
+    color: white;
+    border-radius: 8px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    z-index: 10000;
+    animation: slideIn 0.3s ease-out;
+  `;
+  
+  document.body.appendChild(notification);
+  
+  setTimeout(() => {
+    notification.style.animation = 'slideOut 0.3s ease-out';
+    setTimeout(() => notification.remove(), 300);
+  }, 3000);
+}
+
+// Download JSON
+function downloadJSON(data, filename) {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// =====================================================
+// ADMIN DASHBOARD CONTROLLER
+// =====================================================
+
 const dashboard = {
   currentTab: 'events',
   
@@ -116,8 +212,21 @@ const eventsManager = {
               <textarea name="description" rows="3" class="form-control"></textarea>
             </div>
             <div class="form-group">
-              <label>Image URL</label>
-              <input type="url" name="image_url" class="form-control">
+              <label>Event Image</label>
+              <div style="margin-bottom: 12px;">
+                <button type="button" onclick="document.getElementById('eventImageFile').click()" class="btn btn-secondary" style="margin-right: 8px;">
+                  <i class="fas fa-upload"></i> Upload Image
+                </button>
+                <span id="imageFileName" style="color: var(--gray-600); font-size: 14px;"></span>
+                <input type="file" id="eventImageFile" accept="image/*" style="display: none;">
+              </div>
+              <div id="imagePreview" style="display: none; margin-bottom: 12px;">
+                <img id="previewImg" style="max-width: 100%; max-height: 200px; border-radius: 8px; border: 2px solid var(--gray-200);">
+              </div>
+              <div style="margin-top: 8px;">
+                <label style="font-size: 14px; color: var(--gray-600);">Or enter image URL:</label>
+                <input type="url" name="image_url" id="imageUrlInput" class="form-control" placeholder="https://example.com/image.jpg">
+              </div>
             </div>
             <div class="form-group">
               <label>Price (€) *</label>
@@ -255,15 +364,62 @@ const eventsManager = {
   
   setupEventForm() {
     const form = document.getElementById('eventForm');
+    const fileInput = document.getElementById('eventImageFile');
+    const imageFileName = document.getElementById('imageFileName');
+    const imagePreview = document.getElementById('imagePreview');
+    const previewImg = document.getElementById('previewImg');
+    const imageUrlInput = document.getElementById('imageUrlInput');
+    
+    // Handle file input change - show preview
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        imageFileName.textContent = file.name;
+        
+        // Show preview
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          previewImg.src = e.target.result;
+          imagePreview.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+        
+        // Clear URL input if file is selected
+        imageUrlInput.value = '';
+      }
+    });
+    
+    // Handle URL input - show preview
+    imageUrlInput.addEventListener('input', (e) => {
+      if (e.target.value) {
+        previewImg.src = e.target.value;
+        imagePreview.style.display = 'block';
+        
+        // Clear file input if URL is entered
+        fileInput.value = '';
+        imageFileName.textContent = '';
+      }
+    });
+    
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       
       const formData = new FormData(form);
-      const data = Object.fromEntries(formData.entries());
+      let data = Object.fromEntries(formData.entries());
       const eventId = form.dataset.id;
+      const imageFile = fileInput.files[0];
       
       try {
         showLoading();
+        
+        // Upload image if file is selected
+        if (imageFile) {
+          const uploadFormData = new FormData();
+          uploadFormData.append('image', imageFile);
+          
+          const uploadResult = await fetchAPI('/api/upload/image', 'POST', uploadFormData, true);
+          data.image_url = uploadResult.url;
+        }
         
         if (eventId) {
           await fetchAPI(`/api/events/${eventId}`, 'PUT', data);

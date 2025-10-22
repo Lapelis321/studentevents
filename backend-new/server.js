@@ -114,6 +114,7 @@ const workersRoutes = require('./routes/workers');
 const settingsRoutes = require('./routes/settings');
 const policiesRoutes = require('./routes/policies');
 const paymentsRoutes = require('./routes/payments');
+const uploadRoutes = require('./routes/upload');
 
 // Register routes
 app.use('/api/admin', authRoutes.adminRoutes);
@@ -124,6 +125,7 @@ app.use('/api/workers', workersRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/policies', policiesRoutes);
 app.use('/api/payments', paymentsRoutes);
+app.use('/api/upload', uploadRoutes);
 
 // =====================================================
 // ERROR HANDLING
