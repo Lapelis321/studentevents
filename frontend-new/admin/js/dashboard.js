@@ -1106,11 +1106,16 @@ const settingsManager = {
         </div>
         
         <div style="margin-bottom: 32px; border-top: 2px solid var(--gray-200); padding-top: 32px;">
-          <h3 style="color: var(--danger);">Data Management</h3>
-          <p style="color: var(--gray-600);">Reset all data including events, workers, and bookings. A backup will be automatically downloaded.</p>
-          <button onclick="settingsManager.resetSystem()" class="btn btn-danger">
-            <i class="fas fa-exclamation-triangle"></i> Reset Everything
-          </button>
+          <h3 style="color: var(--gray-700);">Data Management</h3>
+          <p style="color: var(--gray-600);">Download a complete backup of all system data or reset everything to start fresh.</p>
+          <div style="display: flex; gap: 12px; margin-top: 16px;">
+            <button onclick="settingsManager.downloadBackup()" class="btn btn-secondary">
+              <i class="fas fa-download"></i> Download Backup
+            </button>
+            <button onclick="settingsManager.resetSystem()" class="btn btn-danger">
+              <i class="fas fa-exclamation-triangle"></i> Reset Everything
+            </button>
+          </div>
         </div>
       </div>
     `;
@@ -1175,15 +1180,49 @@ const settingsManager = {
     }
   },
   
+  async downloadBackup() {
+    try {
+      showLoading();
+      const response = await fetch(`${window.CONFIG.API_BASE_URL}/settings/backup`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Backup failed');
+      }
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `system-backup-${Date.now()}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      
+      showNotification('Backup downloaded successfully', 'success');
+    } catch (error) {
+      showNotification('Failed to download backup', 'error');
+      console.error('Backup error:', error);
+    } finally {
+      hideLoading();
+    }
+  },
+  
   async resetSystem() {
     if (!confirm('Are you ABSOLUTELY sure? This will delete ALL data!')) return;
     if (!confirm('Last warning: This action cannot be undone!')) return;
     
     try {
       showLoading();
-      const backup = await fetchAPI('/api/settings/backup');
-      downloadJSON(backup, `backup-${Date.now()}.json`);
       
+      // First download backup
+      await this.downloadBackup();
+      
+      // Then reset
       await fetchAPI('/api/settings/reset', 'POST');
       showNotification('System reset complete. Backup downloaded.', 'success');
       
@@ -1192,6 +1231,7 @@ const settingsManager = {
       }, 2000);
     } catch (error) {
       showNotification('Failed to reset system', 'error');
+      console.error('Reset error:', error);
     } finally {
       hideLoading();
     }

@@ -123,6 +123,44 @@ router.put('/', requireAdmin, async (req, res) => {
 });
 
 // =====================================================
+// GET /api/settings/backup - Download system backup (admin only)
+// =====================================================
+router.get('/backup', requireAdmin, async (req, res) => {
+  const pool = req.app.locals.pool;
+  
+  if (!pool) {
+    return res.status(503).json({ error: 'Database not available' });
+  }
+  
+  try {
+    // Create backup data
+    const eventsBackup = await pool.query('SELECT * FROM events ORDER BY created_at DESC');
+    const bookingsBackup = await pool.query('SELECT * FROM bookings ORDER BY created_at DESC');
+    const workersBackup = await pool.query('SELECT * FROM workers ORDER BY created_at DESC');
+    const settingsBackup = await pool.query('SELECT * FROM settings');
+    const policiesBackup = await pool.query('SELECT * FROM policies');
+    
+    const backup = {
+      timestamp: new Date().toISOString(),
+      events: eventsBackup.rows,
+      bookings: bookingsBackup.rows,
+      workers: workersBackup.rows,
+      settings: settingsBackup.rows,
+      policies: policiesBackup.rows
+    };
+    
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', `attachment; filename=system-backup-${Date.now()}.json`);
+    
+    res.json(backup);
+    
+  } catch (error) {
+    console.error('Error creating backup:', error);
+    res.status(500).json({ error: 'Failed to create backup' });
+  }
+});
+
+// =====================================================
 // POST /api/settings/reset - Reset system (admin only)
 // =====================================================
 router.post('/reset', requireAdmin, async (req, res) => {
