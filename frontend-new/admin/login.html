@@ -137,7 +137,7 @@
       submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in...';
       
       try {
-        const response = await Utils.apiRequest('/api/admin/login', {
+        const response = await Utils.apiRequest('/admin/login', {
           method: 'POST',
           body: JSON.stringify({ email, password })
         });
