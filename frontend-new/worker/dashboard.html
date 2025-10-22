@@ -11,12 +11,32 @@
   
   <style>
     .worker-header {
-      background: var(--primary-600);
+      background: var(--gray-900);
       color: white;
       padding: 20px 30px;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      box-shadow: var(--shadow-md);
+    }
+    .header-left, .header-right {
+      flex: 0 0 200px;
+    }
+    .header-center {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+    .header-logo {
+      height: 40px;
+      width: auto;
+    }
+    .header-title {
+      font-size: 20px;
+      font-weight: 700;
+      margin: 0;
     }
     .worker-title { font-size: 24px; font-weight: 700; }
     .worker-container { max-width: 1000px; margin: 40px auto; padding: 0 20px; }
@@ -35,11 +55,16 @@
 </head>
 <body>
   <div class="worker-header">
-    <div class="worker-title">
-      <i class="fas fa-user-check"></i> Worker Dashboard
+    <div class="header-left">
+      <a href="../index.html" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Back
+      </a>
     </div>
-    <div>
-      <span id="workerName" style="margin-right: 20px;"></span>
+    <div class="header-center">
+      <img src="../assets/logo.svg" alt="StudentEvents Logo" class="header-logo logo-light">
+      <h1 class="header-title">StudentEvents</h1>
+    </div>
+    <div class="header-right" style="text-align: right;">
       <button onclick="logout()" class="btn btn-secondary">
         <i class="fas fa-sign-out-alt"></i> Logout
       </button>

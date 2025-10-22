@@ -138,3 +138,4 @@ class AdminDashboardFallback {
 
 // Export for use in admin dashboard
 window.AdminDashboardFallback = AdminDashboardFallback;
+

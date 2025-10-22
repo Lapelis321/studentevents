@@ -344,6 +344,52 @@ Created: ${new Date().toLocaleString('en-US', { hour12: false })}
             
             document.body.removeChild(qrContainer);
             
+            // ===== PENDING PAYMENT WATERMARK =====
+            // Add prominent watermark across the middle of the ticket
+            doc.setFontSize(28);
+            doc.setFont(undefined, 'bold');
+            doc.setTextColor(220, 38, 38); // Red color
+            
+            const centerX = pageWidth / 2;
+            const centerY = pageHeight / 2;
+            
+            // Save graphics state and add transparency
+            doc.saveGraphicsState();
+            doc.setGState(new doc.GState({opacity: 0.3})); // 30% opacity
+            
+            // Draw watermark text at an angle
+            doc.text('PENDING PAYMENT', centerX, centerY - 10, {
+                align: 'center',
+                angle: -30
+            });
+            doc.text('NOT VALID FOR ENTRY', centerX, centerY + 10, {
+                align: 'center',
+                angle: -30
+            });
+            
+            doc.restoreGraphicsState();
+            
+            // Additional red warning box at bottom
+            yPos = pageHeight - 80;
+            doc.setFillColor(254, 226, 226); // Light red background
+            doc.rect(15, yPos - 8, pageWidth - 30, 25, 'F');
+            
+            doc.setTextColor(220, 38, 38); // Red text
+            doc.setFontSize(10);
+            doc.setFont(undefined, 'bold');
+            doc.text('⚠ PENDING PAYMENT - NOT VALID FOR EVENT ENTRY', pageWidth / 2, yPos, { align: 'center' });
+            
+            yPos += 6;
+            doc.setFontSize(8);
+            doc.setFont(undefined, 'normal');
+            doc.text('This ticket will become valid only after payment is confirmed.', pageWidth / 2, yPos, { align: 'center' });
+            
+            yPos += 5;
+            doc.text('You will receive a new valid ticket via email once payment is approved.', pageWidth / 2, yPos, { align: 'center' });
+            
+            // Reset colors for footer
+            doc.setTextColor(0, 0, 0);
+            
             // Small note at bottom
             yPos = pageHeight - 45;
             doc.setFontSize(7);

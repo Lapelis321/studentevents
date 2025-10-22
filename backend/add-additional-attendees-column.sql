@@ -11,3 +11,4 @@ WHERE additional_attendees IS NULL;
 
 -- Add comment to the column
 COMMENT ON COLUMN bookings.additional_attendees IS 'JSON array of additional attendees for multi-person bookings';
+

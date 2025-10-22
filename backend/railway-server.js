@@ -1,4 +1,7 @@
 // Clean Railway production server
+// Load environment variables from .env file for local development
+require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
