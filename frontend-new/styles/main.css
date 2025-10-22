@@ -73,25 +73,29 @@ body {
    ===================================================== */
 
 .logo-img {
-  height: 40px;
+  height: 32px;
+  max-height: 32px;
   width: auto;
+  max-width: 32px;
   display: inline-block;
   vertical-align: middle;
   transition: var(--transition-normal);
+  object-fit: contain;
 }
 
 .logo-container {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   text-decoration: none;
   color: inherit;
 }
 
 .logo-text {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 700;
   margin: 0;
+  white-space: nowrap;
 }
 
 /* Logo color variations for different backgrounds */
