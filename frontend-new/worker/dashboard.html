@@ -82,6 +82,27 @@
       </p>
       
       <div class="search-box">
+        <!-- QR Scanner Button -->
+        <button onclick="openQRScanner()" class="btn btn-secondary btn-block" style="margin-bottom: 16px; padding: 16px;">
+          <i class="fas fa-camera"></i> Scan QR Code
+        </button>
+        
+        <!-- Camera Preview (hidden by default) -->
+        <div id="qrScannerContainer" style="display: none; margin-bottom: 16px;">
+          <div style="background: var(--gray-100); border: 2px dashed var(--gray-300); border-radius: 8px; padding: 40px; text-align: center;">
+            <i class="fas fa-video" style="font-size: 48px; color: var(--gray-400); margin-bottom: 16px;"></i>
+            <p style="color: var(--gray-600); margin: 0;">Camera QR scanning coming soon!</p>
+            <p style="color: var(--gray-500); font-size: 14px; margin-top: 8px;">Use manual search for now.</p>
+            <button onclick="closeQRScanner()" class="btn btn-secondary" style="margin-top: 16px;">
+              <i class="fas fa-times"></i> Close
+            </button>
+          </div>
+        </div>
+        
+        <div style="text-align: center; margin: 16px 0; color: var(--gray-500); font-weight: 500;">
+          OR
+        </div>
+        
         <input 
           type="text" 
           id="ticketSearch" 

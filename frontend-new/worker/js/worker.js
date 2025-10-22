@@ -17,6 +17,15 @@ function logout() {
   window.location.href = 'login.html';
 }
 
+function openQRScanner() {
+  document.getElementById('qrScannerContainer').style.display = 'block';
+  showNotification('Camera QR scanning feature coming soon!', 'info');
+}
+
+function closeQRScanner() {
+  document.getElementById('qrScannerContainer').style.display = 'none';
+}
+
 async function searchTicket() {
   const query = document.getElementById('ticketSearch').value.trim();
   
