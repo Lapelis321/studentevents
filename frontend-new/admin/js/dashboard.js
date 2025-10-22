@@ -91,6 +91,19 @@ function downloadJSON(data, filename) {
   URL.revokeObjectURL(url);
 }
 
+// Format date
+function formatDate(dateString) {
+  if (!dateString) return 'N/A';
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+}
+
 // =====================================================
 // ADMIN DASHBOARD CONTROLLER
 // =====================================================
@@ -498,10 +511,98 @@ const bookingsManager = {
         
         <div id="bookingsTable"></div>
       </div>
+      
+      <!-- Add Participant Modal -->
+      <div id="addParticipantModal" class="modal">
+        <div class="modal-content">
+          <h3 id="modalTitle" style="margin-bottom: 24px;">Add Participant</h3>
+          <form id="addParticipantForm">
+            <div class="form-group">
+              <label>Event *</label>
+              <select name="event_id" id="participantEventSelect" required class="form-control">
+                <option value="">Select an event</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>First Name *</label>
+              <input type="text" name="first_name" required class="form-control">
+            </div>
+            <div class="form-group">
+              <label>Last Name *</label>
+              <input type="text" name="last_name" required class="form-control">
+            </div>
+            <div class="form-group">
+              <label>Email *</label>
+              <input type="email" name="email" required class="form-control">
+            </div>
+            <div class="form-group">
+              <label>Phone *</label>
+              <input type="tel" name="phone" required class="form-control">
+            </div>
+            <div class="form-group">
+              <label>Quantity *</label>
+              <input type="number" name="quantity" min="1" value="1" required class="form-control">
+            </div>
+            <div class="form-group">
+              <label>Payment Status</label>
+              <select name="payment_status" class="form-control">
+                <option value="paid">Paid</option>
+                <option value="pending">Pending</option>
+              </select>
+            </div>
+            <div style="display: flex; gap: 12px; margin-top: 24px;">
+              <button type="submit" class="btn btn-primary" style="flex: 1;">Add Participant</button>
+              <button type="button" onclick="bookingsManager.closeAddModal()" class="btn btn-secondary">Cancel</button>
+            </div>
+          </form>
+        </div>
+      </div>
     `;
     
     await this.loadBookings();
+    await this.loadEventsForSelect();
     this.setupSearch();
+    this.setupAddParticipantForm();
+  },
+  
+  async loadEventsForSelect() {
+    try {
+      const events = await fetchAPI('/api/events');
+      const select = document.getElementById('participantEventSelect');
+      if (select) {
+        select.innerHTML = '<option value="">Select an event</option>' +
+          events.filter(e => e.status === 'active' || e.status === 'coming-soon').map(event =>
+            `<option value="${event.id}">${event.name} - ${formatDate(event.date)}</option>`
+          ).join('');
+      }
+    } catch (error) {
+      console.error('Failed to load events', error);
+    }
+  },
+  
+  setupAddParticipantForm() {
+    const form = document.getElementById('addParticipantForm');
+    if (!form) return;
+    
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const formData = new FormData(form);
+      const data = Object.fromEntries(formData.entries());
+      data.quantity = parseInt(data.quantity);
+      
+      try {
+        showLoading();
+        await fetchAPI('/api/bookings/manual', 'POST', data);
+        showNotification('Participant added successfully', 'success');
+        this.closeAddModal();
+        await this.loadBookings();
+      } catch (error) {
+        showNotification(error.message || 'Failed to add participant', 'error');
+      } finally {
+        hideLoading();
+      }
+    });
   },
   
   async loadBookings() {
@@ -615,7 +716,12 @@ const bookingsManager = {
   },
   
   openAddModal() {
-    showNotification('Add participant form coming soon', 'info');
+    document.getElementById('addParticipantForm').reset();
+    document.getElementById('addParticipantModal').classList.add('active');
+  },
+  
+  closeAddModal() {
+    document.getElementById('addParticipantModal').classList.remove('active');
   },
   
   exportParticipants() {

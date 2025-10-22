@@ -392,6 +392,92 @@ router.post('/:id/confirm', requireAdmin, async (req, res) => {
 });
 
 // =====================================================
+// POST /api/bookings/manual - Create booking manually (admin only)
+// =====================================================
+router.post('/manual', requireAdmin, async (req, res) => {
+  const pool = req.app.locals.pool;
+  
+  if (!pool) {
+    return res.status(503).json({ error: 'Database not available' });
+  }
+  
+  try {
+    const {
+      event_id,
+      first_name,
+      last_name,
+      email,
+      phone,
+      quantity,
+      payment_status,
+      payment_method
+    } = req.body;
+    
+    // Validate required fields
+    if (!event_id || !first_name || !last_name || !email || !phone || !quantity) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+    
+    // Get event details
+    const eventResult = await pool.query(
+      'SELECT * FROM events WHERE id = $1',
+      [event_id]
+    );
+    
+    if (eventResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+    
+    const event = eventResult.rows[0];
+    
+    // Check ticket availability
+    const availableTickets = event.total_tickets - event.sold_tickets;
+    if (quantity > availableTickets) {
+      return res.status(400).json({ 
+        error: 'Not enough tickets available',
+        available: availableTickets
+      });
+    }
+    
+    // Calculate total amount
+    const total_amount = event.price * quantity;
+    
+    // Generate ticket number
+    const ticket_number = generateTicketNumber();
+    
+    // Generate payment reference
+    const payment_reference = generatePaymentReference();
+    
+    // Create booking with manual payment status (default to 'paid' if not specified)
+    const finalPaymentStatus = payment_status || 'paid';
+    const finalPaymentMethod = payment_method || 'manual';
+    
+    const result = await pool.query(
+      `INSERT INTO bookings (
+        event_id, ticket_number, first_name, last_name, email, phone, 
+        quantity, total_amount, payment_status, payment_method, payment_reference
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+      RETURNING *`,
+      [
+        event_id, ticket_number, first_name, last_name, email, phone,
+        quantity, total_amount, finalPaymentStatus, finalPaymentMethod, payment_reference
+      ]
+    );
+    
+    const booking = result.rows[0];
+    
+    res.status(201).json({
+      message: 'Booking created successfully',
+      booking
+    });
+    
+  } catch (error) {
+    console.error('Error creating manual booking:', error);
+    res.status(500).json({ error: 'Failed to create booking' });
+  }
+});
+
+// =====================================================
 // GET /api/bookings/export/:event_id - Export participants (admin only)
 // =====================================================
 router.get('/export/:event_id', requireAdmin, async (req, res) => {
