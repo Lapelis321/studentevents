@@ -8,39 +8,186 @@
   <link rel="stylesheet" href="../styles/main.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    body {
+      background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0;
+      padding: 20px;
+    }
+    
+    .login-container {
+      background: white;
+      padding: 50px;
+      border-radius: 24px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      width: 100%;
+      max-width: 450px;
+      animation: slideUp 0.4s ease-out;
+    }
+    
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .login-header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    
+    .login-icon {
+      width: 80px;
+      height: 80px;
+      background: linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%);
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+      padding: 12px;
+      box-shadow: 0 10px 30px rgba(17, 153, 142, 0.3);
+    }
+    
+    .login-icon img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      filter: brightness(0) saturate(100%) invert(36%) sepia(93%) saturate(500%) hue-rotate(120deg);
+    }
+    
+    .login-header h1 {
+      font-size: 28px;
+      font-weight: 800;
+      margin-bottom: 8px;
+      color: #1a1a1a;
+    }
+    
+    .login-header p {
+      color: #666;
+      font-size: 15px;
+    }
+    
+    .login-form .form-group {
+      margin-bottom: 24px;
+    }
+    
+    .login-form label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #333;
+      font-size: 14px;
+    }
+    
+    .login-form input {
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid #e5e7eb;
+      border-radius: 12px;
+      font-size: 15px;
+      transition: all 0.3s ease;
+      font-family: 'Inter', sans-serif;
+    }
+    
+    .login-form input:focus {
+      outline: none;
+      border-color: #11998e;
+      box-shadow: 0 0 0 3px rgba(17, 153, 142, 0.1);
+    }
+    
+    .login-form button {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-family: 'Inter', sans-serif;
+      box-shadow: 0 4px 12px rgba(17, 153, 142, 0.3);
+    }
+    
+    .login-form button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(17, 153, 142, 0.4);
+    }
+    
+    .login-form button:active {
+      transform: translateY(0);
+    }
+    
+    .login-form button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    .back-link {
+      text-align: center;
+      margin-top: 24px;
+    }
+    
+    .back-link a {
+      color: #666;
+      text-decoration: none;
+      font-size: 14px;
+      transition: color 0.3s ease;
+    }
+    
+    .back-link a:hover {
+      color: #11998e;
+    }
+    
+    .back-link i {
+      margin-right: 6px;
+    }
+  </style>
 </head>
 <body>
-  <div class="auth-container">
-    <div class="auth-card">
-      <div class="auth-header">
-        <div style="width: 80px; height: 80px; margin: 0 auto 20px; padding: 12px; background: var(--primary-100); border-radius: 20px; display: flex; align-items: center; justify-content: center;">
-          <img src="../assets/logo.svg" alt="StudentEvents Logo" class="logo-primary" style="width: 100%; height: 100%; object-fit: contain;">
-        </div>
-        <h1>Worker Login</h1>
-        <p>Access your worker dashboard</p>
+  <div class="login-container">
+    <div class="login-header">
+      <div class="login-icon">
+        <img src="../assets/logo.svg" alt="StudentEvents Logo">
+      </div>
+      <h1>Worker Login</h1>
+      <p>Access your worker dashboard</p>
+    </div>
+    
+    <form class="login-form" id="loginForm">
+      <div class="form-group">
+        <label for="email">Email Address</label>
+        <input type="email" id="email" required autofocus placeholder="worker@example.com">
       </div>
       
-      <form id="loginForm" class="auth-form">
-        <div class="form-group">
-          <label for="email">Email</label>
-          <input type="email" id="email" name="email" required class="form-control" placeholder="your@email.com">
-        </div>
-        
-        <div class="form-group">
-          <label for="password">Password</label>
-          <input type="password" id="password" name="password" required class="form-control" placeholder="Enter your password">
-        </div>
-        
-        <button type="submit" class="btn btn-primary btn-block">
-          <i class="fas fa-sign-in-alt"></i> Login
-        </button>
-      </form>
-      
-      <div class="auth-footer">
-        <a href="../index.html" class="text-link">
-          <i class="fas fa-arrow-left"></i> Back to Home
-        </a>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" required placeholder="Enter your password">
       </div>
+      
+      <button type="submit">
+        <i class="fas fa-sign-in-alt"></i>
+        Login
+      </button>
+    </form>
+    
+    <div class="back-link">
+      <a href="../index.html">
+        <i class="fas fa-arrow-left"></i> Back to Homepage
+      </a>
     </div>
   </div>
   
