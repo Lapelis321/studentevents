@@ -710,9 +710,57 @@ const bookingsManager = {
     }
   },
   
-  viewBooking(id) {
+  async viewBooking(id) {
     const booking = this.bookings.find(b => b.id === id);
-    if (booking) alert(JSON.stringify(booking, null, 2));
+    if (booking) {
+      const details = `
+Booking Details:
+================
+Ticket: ${booking.ticket_number}
+Name: ${booking.first_name} ${booking.last_name}
+Email: ${booking.email}
+Phone: ${booking.phone}
+Quantity: ${booking.quantity}
+Amount: €${booking.total_amount}
+Status: ${booking.payment_status}
+Created: ${formatDate(booking.created_at)}
+
+Download ticket?`;
+      
+      if (confirm(details)) {
+        await this.downloadTicket(id);
+      }
+    }
+  },
+  
+  async downloadTicket(bookingId) {
+    try {
+      showLoading();
+      
+      const response = await fetch(`${window.CONFIG.API_BASE_URL}/bookings/${bookingId}/ticket`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to download ticket');
+      }
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ticket-${bookingId}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      
+      showNotification('Ticket downloaded successfully', 'success');
+      
+    } catch (error) {
+      showNotification('Failed to download ticket', 'error');
+      console.error('Error:', error);
+    } finally {
+      hideLoading();
+    }
   },
   
   openAddModal() {

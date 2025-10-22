@@ -5,6 +5,7 @@
 const express = require('express');
 const router = express.Router();
 const { requireAdmin } = require('../middleware/auth');
+const PDFDocument = require('pdfkit');
 
 // =====================================================
 // GET /api/policies - Get all policies
@@ -142,12 +143,53 @@ router.get('/:type/pdf', async (req, res) => {
     
     const policy = result.rows[0];
     
-    // TODO: Generate PDF using PDFKit
-    // For now, return plain text
-    res.setHeader('Content-Type', 'text/plain');
-    res.setHeader('Content-Disposition', `attachment; filename=${type}-policy.txt`);
+    // Create PDF document
+    const doc = new PDFDocument({
+      size: 'A4',
+      margins: { top: 50, bottom: 50, left: 50, right: 50 }
+    });
     
-    res.send(`${policy.title}\n\n${policy.content}`);
+    // Set response headers
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename=${type}-policy.pdf`);
+    
+    // Pipe PDF to response
+    doc.pipe(res);
+    
+    // Add header
+    doc.fontSize(24)
+       .font('Helvetica-Bold')
+       .text(policy.title, { align: 'center' });
+    
+    doc.moveDown(1);
+    
+    // Add metadata
+    doc.fontSize(10)
+       .font('Helvetica')
+       .fillColor('#666')
+       .text(`Type: ${type.toUpperCase()}`, { align: 'center' });
+    
+    doc.text(`Last Updated: ${new Date(policy.updated_at).toLocaleDateString()}`, { align: 'center' });
+    
+    doc.moveDown(2);
+    
+    // Add content
+    doc.fontSize(11)
+       .font('Helvetica')
+       .fillColor('#000')
+       .text(policy.content, {
+         align: 'justify',
+         lineGap: 2
+       });
+    
+    // Add footer
+    doc.moveDown(3);
+    doc.fontSize(8)
+       .fillColor('#999')
+       .text('StudentEvents - Event Management Platform', { align: 'center' });
+    
+    // Finalize PDF
+    doc.end();
     
   } catch (error) {
     console.error('Error downloading policy:', error);

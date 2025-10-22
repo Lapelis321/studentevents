@@ -129,7 +129,12 @@ function displayPolicies() {
   
   const policiesHTML = policyData.map(policy => `
     <div class="policy-section">
-      <h2>${policy.title || formatPolicyType(policy.type)}</h2>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h2 style="margin: 0;">${policy.title || formatPolicyType(policy.type)}</h2>
+        <button onclick="downloadPolicyPDF('${policy.type}')" class="btn btn-secondary btn-sm">
+          <i class="fas fa-download"></i> Download PDF
+        </button>
+      </div>
       ${policy.content}
     </div>
   `).join('');
@@ -143,15 +148,12 @@ function formatPolicyType(type) {
   ).join(' ');
 }
 
-async function downloadPDF() {
+async function downloadPolicyPDF(policyType) {
   try {
     showLoading();
     
-    const response = await fetch(`${API_BASE_URL}/api/policies/pdf`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/pdf'
-      }
+    const response = await fetch(`${window.CONFIG.API_BASE_URL}/policies/${policyType}/pdf`, {
+      method: 'GET'
     });
     
     if (!response.ok) {
@@ -162,7 +164,7 @@ async function downloadPDF() {
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'rules-and-policy.pdf';
+    a.download = `${policyType}-policy.pdf`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -171,10 +173,18 @@ async function downloadPDF() {
     showNotification('PDF downloaded successfully', 'success');
     
   } catch (error) {
-    showNotification('PDF download feature coming soon', 'info');
+    showNotification('Failed to download PDF', 'error');
     console.error('Error:', error);
   } finally {
     hideLoading();
+  }
+}
+
+// Keep backward compatibility
+async function downloadPDF() {
+  // Download the first policy as default
+  if (policyData.length > 0) {
+    await downloadPolicyPDF(policyData[0].type);
   }
 }
 
