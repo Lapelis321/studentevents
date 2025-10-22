@@ -110,6 +110,8 @@ function formatDate(dateString) {
 
 const dashboard = {
   currentTab: 'events',
+  autoRefreshInterval: null,
+  autoRefreshEnabled: true,
   
   init() {
     this.checkAuth();
@@ -144,6 +146,9 @@ const dashboard = {
     this.currentTab = tabName;
     const tabContent = document.getElementById('tabContent');
     
+    // Stop existing auto-refresh
+    this.stopAutoRefresh();
+    
     switch(tabName) {
       case 'events':
         eventsManager.render(tabContent);
@@ -158,9 +163,51 @@ const dashboard = {
         settingsManager.render(tabContent);
         break;
     }
+    
+    // Start auto-refresh for data tabs (not settings)
+    if (tabName !== 'settings' && this.autoRefreshEnabled) {
+      this.startAutoRefresh();
+    }
+  },
+  
+  startAutoRefresh() {
+    // Clear any existing interval
+    this.stopAutoRefresh();
+    
+    // Refresh every 30 seconds
+    this.autoRefreshInterval = setInterval(async () => {
+      console.log('🔄 Auto-refreshing data...');
+      
+      try {
+        switch(this.currentTab) {
+          case 'events':
+            await eventsManager.loadEvents();
+            eventsManager.renderEvents();
+            break;
+          case 'bookings':
+            await bookingsManager.loadBookings();
+            bookingsManager.renderBookings();
+            break;
+          case 'workers':
+            await workersManager.loadWorkers();
+            workersManager.renderWorkers();
+            break;
+        }
+      } catch (error) {
+        console.error('Auto-refresh error:', error);
+      }
+    }, 30000); // 30 seconds
+  },
+  
+  stopAutoRefresh() {
+    if (this.autoRefreshInterval) {
+      clearInterval(this.autoRefreshInterval);
+      this.autoRefreshInterval = null;
+    }
   },
   
   logout() {
+    this.stopAutoRefresh();
     localStorage.removeItem('adminToken');
     window.location.href = 'login.html';
   }
