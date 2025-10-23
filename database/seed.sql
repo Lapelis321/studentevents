@@ -28,8 +28,8 @@ INSERT INTO settings (key, value, category) VALUES
 
 -- Bank Transfer Settings
 INSERT INTO settings (key, value, category) VALUES
-('bank_recipient_name', 'Afterstate Events Organization', 'payment'),
-('bank_iban', 'LT000000000000000000', 'payment'),
+('bank_recipient_name', 'Paulius Kulikas', 'payment'),
+('bank_iban', 'LT29 3250 0447 1147 0838', 'payment'),
 ('bank_transfer_deadline_hours', '24', 'payment');
 
 -- Contact Settings
