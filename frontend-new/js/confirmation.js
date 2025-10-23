@@ -20,14 +20,14 @@ async function init() {
     
     // If we have a Stripe session, verify it first
     if (sessionId) {
-      await fetchAPI('/api/payments/verify-session', 'POST', {
+      await fetchAPI('/payments/verify-session', 'POST', {
         session_id: sessionId,
         booking_id: bookingId
       });
     }
     
     // Load booking details
-    const response = await fetchAPI(`/api/bookings/${bookingId}`);
+    const response = await fetchAPI(`/bookings/${bookingId}`);
     bookingData = response;
     
     displayBookingDetails();
@@ -78,9 +78,9 @@ function displayBookingDetails() {
 
 async function loadSupportInfo() {
   try {
-    const settings = await fetchAPI('/api/settings');
+    const settings = await fetchAPI('/settings');
     
-    const supportEmail = settings.find(s => s.key === 'supportEmail')?.value || 'support@studentevents.com';
+    const supportEmail = settings.find(s => s.key === 'supportEmail')?.value || 'support@afterstate.events';
     const supportPhone = settings.find(s => s.key === 'supportPhone')?.value || '+370 XXX XXXXX';
     const workingHours = settings.find(s => s.key === 'workingHours')?.value || 'Mon-Fri 9:00-18:00';
     
@@ -106,11 +106,8 @@ async function downloadTickets() {
     showLoading();
     
     // Request ticket PDF from backend
-    const response = await fetch(`${API_BASE_URL}/api/bookings/${bookingData.id}/ticket`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/pdf'
-      }
+    const response = await fetch(`${window.CONFIG.API_BASE_URL}/bookings/${bookingData.id}/ticket`, {
+      method: 'GET'
     });
     
     if (!response.ok) {
