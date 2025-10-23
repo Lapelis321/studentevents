@@ -1,0 +1,41 @@
+# Ignore old/deprecated backend
+backend-old-deprecated/
+backend/
+
+# Ignore frontend
+frontend-new/
+admin/
+worker/
+styles/
+scripts/
+
+# Ignore documentation
+*.md
+documents/
+
+# Ignore test files
+test-*.html
+*-test.html
+*.test.js
+
+# Ignore deployment configs for other platforms
+netlify/
+netlify.toml
+vercel.json
+
+# Ignore development files
+node_modules/
+.env
+.env.local
+*.log
+
+# Ignore git
+.git/
+.gitignore
+
+# Ignore batch files
+*.bat
+
+# Keep only backend-new
+!backend-new/
+
