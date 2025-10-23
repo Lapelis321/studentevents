@@ -9,12 +9,12 @@
 -- ADMIN ACCOUNT
 -- =====================================================
 -- Default admin credentials:
--- Email: admin@studentevents.com
+-- Email: admin@afterstate.events
 -- Password: admin123
 -- Password hash generated with bcrypt (10 rounds)
 
 INSERT INTO admin (email, password_hash, full_name) VALUES
-('admin@studentevents.com', '$2a$10$8K1p/a0dL3LclLe7FP8yCu8kDECxzKzLd1Hm0P7EcKFJq.0F3Z0KO', 'System Administrator');
+('admin@afterstate.events', '$2a$10$8K1p/a0dL3LclLe7FP8yCu8kDECxzKzLd1Hm0P7EcKFJq.0F3Z0KO', 'System Administrator');
 
 -- =====================================================
 -- SYSTEM SETTINGS
@@ -28,7 +28,7 @@ INSERT INTO settings (key, value, category) VALUES
 
 -- Bank Transfer Settings
 INSERT INTO settings (key, value, category) VALUES
-('bank_recipient_name', 'StudentEvents Organization', 'payment'),
+('bank_recipient_name', 'Afterstate Events Organization', 'payment'),
 ('bank_iban', 'LT000000000000000000', 'payment'),
 ('bank_transfer_deadline_hours', '24', 'payment');
 
@@ -40,7 +40,7 @@ INSERT INTO settings (key, value, category) VALUES
 
 -- Organization Settings
 INSERT INTO settings (key, value, category) VALUES
-('organization_name', 'StudentEvents', 'organization'),
+('organization_name', 'Afterstate Events', 'organization'),
 ('organization_email', 'info@studentevents.com', 'organization'),
 ('organization_phone', '+370 600 00000', 'organization'),
 ('organization_address', 'Vilnius, Lithuania', 'organization');
@@ -63,10 +63,10 @@ INSERT INTO policies (type, title, content, is_published) VALUES
 '# Terms of Service
 
 ## 1. Acceptance of Terms
-By accessing and using StudentEvents platform, you accept and agree to be bound by the terms and provision of this agreement.
+By accessing and using Afterstate Events platform, you accept and agree to be bound by the terms and provision of this agreement.
 
 ## 2. Use License
-Permission is granted to temporarily access the materials on StudentEvents website for personal, non-commercial transitory viewing only.
+Permission is granted to temporarily access the materials on Afterstate Events website for personal, non-commercial transitory viewing only.
 
 ## 3. Ticket Purchases
 - All ticket sales are final unless the event is cancelled
@@ -88,7 +88,7 @@ Users agree not to:
 - Violate any applicable laws
 
 ## 6. Liability
-StudentEvents is not responsible for:
+Afterstate Events is not responsible for:
 - Lost or stolen tickets
 - Changes to event schedule
 - Personal injury or property damage at events
@@ -250,7 +250,7 @@ INSERT INTO policies (type, title, content, is_published) VALUES
 '# Code of Conduct
 
 ## Our Commitment
-StudentEvents is committed to providing a safe, inclusive, and enjoyable experience for all attendees.
+Afterstate Events is committed to providing a safe, inclusive, and enjoyable experience for all attendees.
 
 ## Expected Behavior
 All attendees should:

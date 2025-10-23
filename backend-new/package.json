@@ -1,7 +1,7 @@
 {
-  "name": "studentevents-backend",
-  "version": "2.0.1",
-  "description": "NEW BACKEND - Complete rebuild - Backend API for StudentEvents platform - FORCE DEPLOY 2024-10-23",
+  "name": "afterstate-events-backend",
+  "version": "2.0.2",
+  "description": "NEW BACKEND - Complete rebuild - Backend API for Afterstate Events platform - Name Change 2024-10-23",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -15,7 +15,7 @@
     "api",
     "express"
   ],
-  "author": "StudentEvents Team",
+  "author": "Afterstate Events Team",
   "license": "MIT",
   "engines": {
     "node": ">=18.0.0",
