@@ -85,7 +85,17 @@ app.get('/health', (req, res) => {
     status: 'healthy',
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development',
-    database: pool ? 'connected' : 'not configured'
+    database: pool ? 'connected' : 'not configured',
+    backend_version: 'NEW-BACKEND-2.0.0'
+  });
+});
+
+// Version check endpoint to verify which backend is deployed
+app.get('/api/version', (req, res) => {
+  res.json({
+    version: '2.0.0',
+    backend: 'NEW-BACKEND',
+    timestamp: new Date().toISOString()
   });
 });
 
