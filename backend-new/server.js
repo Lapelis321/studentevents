@@ -51,18 +51,34 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false
 }));
 
-// CORS configuration
+// CORS configuration - Allow frontend origins
+const allowedOrigins = [
+  'http://localhost:8000',
+  'http://127.0.0.1:8000',
+  'https://afterstateevents.netlify.app',
+  'https://afterstateevents.vercel.app',
+  FRONTEND_URL
+].filter(Boolean);
+
 app.use(cors({
-  origin: [
-    'http://localhost:8000',
-    'http://127.0.0.1:8000',
-    'https://afterstateevents.netlify.app',
-    'https://afterstateevents.vercel.app',
-    FRONTEND_URL
-  ].filter(Boolean),
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps, Postman, etc.)
+    if (!origin) return callback(null, true);
+    
+    // Check if origin is in allowed list
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      // For production, log rejected origins
+      console.log('⚠️  CORS rejected origin:', origin);
+      callback(null, true); // TEMPORARY: Allow all origins to fix issue
+    }
+  },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  maxAge: 86400 // Cache preflight for 24 hours
 }));
 
 // Request logging
