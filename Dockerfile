@@ -4,14 +4,14 @@ FROM node:18-alpine
 # Set working directory
 WORKDIR /app
 
-# Copy backend package files
-COPY backend/package*.json ./
+# Copy backend-new package files
+COPY backend-new/package*.json ./
 
 # Install production dependencies only (suppress warnings)
 RUN npm ci --only=production --silent 2>&1 | grep -v "^npm" || true
 
-# Copy backend application files
-COPY backend/ ./
+# Copy backend-new application files
+COPY backend-new/ ./
 
 # Expose port (Railway will override this with PORT env var)
 EXPOSE 8080
@@ -20,5 +20,5 @@ EXPOSE 8080
 ENV NODE_ENV=production
 
 # Start the application
-CMD ["node", "railway-server.js"]
+CMD ["node", "server.js"]
 
