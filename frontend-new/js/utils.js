@@ -56,19 +56,24 @@ const Utils = {
   },
   
   /**
-   * Format date
+   * Format date - Shows the exact time stored in database (UTC)
    */
   formatDate(dateString, options = {}) {
+    if (!dateString) return 'N/A';
+    
+    const date = new Date(dateString);
+    
     const defaultOptions = {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
+      timeZone: 'UTC' // Use UTC to show exact time stored in database
     };
     
-    return new Date(dateString).toLocaleDateString('en-US', {
+    return date.toLocaleDateString('en-US', {
       ...defaultOptions,
       ...options
     });
