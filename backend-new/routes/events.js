@@ -108,7 +108,23 @@ router.post('/', requireAdmin, async (req, res) => {
     
     // Validate required fields
     if (!name || !date || !location || price === undefined || !total_tickets) {
-      return res.status(400).json({ error: 'Missing required fields' });
+      console.error('Validation failed. Received data:', {
+        name: name ? 'OK' : 'MISSING',
+        date: date ? 'OK' : 'MISSING',
+        location: location ? 'OK' : 'MISSING',
+        price: price !== undefined ? 'OK' : 'MISSING',
+        total_tickets: total_tickets ? 'OK' : 'MISSING'
+      });
+      return res.status(400).json({ 
+        error: 'Missing required fields',
+        details: {
+          name: !name,
+          date: !date,
+          location: !location,
+          price: price === undefined,
+          total_tickets: !total_tickets
+        }
+      });
     }
     
     const result = await pool.query(
