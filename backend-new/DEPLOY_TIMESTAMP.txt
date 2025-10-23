@@ -1,0 +1,8 @@
+DEPLOYMENT TIMESTAMP: 2024-10-23T20:00:00Z
+VERSION: 2.0.1-NEW-BACKEND
+BACKEND: backend-new
+STATUS: FORCE REDEPLOY
+
+This file exists to force Railway to recognize code changes.
+Railway should deploy from backend-new/ directory ONLY.
+

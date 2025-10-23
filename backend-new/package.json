@@ -1,7 +1,7 @@
 {
   "name": "studentevents-backend",
-  "version": "2.0.0",
-  "description": "Complete rebuild - Backend API for StudentEvents platform",
+  "version": "2.0.1",
+  "description": "NEW BACKEND - Complete rebuild - Backend API for StudentEvents platform - FORCE DEPLOY 2024-10-23",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
