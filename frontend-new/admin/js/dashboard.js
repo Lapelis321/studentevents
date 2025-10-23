@@ -470,6 +470,31 @@ const eventsManager = {
       const eventId = form.dataset.id;
       const imageFile = fileInput.files[0];
       
+      // Validate required fields
+      if (!data.name || !data.date || !data.location || !data.price || !data.total_tickets) {
+        showNotification('Please fill in all required fields', 'error');
+        return;
+      }
+      
+      // Convert numeric fields
+      data.price = parseFloat(data.price);
+      data.total_tickets = parseInt(data.total_tickets);
+      if (data.min_age) {
+        data.min_age = parseInt(data.min_age);
+      } else {
+        delete data.min_age; // Remove empty min_age
+      }
+      
+      // Remove empty optional fields
+      if (!data.description) delete data.description;
+      if (!data.dress_code) delete data.dress_code;
+      if (!data.image_url) delete data.image_url;
+      
+      // Default status if not set
+      if (!data.status) {
+        data.status = 'active';
+      }
+      
       try {
         showLoading();
         
@@ -491,8 +516,13 @@ const eventsManager = {
         }
         
         this.closeModal();
+        form.reset();
+        fileInput.value = '';
+        imageFileName.textContent = '';
+        imagePreview.style.display = 'none';
         await this.loadEvents();
       } catch (error) {
+        console.error('Form submission error:', error);
         showNotification(error.message || 'Failed to save event', 'error');
       } finally {
         hideLoading();
