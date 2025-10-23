@@ -559,12 +559,31 @@ router.get('/:id/ticket', async (req, res) => {
        .font('Helvetica');
     
     doc.text(`Ticket Number: ${booking.ticket_number}`);
-    doc.text(`Name: ${booking.first_name} ${booking.last_name}`);
+    doc.text(`Primary Contact: ${booking.first_name} ${booking.last_name}`);
     doc.text(`Email: ${booking.email}`);
     doc.text(`Phone: ${booking.phone}`);
-    doc.text(`Quantity: ${booking.quantity} ticket(s)`);
-    doc.text(`Amount: €${booking.total_amount}`);
-    doc.text(`Payment Status: ${booking.payment_status.toUpperCase()}`);
+    doc.text(`Number of Tickets: ${booking.quantity}`);
+    doc.text(`Total Amount: €${booking.total_amount}`);
+    
+    // Show all attendees if there are additional attendees
+    if (booking.additional_attendees && booking.additional_attendees.length > 0) {
+      doc.moveDown(0.5);
+      doc.fontSize(11)
+         .font('Helvetica-Bold')
+         .text('All Attendees:', { underline: true });
+      
+      doc.moveDown(0.3);
+      doc.fontSize(10)
+         .font('Helvetica');
+      
+      // First attendee (main booker)
+      doc.text(`1. ${booking.first_name} ${booking.last_name}`);
+      
+      // Additional attendees
+      booking.additional_attendees.forEach((attendee, index) => {
+        doc.text(`${index + 2}. ${attendee.first_name} ${attendee.last_name}`);
+      });
+    }
     
     doc.moveDown(1);
     
@@ -589,22 +608,47 @@ router.get('/:id/ticket', async (req, res) => {
     })}`);
     doc.text(`Location: ${booking.event_location}`);
     
-    // Add watermark if payment is pending
+    doc.moveDown(2);
+    
+    // Add payment warning note for pending payments
     if (booking.payment_status === 'pending') {
-      doc.fontSize(40)
+      // Warning box
+      const boxY = doc.y;
+      const boxHeight = 100;
+      
+      doc.rect(50, boxY, doc.page.width - 100, boxHeight)
+         .fillAndStroke('#FEF3C7', '#F59E0B');
+      
+      doc.fillColor('#92400E')
+         .fontSize(12)
          .font('Helvetica-Bold')
-         .fillColor('#DC2626')
-         .opacity(0.3)
-         .rotate(-45, { origin: [doc.page.width / 2, doc.page.height / 2] })
-         .text('PENDING PAYMENT', 50, doc.page.height / 2 - 50, { align: 'center' })
-         .rotate(45, { origin: [doc.page.width / 2, doc.page.height / 2] })
-         .opacity(1);
+         .text('⚠ IMPORTANT - PAYMENT REQUIRED', 60, boxY + 15, { 
+           width: doc.page.width - 120 
+         });
+      
+      doc.fontSize(9)
+         .font('Helvetica')
+         .fillColor('#92400E')
+         .text(
+           'This ticket is NOT VALID for event entry until payment is confirmed. ' +
+           'You will receive a confirmation email once your payment is processed. ' +
+           'Please complete your bank transfer using the reference number provided in your payment instructions.',
+           60,
+           boxY + 35,
+           { 
+             width: doc.page.width - 120,
+             align: 'left',
+             lineGap: 3
+           }
+         );
+      
+      doc.moveDown(2);
     }
     
     // Footer
     doc.fontSize(8)
        .fillColor('#666')
-       .text('StudentEvents - Thank you for your purchase!', 50, doc.page.height - 50, { align: 'center' });
+       .text('Afterstate Events - Thank you for your purchase!', 50, doc.page.height - 50, { align: 'center' });
     
     // Finalize PDF
     doc.end();

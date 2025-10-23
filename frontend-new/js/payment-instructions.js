@@ -114,7 +114,19 @@ class PaymentInstructionsPage {
           <i class="fas fa-home"></i> Back to Events
         </a>
         <button class="btn btn-primary" onclick="paymentInstructionsPage.downloadInstructions()">
-          <i class="fas fa-download"></i> Download Instructions
+          <i class="fas fa-file-alt"></i> Download Instructions
+        </button>
+      </div>
+      
+      <div style="margin-top: 30px; padding-top: 30px; border-top: 2px solid var(--gray-200);">
+        <h3 style="text-align: center; margin-bottom: 16px; color: var(--gray-700);">
+          <i class="fas fa-ticket-alt"></i> Your Ticket
+        </h3>
+        <p style="text-align: center; color: var(--gray-600); margin-bottom: 20px; font-size: 14px;">
+          Download your ticket now. It will be valid only after payment is confirmed.
+        </p>
+        <button class="btn btn-primary btn-lg" onclick="paymentInstructionsPage.downloadTicket()" style="width: 100%; padding: 16px; font-size: 18px; font-weight: 700;">
+          <i class="fas fa-download"></i> Download Ticket (PDF)
         </button>
       </div>
     `;
@@ -128,12 +140,52 @@ class PaymentInstructionsPage {
     });
   }
   
+  async downloadTicket() {
+    const { booking } = this.booking;
+    
+    if (!booking || !booking.id) {
+      Utils.showNotification('Booking information not found', 'error');
+      return;
+    }
+    
+    try {
+      Utils.showLoading();
+      
+      // Request ticket PDF from backend
+      const response = await fetch(`${window.CONFIG.API_BASE_URL}/bookings/${booking.id}/ticket`, {
+        method: 'GET'
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to download ticket');
+      }
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ticket-${booking.ticket_number}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      
+      Utils.showNotification('Ticket downloaded successfully!', 'success');
+      
+    } catch (error) {
+      console.error('Download error:', error);
+      Utils.showNotification('Failed to download ticket. Please try again.', 'error');
+    } finally {
+      Utils.hideLoading();
+    }
+  }
+  
   downloadInstructions() {
     const { booking, event, bankDetails } = this.booking;
     
     const content = `
-STUDENTEVENTS - PAYMENT INSTRUCTIONS
-=====================================
+AFTERSTATE EVENTS - PAYMENT INSTRUCTIONS
+=========================================
 
 Booking Reference: ${booking.ticket_number}
 Event: ${event.name}
@@ -155,7 +207,7 @@ IMPORTANT:
 - Tickets will be sent via email after confirmation
 - Valid ticket required for event entry
 
-For support: support@studentevents.com
+For support: support@afterstate.events
     `.trim();
     
     const blob = new Blob([content], { type: 'text/plain' });
