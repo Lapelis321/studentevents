@@ -51,35 +51,23 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false
 }));
 
-// CORS configuration - Allow frontend origins
-const allowedOrigins = [
-  'http://localhost:8000',
-  'http://127.0.0.1:8000',
-  'https://afterstateevents.netlify.app',
-  'https://afterstateevents.vercel.app',
-  FRONTEND_URL
-].filter(Boolean);
-
+// CORS configuration - Allow ALL origins for maximum compatibility
 app.use(cors({
-  origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps, Postman, etc.)
-    if (!origin) return callback(null, true);
-    
-    // Check if origin is in allowed list
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      // For production, log rejected origins
-      console.log('⚠️  CORS rejected origin:', origin);
-      callback(null, true); // TEMPORARY: Allow all origins to fix issue
-    }
-  },
+  origin: true, // Allow all origins
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH', 'HEAD'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
   exposedHeaders: ['Content-Range', 'X-Content-Range'],
-  maxAge: 86400 // Cache preflight for 24 hours
+  maxAge: 86400, // Cache preflight for 24 hours
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 }));
+
+// Log all CORS requests for debugging
+app.use((req, res, next) => {
+  console.log(`📡 ${req.method} ${req.path} from origin: ${req.headers.origin || 'no-origin'}`);
+  next();
+});
 
 // Request logging
 if (process.env.NODE_ENV !== 'production') {
