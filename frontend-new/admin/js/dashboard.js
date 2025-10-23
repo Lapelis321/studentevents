@@ -308,10 +308,10 @@ const eventsManager = {
                 <label>Status *</label>
                 <select name="status" class="form-control" required>
                   <option value="active">Active</option>
-                  <option value="coming_soon">Coming Soon</option>
+                  <option value="coming-soon">Coming Soon</option>
                   <option value="cancelled">Cancelled</option>
-                  <option value="completed">Completed (Visible)</option>
-                  <option value="completed_hidden">Completed (Hidden)</option>
+                  <option value="completed-visible">Completed (Visible)</option>
+                  <option value="completed-hidden">Completed (Hidden)</option>
                 </select>
               </div>
             </form>
