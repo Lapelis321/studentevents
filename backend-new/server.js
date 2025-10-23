@@ -57,6 +57,7 @@ app.use(cors({
     'http://localhost:8000',
     'http://127.0.0.1:8000',
     'https://afterstateevents.netlify.app',
+    'https://afterstateevents.vercel.app',
     FRONTEND_URL
   ].filter(Boolean),
   credentials: true,
