@@ -1,6 +1,6 @@
 [build]
 builder = "NIXPACKS"
-buildCommand = "cd backend-new && npm ci --only=production"
+buildCommand = "cd backend-new && npm ci --omit=dev"
 
 [deploy]
 startCommand = "cd backend-new && node server.js"
