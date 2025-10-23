@@ -6,7 +6,7 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const { cloudinary } = require('../config/cloudinary');
-const { authenticateToken, requireAdmin } = require('../middleware/auth');
+const { verifyToken, requireAdmin } = require('../middleware/auth');
 
 // Configure multer for memory storage (no disk storage needed)
 const storage = multer.memoryStorage();
@@ -29,7 +29,7 @@ const upload = multer({
 // UPLOAD IMAGE TO CLOUDINARY
 // =====================================================
 // POST /api/upload/image
-router.post('/image', authenticateToken, requireAdmin, upload.single('image'), async (req, res) => {
+router.post('/image', requireAdmin, upload.single('image'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No image file provided' });
@@ -77,7 +77,7 @@ router.post('/image', authenticateToken, requireAdmin, upload.single('image'), a
 // DELETE IMAGE FROM CLOUDINARY
 // =====================================================
 // DELETE /api/upload/image/:publicId
-router.delete('/image/:publicId', authenticateToken, requireAdmin, async (req, res) => {
+router.delete('/image/:publicId', requireAdmin, async (req, res) => {
   try {
     const publicId = req.params.publicId;
 
