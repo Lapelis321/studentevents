@@ -227,8 +227,8 @@ class BookingPage {
       // Gather additional attendees
       for (let i = 0; i < this.quantity - 1; i++) {
         const attendeeData = {
-          firstName: document.getElementById(`attendee${i}_firstName`).value.trim(),
-          lastName: document.getElementById(`attendee${i}_lastName`).value.trim(),
+          first_name: document.getElementById(`attendee${i}_firstName`).value.trim(),
+          last_name: document.getElementById(`attendee${i}_lastName`).value.trim(),
           email: document.getElementById(`attendee${i}_email`)?.value.trim() || '',
           phone: document.getElementById(`attendee${i}_phone`)?.value.trim() || ''
         };
