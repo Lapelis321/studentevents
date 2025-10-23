@@ -91,17 +91,19 @@ function downloadJSON(data, filename) {
   URL.revokeObjectURL(url);
 }
 
-// Format date
+// Format date - Shows exact time as stored (no timezone conversion)
 function formatDate(dateString) {
   if (!dateString) return 'N/A';
   const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
+  
+  // Use UTC methods to show the exact time stored without timezone conversion
+  const month = date.toLocaleString('en-US', { month: 'short', timeZone: 'UTC' });
+  const day = date.getUTCDate();
+  const year = date.getUTCFullYear();
+  const hours = String(date.getUTCHours()).padStart(2, '0');
+  const minutes = String(date.getUTCMinutes()).padStart(2, '0');
+  
+  return `${month} ${day}, ${year}, ${hours}:${minutes}`;
 }
 
 // =====================================================
@@ -408,7 +410,13 @@ const eventsManager = {
     
     const form = document.getElementById('eventForm');
     form.querySelector('[name="name"]').value = event.name;
-    form.querySelector('[name="date"]').value = event.date.slice(0, 16);
+    
+    // Convert UTC date to local datetime-local format (no timezone conversion)
+    // The database stores the exact date/time the user entered
+    // datetime-local expects format: YYYY-MM-DDTHH:MM
+    const dateValue = event.date.slice(0, 16); // Keep the exact time from database
+    form.querySelector('[name="date"]').value = dateValue;
+    
     form.querySelector('[name="location"]').value = event.location;
     form.querySelector('[name="description"]').value = event.description || '';
     form.querySelector('[name="image_url"]').value = event.image_url || '';
@@ -474,6 +482,14 @@ const eventsManager = {
       if (!data.name || !data.date || !data.location || !data.price || !data.total_tickets) {
         showNotification('Please fill in all required fields', 'error');
         return;
+      }
+      
+      // Fix date timezone issue: datetime-local gives "YYYY-MM-DDTHH:MM" without timezone
+      // We need to ensure it's stored exactly as entered, so append ":00.000Z" to treat it as UTC
+      // This way, the exact time entered is preserved in the database
+      if (data.date && !data.date.includes('Z') && !data.date.includes('+')) {
+        // Add seconds and Z suffix to indicate UTC (prevents timezone shifts)
+        data.date = data.date + ':00.000Z';
       }
       
       // Convert numeric fields
