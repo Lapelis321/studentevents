@@ -182,6 +182,9 @@ router.put('/:id', requireAdmin, async (req, res) => {
       status
     } = req.body;
     
+    console.log('📝 Updating event:', id);
+    console.log('📦 Received data:', JSON.stringify(req.body, null, 2));
+    
     // Check if event exists
     const checkResult = await pool.query(
       'SELECT id FROM events WHERE id = $1',
@@ -192,23 +195,69 @@ router.put('/:id', requireAdmin, async (req, res) => {
       return res.status(404).json({ error: 'Event not found' });
     }
     
-    const result = await pool.query(
-      `UPDATE events 
-      SET name = COALESCE($1, name),
-          date = COALESCE($2, date),
-          location = COALESCE($3, location),
-          description = COALESCE($4, description),
-          image_url = COALESCE($5, image_url),
-          price = COALESCE($6, price),
-          total_tickets = COALESCE($7, total_tickets),
-          min_age = COALESCE($8, min_age),
-          dress_code = COALESCE($9, dress_code),
-          status = COALESCE($10, status),
-          updated_at = NOW()
-      WHERE id = $11
-      RETURNING *`,
-      [name, date, location, description, image_url, price, total_tickets, min_age, dress_code, status, id]
-    );
+    // Build dynamic update query to only update provided fields
+    const updates = [];
+    const values = [];
+    let paramCount = 1;
+    
+    if (name !== undefined) {
+      updates.push(`name = $${paramCount++}`);
+      values.push(name);
+    }
+    if (date !== undefined) {
+      updates.push(`date = $${paramCount++}`);
+      values.push(date);
+    }
+    if (location !== undefined) {
+      updates.push(`location = $${paramCount++}`);
+      values.push(location);
+    }
+    if (description !== undefined) {
+      updates.push(`description = $${paramCount++}`);
+      values.push(description);
+    }
+    if (image_url !== undefined) {
+      updates.push(`image_url = $${paramCount++}`);
+      values.push(image_url);
+    }
+    if (price !== undefined) {
+      updates.push(`price = $${paramCount++}`);
+      values.push(price);
+    }
+    if (total_tickets !== undefined) {
+      updates.push(`total_tickets = $${paramCount++}`);
+      values.push(total_tickets);
+    }
+    if (min_age !== undefined) {
+      updates.push(`min_age = $${paramCount++}`);
+      values.push(min_age);
+    }
+    if (dress_code !== undefined) {
+      updates.push(`dress_code = $${paramCount++}`);
+      values.push(dress_code);
+    }
+    if (status !== undefined) {
+      updates.push(`status = $${paramCount++}`);
+      values.push(status);
+    }
+    
+    // Always update updated_at
+    updates.push('updated_at = NOW()');
+    
+    // Add ID as last parameter
+    values.push(id);
+    
+    if (updates.length === 1) {
+      return res.status(400).json({ error: 'No fields to update' });
+    }
+    
+    const query = `UPDATE events SET ${updates.join(', ')} WHERE id = $${paramCount} RETURNING *`;
+    console.log('🔍 Query:', query);
+    console.log('🔍 Values:', values);
+    
+    const result = await pool.query(query, values);
+    
+    console.log('✅ Event updated successfully');
     
     res.json({
       message: 'Event updated successfully',
@@ -216,8 +265,17 @@ router.put('/:id', requireAdmin, async (req, res) => {
     });
     
   } catch (error) {
-    console.error('Error updating event:', error);
-    res.status(500).json({ error: 'Failed to update event' });
+    console.error('❌ Error updating event:', error);
+    console.error('❌ Error details:', {
+      message: error.message,
+      code: error.code,
+      detail: error.detail,
+      stack: error.stack
+    });
+    res.status(500).json({ 
+      error: 'Failed to update event',
+      details: error.message 
+    });
   }
 });
 
