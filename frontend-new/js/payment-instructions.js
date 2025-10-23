@@ -12,7 +12,7 @@ class PaymentInstructionsPage {
     const bookingData = sessionStorage.getItem('pendingBooking');
     
     if (!bookingData) {
-      Utils.showNotification('No booking found', 'error');
+      showNotification('No booking found', 'error');
       setTimeout(() => window.location.href = '/', 1500);
       return;
     }
@@ -134,9 +134,9 @@ class PaymentInstructionsPage {
   
   copyToClipboard(text) {
     navigator.clipboard.writeText(text).then(() => {
-      Utils.showNotification('Copied to clipboard!', 'success');
+      showNotification('Copied to clipboard!', 'success');
     }).catch(() => {
-      Utils.showNotification('Failed to copy', 'error');
+      showNotification('Failed to copy', 'error');
     });
   }
   
@@ -144,12 +144,12 @@ class PaymentInstructionsPage {
     const { booking } = this.booking;
     
     if (!booking || !booking.id) {
-      Utils.showNotification('Booking information not found', 'error');
+      showNotification('Booking information not found', 'error');
       return;
     }
     
     try {
-      Utils.showLoading();
+      showLoading();
       
       // Request ticket PDF from backend
       const response = await fetch(`${window.CONFIG.API_BASE_URL}/bookings/${booking.id}/ticket`, {
@@ -170,13 +170,13 @@ class PaymentInstructionsPage {
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
       
-      Utils.showNotification('Ticket downloaded successfully!', 'success');
+      showNotification('Ticket downloaded successfully!', 'success');
       
     } catch (error) {
       console.error('Download error:', error);
-      Utils.showNotification('Failed to download ticket. Please try again.', 'error');
+      showNotification('Failed to download ticket. Please try again.', 'error');
     } finally {
-      Utils.hideLoading();
+      hideLoading();
     }
   }
   
@@ -220,7 +220,7 @@ For support: support@afterstate.events
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
     
-    Utils.showNotification('Instructions downloaded', 'success');
+    showNotification('Instructions downloaded', 'success');
   }
 }
 
