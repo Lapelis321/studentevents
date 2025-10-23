@@ -578,10 +578,30 @@ router.get('/:id/ticket', async (req, res) => {
       
       // First attendee (main booker)
       doc.text(`1. ${booking.first_name} ${booking.last_name}`);
+      doc.fontSize(9)
+         .fillColor('#666');
+      doc.text(`   Email: ${booking.email}`);
+      doc.text(`   Phone: ${booking.phone}`);
+      
+      doc.moveDown(0.3);
       
       // Additional attendees
       booking.additional_attendees.forEach((attendee, index) => {
+        doc.fontSize(10)
+           .fillColor('#000');
         doc.text(`${index + 2}. ${attendee.first_name} ${attendee.last_name}`);
+        
+        doc.fontSize(9)
+           .fillColor('#666');
+        
+        if (attendee.email) {
+          doc.text(`   Email: ${attendee.email}`);
+        }
+        if (attendee.phone) {
+          doc.text(`   Phone: ${attendee.phone}`);
+        }
+        
+        doc.moveDown(0.3);
       });
     }
     

@@ -829,24 +829,37 @@ const bookingsManager = {
   async viewBooking(id) {
     const booking = this.bookings.find(b => b.id === id);
     if (booking) {
-      // Build attendees list
-      let attendeesList = `Primary Contact: ${booking.first_name} ${booking.last_name}`;
+      // Build attendees list with all information
+      let attendeesList = '';
       
       if (booking.additional_attendees && booking.additional_attendees.length > 0) {
-        attendeesList += '\n\nAll Attendees:';
-        attendeesList += `\n1. ${booking.first_name} ${booking.last_name}`;
+        attendeesList += '\n\nAll Attendees:\n';
+        attendeesList += '─────────────────────────────────\n';
+        attendeesList += `1. ${booking.first_name} ${booking.last_name}\n`;
+        attendeesList += `   Email: ${booking.email}\n`;
+        attendeesList += `   Phone: ${booking.phone}\n`;
+        
         booking.additional_attendees.forEach((attendee, index) => {
-          attendeesList += `\n${index + 2}. ${attendee.first_name} ${attendee.last_name}`;
+          attendeesList += `\n${index + 2}. ${attendee.first_name} ${attendee.last_name}\n`;
+          if (attendee.email) {
+            attendeesList += `   Email: ${attendee.email}\n`;
+          }
+          if (attendee.phone) {
+            attendeesList += `   Phone: ${attendee.phone}\n`;
+          }
         });
+        attendeesList += '─────────────────────────────────';
       }
       
       const details = `
 Booking Details:
 ================
 Ticket: ${booking.ticket_number}
-${attendeesList}
+Primary Contact: ${booking.first_name} ${booking.last_name}
 Email: ${booking.email}
 Phone: ${booking.phone}
+${attendeesList}
+
 Quantity: ${booking.quantity} ticket(s)
 Amount: €${booking.total_amount}
 Status: ${booking.payment_status}
