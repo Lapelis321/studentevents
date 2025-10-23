@@ -1,0 +1,126 @@
+===============================================
+DEPLOY TO RENDER.COM - STEP BY STEP
+===============================================
+
+STEP 1: Sign Up (2 minutes)
+----------------------------
+1. Go to: https://render.com
+2. Click "Get Started" or "Sign Up"
+3. Choose "Sign up with GitHub" (EASIEST)
+4. Authorize Render to access GitHub
+5. Complete signup
+
+STEP 2: Create Web Service (3 minutes)
+---------------------------------------
+1. Click "New +" button (top right)
+2. Select "Web Service"
+3. Click "Connect account" for GitHub (if needed)
+4. Find "studentevents" in repository list
+5. Click "Connect"
+
+STEP 3: Configure Service (5 minutes)
+--------------------------------------
+Fill in these settings:
+
+Name: studentevents-backend
+
+Region: Frankfurt (EU Central)
+
+Branch: main
+
+Root Directory: backend-new
+   ↑ CRITICAL - Type exactly: backend-new
+
+Build Command: npm install
+
+Start Command: npm start
+
+Instance Type: Free
+
+STEP 4: Add Environment Variables (5 minutes)
+----------------------------------------------
+Click "Advanced" button
+Click "Add Environment Variable" for each:
+
+Go to Railway → Your Project → Variables tab
+Copy these values EXACTLY:
+
+1. NODE_ENV=production
+2. DATABASE_URL=<copy from Railway>
+3. SENDGRID_API_KEY=<copy from Railway>
+4. SENDGRID_FROM_EMAIL=<copy from Railway>
+5. FROM_NAME=StudentEvents
+6. FRONTEND_URL=https://afterstateevents.vercel.app
+7. STRIPE_SECRET_KEY=<copy from Railway>
+8. STRIPE_PUBLISHABLE_KEY=<copy from Railway>
+
+Optional (if you have them):
+9. CLOUDINARY_CLOUD_NAME=<copy from Railway>
+10. CLOUDINARY_API_KEY=<copy from Railway>
+11. CLOUDINARY_API_SECRET=<copy from Railway>
+
+STEP 5: Create Service
+-----------------------
+1. Click "Create Web Service" button
+2. Wait for build to start (1-2 minutes)
+3. Watch build logs - look for:
+   ✅ "Installing 198 packages"
+   ✅ "cd backend-new"
+   ✅ "Server running on port 3001"
+
+STEP 6: Get Your URL (After 7 minutes)
+---------------------------------------
+1. Wait for deployment to complete (green checkmark)
+2. Render shows your URL at top of page
+3. Example: https://studentevents-backend.onrender.com
+4. COPY THIS URL - you'll need it
+
+STEP 7: Test Backend
+---------------------
+Open in browser:
+https://YOUR-RENDER-URL/api/version
+
+Should show:
+{
+  "version": "2.0.0",
+  "backend": "NEW-BACKEND",
+  "timestamp": "..."
+}
+
+If you see this ↑ SUCCESS! NEW BACKEND IS WORKING!
+
+STEP 8: Tell Me Your URL
+-------------------------
+After you get the Render URL, tell me what it is.
+I'll update your frontend to use it.
+
+===============================================
+TROUBLESHOOTING
+===============================================
+
+Build Failed?
+- Check Root Directory is exactly: backend-new
+- Check Build Command is: npm install
+- Check Start Command is: npm start
+
+Can't Find Repository?
+- Make sure GitHub is connected to Render
+- Authorize Render in GitHub settings
+- Repository must be public or Render needs access
+
+Environment Variable Questions?
+- DATABASE_URL: Must be the Supabase pooler URL (port 6543)
+- All other variables: Copy exactly from Railway
+
+===============================================
+NEXT STEPS AFTER DEPLOYMENT
+===============================================
+
+Once you tell me your Render URL, I will:
+1. Update frontend-new/js/config.js with new URL
+2. Commit and push to trigger Vercel redeploy
+3. Wait 2 minutes for Vercel
+4. Test event creation - will work immediately!
+
+===============================================
+
