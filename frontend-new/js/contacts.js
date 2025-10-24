@@ -7,43 +7,42 @@ async function loadContactInfo() {
   try {
     showLoading();
     
-    const settings = await fetchAPI('/api/settings');
+    const settings = await fetchAPI('/settings');
     
-    // Extract settings by key
+    // Extract settings by key (settings is an object with key-value pairs)
     const getSettingValue = (key, defaultValue = 'Not available') => {
-      const setting = settings.find(s => s.key === key);
-      return setting ? setting.value : defaultValue;
+      return settings[key] || defaultValue;
     };
     
     // Support contact info
     document.getElementById('supportEmail').innerHTML = `
-      <a href="mailto:${getSettingValue('supportEmail')}">${getSettingValue('supportEmail')}</a>
+      <a href="mailto:${getSettingValue('support_email')}">${getSettingValue('support_email')}</a>
     `;
     document.getElementById('supportPhone').innerHTML = `
-      <a href="tel:${getSettingValue('supportPhone')}">${getSettingValue('supportPhone')}</a>
+      <a href="tel:${getSettingValue('support_phone')}">${getSettingValue('support_phone')}</a>
     `;
-    document.getElementById('workingHours').textContent = getSettingValue('workingHours');
+    document.getElementById('workingHours').textContent = getSettingValue('support_hours');
     
     // Organization info
-    document.getElementById('orgName').textContent = getSettingValue('orgName', 'StudentEvents');
+    document.getElementById('orgName').textContent = getSettingValue('organization_name', 'Afterstate Events');
     document.getElementById('orgEmail').innerHTML = `
-      <a href="mailto:${getSettingValue('orgEmail')}">${getSettingValue('orgEmail')}</a>
+      <a href="mailto:${getSettingValue('organization_email')}">${getSettingValue('organization_email')}</a>
     `;
     document.getElementById('orgPhone').innerHTML = `
-      <a href="tel:${getSettingValue('orgPhone')}">${getSettingValue('orgPhone')}</a>
+      <a href="tel:${getSettingValue('organization_phone')}">${getSettingValue('organization_phone')}</a>
     `;
     
   } catch (error) {
     console.error('Failed to load contact info:', error);
     
     // Load default values
-    document.getElementById('supportEmail').innerHTML = '<a href="mailto:support@studentevents.com">support@studentevents.com</a>';
-    document.getElementById('supportPhone').innerHTML = '<a href="tel:+370XXXXXXXX">+370 XXX XXXXX</a>';
+    document.getElementById('supportEmail').innerHTML = '<a href="mailto:support@afterstate.events">support@afterstate.events</a>';
+    document.getElementById('supportPhone').innerHTML = '<a href="tel:+37060000000">+370 600 00000</a>';
     document.getElementById('workingHours').textContent = 'Monday - Friday, 9:00 AM - 6:00 PM';
     
-    document.getElementById('orgName').textContent = 'StudentEvents';
-    document.getElementById('orgEmail').innerHTML = '<a href="mailto:info@studentevents.com">info@studentevents.com</a>';
-    document.getElementById('orgPhone').innerHTML = '<a href="tel:+370XXXXXXXX">+370 XXX XXXXX</a>';
+    document.getElementById('orgName').textContent = 'Afterstate Events';
+    document.getElementById('orgEmail').innerHTML = '<a href="mailto:info@afterstate.events">info@afterstate.events</a>';
+    document.getElementById('orgPhone').innerHTML = '<a href="tel:+37060000000">+370 600 00000</a>';
     
     showNotification('Using default contact information', 'info');
   } finally {
