@@ -1277,10 +1277,27 @@ const settingsManager = {
   async loadSettings() {
     try {
       const settings = await fetchAPI('/settings');
+      
+      // Map database keys to form field IDs
+      const keyMapping = {
+        'bank_recipient_name': 'bankRecipientName',
+        'bank_iban': 'bankIBAN',
+        'support_email': 'supportEmail',
+        'support_phone': 'supportPhone',
+        'support_hours': 'workingHours',
+        'organization_name': 'orgName',
+        'organization_email': 'orgEmail',
+        'organization_phone': 'orgPhone',
+        'payment_method': 'paymentMethod'
+      };
+      
       // Populate form fields
-      settings.forEach(setting => {
-        const field = document.getElementById(setting.key);
-        if (field) field.value = setting.value;
+      Object.entries(settings).forEach(([key, value]) => {
+        const fieldId = keyMapping[key] || key;
+        const field = document.getElementById(fieldId);
+        if (field) {
+          field.value = value;
+        }
       });
     } catch (error) {
       console.error('Failed to load settings', error);
@@ -1289,8 +1306,8 @@ const settingsManager = {
   
   async saveBankSettings() {
     const data = {
-      bankRecipientName: document.getElementById('bankRecipientName').value,
-      bankIBAN: document.getElementById('bankIBAN').value
+      bank_recipient_name: document.getElementById('bankRecipientName').value,
+      bank_iban: document.getElementById('bankIBAN').value
     };
     
     try {
@@ -1303,9 +1320,9 @@ const settingsManager = {
   
   async saveContactSettings() {
     const data = {
-      supportEmail: document.getElementById('supportEmail').value,
-      supportPhone: document.getElementById('supportPhone').value,
-      workingHours: document.getElementById('workingHours').value
+      support_email: document.getElementById('supportEmail').value,
+      support_phone: document.getElementById('supportPhone').value,
+      support_hours: document.getElementById('workingHours').value
     };
     
     try {
@@ -1318,9 +1335,9 @@ const settingsManager = {
   
   async saveOrgSettings() {
     const data = {
-      orgName: document.getElementById('orgName').value,
-      orgEmail: document.getElementById('orgEmail').value,
-      orgPhone: document.getElementById('orgPhone').value
+      organization_name: document.getElementById('orgName').value,
+      organization_email: document.getElementById('orgEmail').value,
+      organization_phone: document.getElementById('orgPhone').value
     };
     
     try {
