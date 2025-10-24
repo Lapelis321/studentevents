@@ -14,7 +14,7 @@
 -- Password hash generated with bcrypt (10 rounds)
 
 INSERT INTO admin (email, password_hash, full_name) VALUES
-('admin@afterstate.events', '$2a$10$8K1p/a0dL3LclLe7FP8yCu8kDECxzKzLd1Hm0P7EcKFJq.0F3Z0KO', 'System Administrator');
+('admin@afterstate.events', '$2b$10$GgP51trRlA/e52x9EA9ZnOXEnBrCWQk7LiIXBdAyA9yP68ZogqW3u', 'System Administrator');
 
 -- =====================================================
 -- SYSTEM SETTINGS
