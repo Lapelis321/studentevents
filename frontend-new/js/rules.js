@@ -9,7 +9,7 @@ async function init() {
 async function loadPolicies() {
   try {
     showLoading();
-    const response = await fetchAPI('/api/policies');
+    const response = await fetchAPI('/policies');
     policyData = response;
   } catch (error) {
     showNotification('Failed to load policies', 'error');
