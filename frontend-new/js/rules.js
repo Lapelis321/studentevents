@@ -135,7 +135,7 @@ function displayPolicies() {
           <i class="fas fa-download"></i> Download PDF
         </button>
       </div>
-      ${policy.content}
+      <div style="white-space: pre-wrap; word-wrap: break-word;">${policy.content}</div>
     </div>
   `).join('');
   

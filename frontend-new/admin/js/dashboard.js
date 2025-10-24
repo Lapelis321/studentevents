@@ -1225,31 +1225,31 @@ const settingsManager = {
         
         <div style="margin-bottom: 32px; border-top: 2px solid var(--gray-200); padding-top: 32px;">
           <h3>Policy & Rules Content</h3>
-          <p style="color: var(--gray-600);">Edit the content of policies displayed on the public website.</p>
+          <p style="color: var(--gray-600);">Edit the content of policies displayed on the public website. Line breaks will be preserved.</p>
           
           <div class="form-group">
             <label>Terms of Service</label>
-            <textarea id="policyTerms" class="form-control" rows="4" placeholder="Terms of Service content..."></textarea>
+            <textarea id="policyTerms" class="form-control" rows="8" placeholder="Terms of Service content..." style="font-family: monospace; font-size: 13px;"></textarea>
           </div>
           
           <div class="form-group">
             <label>Privacy Policy</label>
-            <textarea id="policyPrivacy" class="form-control" rows="4" placeholder="Privacy Policy content..."></textarea>
+            <textarea id="policyPrivacy" class="form-control" rows="8" placeholder="Privacy Policy content..." style="font-family: monospace; font-size: 13px;"></textarea>
           </div>
           
           <div class="form-group">
             <label>Event Guidelines</label>
-            <textarea id="policyGuidelines" class="form-control" rows="4" placeholder="Event Guidelines content..."></textarea>
+            <textarea id="policyGuidelines" class="form-control" rows="8" placeholder="Event Guidelines content..." style="font-family: monospace; font-size: 13px;"></textarea>
           </div>
           
           <div class="form-group">
             <label>Refund Policy</label>
-            <textarea id="policyRefund" class="form-control" rows="4" placeholder="Refund Policy content..."></textarea>
+            <textarea id="policyRefund" class="form-control" rows="8" placeholder="Refund Policy content..." style="font-family: monospace; font-size: 13px;"></textarea>
           </div>
           
           <div class="form-group">
             <label>Code of Conduct</label>
-            <textarea id="policyConduct" class="form-control" rows="4" placeholder="Code of Conduct content..."></textarea>
+            <textarea id="policyConduct" class="form-control" rows="8" placeholder="Code of Conduct content..." style="font-family: monospace; font-size: 13px;"></textarea>
           </div>
           
           <button onclick="settingsManager.savePolicies()" class="btn btn-primary">Save All Policies</button>
