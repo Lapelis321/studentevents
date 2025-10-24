@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database Admin Check</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #6366f1;
+            margin-bottom: 30px;
+        }
+        .status {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-family: monospace;
+        }
+        .success {
+            background: #d1fae5;
+            border-left: 4px solid #10b981;
+        }
+        .error {
+            background: #fee2e2;
+            border-left: 4px solid #ef4444;
+        }
+        .info {
+            background: #dbeafe;
+            border-left: 4px solid #3b82f6;
+        }
+        button {
+            background: #6366f1;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px 10px 0;
+        }
+        button:hover {
+            background: #4f46e5;
+        }
+        pre {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Admin Database Diagnostic</h1>
+        
+        <div>
+            <button onclick="checkBackendHealth()">1. Check Backend Health</button>
+            <button onclick="checkAdminExists()">2. Check Admin Account</button>
+            <button onclick="testLogin()">3. Test Login</button>
+            <button onclick="checkSettings()">4. Check Settings</button>
+        </div>
+        
+        <div id="results"></div>
+    </div>
+
+    <script>
+        const API_URL = 'https://studentevents.onrender.com/api';
+        const results = document.getElementById('results');
+
+        function log(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.innerHTML = message;
+            results.appendChild(div);
+        }
+
+        function logJSON(title, data) {
+            const pre = document.createElement('pre');
+            pre.textContent = title + ':\n' + JSON.stringify(data, null, 2);
+            results.appendChild(pre);
+        }
+
+        async function checkBackendHealth() {
+            results.innerHTML = '';
+            log('🔄 Checking backend health...', 'info');
+            
+            try {
+                const response = await fetch(`${API_URL}/health`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    log('✅ Backend is running!', 'success');
+                    logJSON('Health Check Response', data);
+                } else {
+                    log('❌ Backend returned error', 'error');
+                    logJSON('Error Response', data);
+                }
+            } catch (error) {
+                log('❌ Failed to connect to backend: ' + error.message, 'error');
+            }
+        }
+
+        async function checkAdminExists() {
+            results.innerHTML = '';
+            log('🔄 Checking if admin account exists in database...', 'info');
+            
+            try {
+                // Create a temporary diagnostic endpoint test
+                const response = await fetch(`${API_URL}/admin/check`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log('✅ Admin check successful', 'success');
+                    logJSON('Admin Data', data);
+                } else if (response.status === 404) {
+                    log('⚠️ Diagnostic endpoint not found - this is normal', 'info');
+                    log('Try logging in with: admin@afterstate.events / admin123', 'info');
+                } else {
+                    const data = await response.json();
+                    log('❌ Error checking admin', 'error');
+                    logJSON('Error', data);
+                }
+            } catch (error) {
+                log('❌ Error: ' + error.message, 'error');
+            }
+        }
+
+        async function testLogin() {
+            results.innerHTML = '';
+            
+            const tests = [
+                { email: 'admin@afterstate.events', password: 'admin123', label: 'Afterstate Events Admin' },
+                { email: 'admin@studentevents.com', password: 'admin123', label: 'Student Events Admin (OLD)' }
+            ];
+
+            for (const test of tests) {
+                log(`🔄 Testing login: ${test.label}`, 'info');
+                
+                try {
+                    const response = await fetch(`${API_URL}/admin/login`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            email: test.email,
+                            password: test.password
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        log(`✅ LOGIN SUCCESSFUL for ${test.email}!`, 'success');
+                        logJSON('Login Response', {
+                            email: data.user?.email,
+                            fullName: data.user?.fullName,
+                            role: data.user?.role,
+                            tokenReceived: !!data.token
+                        });
+                    } else {
+                        log(`❌ Login failed for ${test.email}: ${data.error}`, 'error');
+                    }
+                } catch (error) {
+                    log(`❌ Error testing ${test.email}: ${error.message}`, 'error');
+                }
+            }
+        }
+
+        async function checkSettings() {
+            results.innerHTML = '';
+            log('🔄 Checking system settings...', 'info');
+            
+            try {
+                const response = await fetch(`${API_URL}/settings`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log('✅ Settings loaded successfully', 'success');
+                    logJSON('Settings', data);
+                } else {
+                    const data = await response.json();
+                    log('❌ Failed to load settings', 'error');
+                    logJSON('Error', data);
+                }
+            } catch (error) {
+                log('❌ Error: ' + error.message, 'error');
+            }
+        }
+
+        // Auto-run health check on load
+        window.addEventListener('load', () => {
+            setTimeout(checkBackendHealth, 500);
+        });
+    </script>
+</body>
+</html>
+
