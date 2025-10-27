@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Render Backend Status Checker</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 900px;
+      margin: 50px auto;
+      padding: 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    }
+    h1 {
+      color: #333;
+      margin-bottom: 10px;
+    }
+    .status {
+      padding: 15px;
+      margin: 15px 0;
+      border-radius: 8px;
+      font-weight: 600;
+    }
+    .loading { background: #fef3c7; color: #92400e; border-left: 4px solid #f59e0b; }
+    .success { background: #d1fae5; color: #065f46; border-left: 4px solid #10b981; }
+    .error { background: #fee2e2; color: #991b1b; border-left: 4px solid #ef4444; }
+    .info { background: #dbeafe; color: #1e40af; border-left: 4px solid #3b82f6; }
+    button {
+      background: #4F46E5;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+      margin: 10px 5px;
+    }
+    button:hover { background: #4338ca; }
+    pre {
+      background: #1f2937;
+      color: #10b981;
+      padding: 15px;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    .timestamp {
+      color: #6b7280;
+      font-size: 14px;
+      margin-top: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔍 Render Backend Status Checker</h1>
+    <p>This tool checks if your Render.com backend is up and running</p>
+    
+    <button onclick="checkAll()">🚀 Check All Endpoints</button>
+    <button onclick="location.reload()">🔄 Refresh Page</button>
+    
+    <div id="results"></div>
+  </div>
+
+  <script>
+    const BACKEND_URL = 'https://studentevents.onrender.com';
+    
+    function log(message, type = 'info') {
+      const results = document.getElementById('results');
+      const timestamp = new Date().toLocaleTimeString();
+      results.innerHTML += `
+        <div class="status ${type}">
+          ${message}
+          <div class="timestamp">${timestamp}</div>
+        </div>
+      `;
+    }
+
+    function logJson(data) {
+      const results = document.getElementById('results');
+      results.innerHTML += `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+    }
+
+    async function checkHealth() {
+      log('Checking /health endpoint...', 'loading');
+      try {
+        const response = await fetch(`${BACKEND_URL}/health`, {
+          method: 'GET',
+          mode: 'cors',
+          cache: 'no-cache'
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          log(`✅ Health Check PASSED - Status: ${response.status}`, 'success');
+          logJson(data);
+          return true;
+        } else {
+          log(`❌ Health Check FAILED - Status: ${response.status} ${response.statusText}`, 'error');
+          const text = await response.text();
+          log(`Response: ${text}`, 'error');
+          return false;
+        }
+      } catch (error) {
+        log(`❌ Health Check ERROR: ${error.message}`, 'error');
+        log('This usually means the service is DOWN, CRASHED, or DEPLOYING', 'error');
+        return false;
+      }
+    }
+
+    async function checkVersion() {
+      log('Checking /api/version endpoint...', 'loading');
+      try {
+        const response = await fetch(`${BACKEND_URL}/api/version`, {
+          method: 'GET',
+          mode: 'cors',
+          cache: 'no-cache'
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          log(`✅ Version Check PASSED - Status: ${response.status}`, 'success');
+          logJson(data);
+          return true;
+        } else {
+          log(`❌ Version Check FAILED - Status: ${response.status}`, 'error');
+          return false;
+        }
+      } catch (error) {
+        log(`❌ Version Check ERROR: ${error.message}`, 'error');
+        return false;
+      }
+    }
+
+    async function checkEvents() {
+      log('Checking /api/events endpoint (CORS test)...', 'loading');
+      try {
+        const response = await fetch(`${BACKEND_URL}/api/events`, {
+          method: 'GET',
+          mode: 'cors',
+          cache: 'no-cache',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          log(`✅ Events API PASSED - Status: ${response.status}`, 'success');
+          log(`Found ${data.length} events`, 'info');
+          return true;
+        } else {
+          log(`❌ Events API FAILED - Status: ${response.status}`, 'error');
+          const text = await response.text();
+          log(`Response: ${text.substring(0, 200)}`, 'error');
+          return false;
+        }
+      } catch (error) {
+        log(`❌ Events API ERROR: ${error.message}`, 'error');
+        if (error.message.includes('CORS')) {
+          log('⚠️ CORS is still blocking requests!', 'error');
+        }
+        return false;
+      }
+    }
+
+    async function checkDatabase() {
+      log('Checking database connection via /api/settings...', 'loading');
+      try {
+        const response = await fetch(`${BACKEND_URL}/api/settings`, {
+          method: 'GET',
+          mode: 'cors',
+          cache: 'no-cache'
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          log(`✅ Database Connection PASSED`, 'success');
+          log(`Found ${data.length} settings`, 'info');
+          return true;
+        } else {
+          log(`❌ Database Check FAILED - Status: ${response.status}`, 'error');
+          return false;
+        }
+      } catch (error) {
+        log(`❌ Database Check ERROR: ${error.message}`, 'error');
+        return false;
+      }
+    }
+
+    async function checkAll() {
+      document.getElementById('results').innerHTML = '';
+      log('🔍 Starting comprehensive backend check...', 'info');
+      log(`Target: ${BACKEND_URL}`, 'info');
+      
+      const healthOk = await checkHealth();
+      
+      if (!healthOk) {
+        log('', 'error');
+        log('⚠️ RENDER SERVICE IS DOWN OR DEPLOYING', 'error');
+        log('', 'error');
+        log('📋 Action Items:', 'info');
+        log('1. Go to https://dashboard.render.com', 'info');
+        log('2. Click on your "studentevents" service', 'info');
+        log('3. Check if it shows "Deploying" (wait for it to finish)', 'info');
+        log('4. If it shows "Failed" or "Crashed", check the Logs tab', 'info');
+        log('5. If deployment is successful but still 502, try Manual Deploy', 'info');
+        return;
+      }
+      
+      await checkVersion();
+      await checkEvents();
+      await checkDatabase();
+      
+      log('', 'info');
+      log('✅ ALL CHECKS COMPLETE!', 'success');
+      log('If all checks passed, your admin dashboard should work now.', 'success');
+      log('Try refreshing: https://afterstateevents.vercel.app/admin/dashboard.html', 'success');
+    }
+
+    // Auto-run on page load
+    window.addEventListener('load', () => {
+      setTimeout(checkAll, 500);
+    });
+  </script>
+</body>
+</html>
+
+
